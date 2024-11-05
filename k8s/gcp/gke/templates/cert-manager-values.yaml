@@ -1,0 +1,5 @@
+serviceAccount:
+  create: true
+  name: ${CLUSTER_NAME}-cert-manager
+  annotations:
+    iam.gke.io/gcp-service-account: ${SERVICE_ACCOUNT}

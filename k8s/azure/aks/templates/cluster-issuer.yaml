@@ -1,0 +1,20 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: ${cert_issuer_url}
+    email: ${email}
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    # Use dns-01 challenges in order to support wildcard domain names
+    solvers:
+      - dns01:
+          azureDNS:
+            resourceGroupName: ${RESOURCE_GROUP_NAME}
+            subscriptionID: ${SUBSCRIPTION_ID}
+            hostedZoneName: ${DNS}
+            environment: AzurePublicCloud
+            managedIdentity:
+              clientID: ${CLIENT_ID}

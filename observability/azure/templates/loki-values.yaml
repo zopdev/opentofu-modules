@@ -1,0 +1,280 @@
+fullnameOverride: "loki"
+loki:
+  config: |
+    auth_enabled: true
+    server:
+      http_listen_port: 3100
+      grpc_server_max_recv_msg_size: 16777216 
+      grpc_server_max_send_msg_size: 16777216
+      grpc_server_max_concurrent_streams: 0
+    distributor:
+      ring:
+        kvstore:
+          store: memberlist
+    memberlist:
+      join_members:
+        - {{ include "loki.fullname" . }}-memberlist
+    ingester:
+      lifecycler:
+        join_after: 60s
+        observe_period: 5s
+        ring:
+          replication_factor: 1
+          kvstore:
+            store: memberlist
+          replication_factor: 3
+      chunk_idle_period: 30m
+      chunk_block_size: 262144
+      chunk_encoding: gzip
+      chunk_retain_period: 0s
+      chunk_target_size: 1572864
+      max_chunk_age: 2h
+      max_transfer_retries: 0
+      concurrent_flushes: 256
+      flush_check_period: 5s
+      flush_op_timeout: 600s
+      wal:
+        enabled: true
+        dir: /var/loki/wal
+        replay_memory_ceiling: 16GB
+        checkpoint_duration: 1m
+        flush_on_shutdown: true
+    limits_config:
+      enforce_metric_name: false
+      reject_old_samples_max_age: 168h
+      max_cache_freshness_per_query: 10m
+      ingestion_rate_mb: 100
+      ingestion_burst_size_mb: 200
+      per_stream_rate_limit: "100MB"
+      per_stream_rate_limit_burst: "200MB"   
+      max_query_parallelism: 4096
+      retention_period: 365d
+      cardinality_limit: 500000
+      max_query_series: 50000
+      split_queries_by_interval: 5m
+    schema_config:
+      configs:
+      - from: 2020-10-24
+        store: boltdb-shipper
+        object_store: filesystem
+        schema: v11
+        index:
+          prefix: index_
+          period: 24h
+    storage_config:
+      azure:
+        account_name: ${STORAGE_ACCOUNT}
+        account_key: ${ACCOUNT_KEY}
+        container_name: ${CONTAINER}
+      boltdb_shipper:
+        active_index_directory: /var/loki/boltdb-shipper-active
+        cache_location: /var/loki/boltdb-shipper-cache
+        cache_ttl: 24h
+        shared_store: filesystem
+    chunk_store_config:
+      max_look_back_period: 0s
+    table_manager:
+      retention_deletes_enabled: false
+      retention_period: 0s
+      index_tables_provisioning:
+        provisioned_write_throughput: 100
+        provisioned_read_throughput: 1000
+      chunk_tables_provisioning:
+        provisioned_write_throughput: 100
+        provisioned_read_throughput: 1000
+    query_range:
+      align_queries_with_step: true
+      max_retries: 5
+      cache_results: true
+      results_cache:
+        cache:
+          enable_fifocache: true
+          fifocache:
+            max_size_items: 1024
+            validity: 24h
+    
+    frontend_worker:
+      frontend_address: {{ include "loki.queryFrontendFullname" . }}:9095
+      parallelism: 50
+      match_max_concurrent: true
+    frontend:
+      compress_responses: true
+      tail_proxy_url: http://{{ include "loki.querierFullname" . }}:3100
+      max_outstanding_per_tenant: 4096
+      log_queries_longer_than: 10s
+    querier:
+      query_timeout: 5m
+      max_concurrent: 4096
+      engine:
+        timeout: 10m
+    
+    query_scheduler:
+      max_outstanding_requests_per_tenant: 1000
+    compactor:
+      shared_store: filesystem
+    ruler:
+      storage:
+        type: local
+        local:
+          directory: /etc/loki/rules
+      ring:
+        kvstore:
+          store: memberlist
+      rule_path: /tmp/loki/scratch
+      alertmanager_url: https://alertmanager.xx
+      external_url: https://alertmanager.xx
+  storageConfig:
+    azure:
+      accountName: ${STORAGE_ACCOUNT}
+      accountKey: ${ACCOUNT_KEY}
+      containerName: ${CONTAINER}
+ingester:
+  replicas: ${ingester_replicas}
+  resources:
+    limits:
+
+      %{~ if ingester_max_memory != "null" ~}
+      memory: ${ingester_max_memory}
+      %{~ endif ~}
+      %{~ if ingester_max_cpu != "null" ~}
+      cpu: ${ingester_max_cpu}
+      %{~ endif ~}
+
+    requests:
+      %{~ if ingester_min_cpu != "null" ~}
+      cpu: ${ingester_min_cpu}
+      %{~ endif ~}
+      %{~ if ingester_min_memory != "null" ~}
+      memory: ${ingester_min_memory}
+      %{~ endif ~}
+
+  autoscaling:
+    enabled: ${ingester_autoscaling}
+    maxReplicas: ${ingester_max_replicas}
+    minReplicas: ${ingester_min_replicas}
+    targetMemoryUtilizationPercentage: ${ingester_memory_utilization}
+    targetCPUUtilizationPercentage: ${ingester_cpu_utilization}
+
+distributor:
+  replicas: ${distributor_replicas}
+  resources:
+    requests:
+
+      %{~ if distributor_min_memory != "null"  ~}
+      memory: ${distributor_min_memory}
+      %{~ endif ~}
+      %{~ if distributor_min_cpu != "null" ~}
+      cpu: ${distributor_min_cpu}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if distributor_max_memory != "null" ~}
+      memory: ${distributor_max_memory}
+      %{~ endif ~}
+      %{~ if distributor_max_cpu != "null" ~}
+      cpu: ${distributor_max_cpu}
+      %{~ endif ~}
+
+  autoscaling:
+    enabled: ${distributor_autoscaling}
+    minReplicas: ${distributor_min_replicas}
+    maxReplicas: ${distributor_max_replicas}
+    targetCPUUtilizationPercentage: ${distributor_cpu_utilization}
+    targetMemoryUtilizationPercentage: ${distributor_memory_utilization}
+
+
+queryFrontend:
+  replicas: ${queryFrontend_replicas}
+  resources:
+    requests:
+
+      %{~ if queryFrontend_min_memory != "null" ~}
+      memory: ${queryFrontend_min_memory}
+      %{~ endif ~}
+      %{~ if queryFrontend_min_cpu != "null" ~}
+      cpu: ${queryFrontend_min_cpu}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if queryFrontend_max_memory != "null" ~}
+      memory: ${queryFrontend_max_memory}
+      %{~ endif ~}
+      %{~ if queryFrontend_max_cpu != "null" ~}
+      cpu: ${queryFrontend_max_cpu}
+      %{~ endif ~}
+
+  autoscaling:
+    enabled: ${queryFrontend_autoscaling}
+    maxReplicas: ${queryFrontend_max_replicas}
+    minReplicas: ${queryFrontend_min_replicas}
+    targetMemoryUtilizationPercentage: ${queryFrontend_memory_utilization}
+    targetCPUUtilizationPercentage: ${queryFrontend_cpu_utilization}
+
+querier:
+  replicas: ${querier_replicas}
+
+  %{~ if querier_replicas > querier_max_unavailable ~}
+  maxUnavailable: ${querier_max_unavailable}
+  %{~ endif ~}
+
+  resources:
+    requests:
+
+      %{~ if querier_min_cpu != "null" ~}
+      cpu: ${querier_min_cpu}
+      %{~ endif ~}
+
+      %{~ if querier_min_memory != "null" ~}
+      memory: ${querier_min_memory}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if querier_max_cpu != "null" ~}
+      cpu: ${querier_max_cpu}
+      %{~ endif ~}
+
+      %{~ if querier_max_memory != "null" ~}
+      memory: ${querier_max_memory}
+      %{~ endif ~}
+
+  autoscaling:
+    enabled: ${querier_autoscaling}
+    minReplicas: ${querier_min_replicas}
+    maxReplicas: ${querier_max_replicas}
+    targetCPUUtilizationPercentage: ${querier_cpu_utilization}
+    targetMemoryUtilizationPercentage: ${querier_memory_utilization}
+
+
+serviceMonitor:
+  enabled: true
+  labels:
+    release: prometheus
+
+gateway:
+  enabled: false
+
+compactor:
+  enabled: true
+
+ruler:
+  enabled: false
+
+memcachedExporter:
+  enabled: true
+memcachedChunks:
+  enabled: true
+memcachedFrontend:
+  enabled: true
+memcachedIndexQueries:
+  enabled: true
+memcachedIndexWrites:
+  enabled: true
+
+networkPolicy:
+  enabled: false
+
+tableManager:
+  enabled: true

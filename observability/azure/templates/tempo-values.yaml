@@ -1,0 +1,121 @@
+fullnameOverride: tempo
+
+metaMonitoring:
+  serviceMonitor:
+    enabled: true
+    labels:
+      release: prometheus
+ingester:
+  replicas: ${ingester_replicas}
+  resources:
+    requests:
+
+      %{~ if ingester_min_memory != "null" ~}
+      memory: ${ingester_min_memory}
+      %{~ endif ~}
+      %{~ if ingester_min_cpu != "null" ~}
+      cpu: ${ingester_min_cpu}
+      %{~ endif ~}
+
+    limits:
+      %{~ if ingester_max_memory != "null" ~}
+      memory: ${ingester_max_memory}
+      %{~ endif ~}
+      %{~ if ingester_max_cpu != "null" ~}
+      cpu: ${ingester_max_cpu}
+      %{~ endif ~}
+
+  autoscaling:
+    enabled: ${ingester_autoscaling}
+    targetMemoryUtilizationPercentage: "${ingester_memory_utilization}"
+    targetCPUUtilizationPercentage: "${ingester_cpu_utilization}"
+
+    minReplicas: ${ingester_min_replicas}
+    maxReplicas: ${ingester_max_replicas}
+
+
+distributor:
+  replicas: ${distributor_replicas}
+  resources:
+    requests:
+
+      %{~ if distributor_min_memory != "null" ~}
+      memory: ${distributor_min_memory}
+      %{~ endif ~}
+      %{~ if distributor_min_cpu != "null" ~}
+      cpu: ${distributor_min_cpu}
+      %{~ endif ~}
+    limits:
+
+      %{~ if distributor_max_memory != "null" ~}
+      memory: ${distributor_max_memory}
+      %{~ endif ~}
+      %{~ if distributor_max_cpu != "null" ~}
+      cpu: ${distributor_max_cpu}
+      %{~ endif ~}
+
+  autoscaling:
+    enabled: ${distributor_autoscaling}
+    targetMemoryUtilizationPercentage: "${distributor_memory_utilization}"
+    targetCPUUtilizationPercentage: "${distributor_cpu_utilization}"
+    minReplicas: ${distributor_min_replicas}
+    maxReplicas: ${distributor_max_replicas}
+
+
+querier:
+  replicas: ${querier_replicas}
+queryFrontend:
+  replicas: ${queryFrontend_replicas}
+compactor:
+  config:
+    compaction:
+      block_retention: 720h
+traces:
+  jaeger:
+    grpc:
+      enabled: true
+  otlp:
+    http:
+      enabled: true
+    grpc:
+      enabled: true
+  zipkin:
+    enabled: true
+
+storage:
+  trace:
+    backend: azure
+    azure:
+      container_name: "${CONTAINER}"
+      storage_account_name: "${STORAGE_ACCOUNT}"
+      storage_account_key: "${ACCOUNT_KEY}"
+
+metricsGenerator:
+  enabled: ${metrics_generator_enable}
+  image:
+    tag: latest
+  replicas: ${metrics_generator_replicas}
+  config:
+    processor:
+      service_graphs:
+        max_items: ${metrics_generator_service_graphs_max_items}
+        wait: ${metrics_generator_service_graphs_wait}
+        dimensions: ["container", "service", "job", "namespace"]
+      span_metrics:
+        dimensions: ["container", "service", "job", "namespace"]
+    storage:
+      remote_write_flush_deadline: ${metrics_generator_remote_write_flush_deadline}
+      remote_write:
+        %{~ for k,v in jsondecode(metrics_generator_remote_write) ~}
+        - url: ${v.host}
+          headers:
+            ${v.key}: ${v.value}
+        %{~ endfor ~}
+    metrics_ingestion_time_range_slack: ${metrics_generator_metrics_ingestion_time_range_slack}
+
+  %{~ if metrics_generator_enable ~}
+global_overrides:
+  metrics_generator_processors:
+    - service-graphs
+    - span-metrics
+  %{~ endif ~}

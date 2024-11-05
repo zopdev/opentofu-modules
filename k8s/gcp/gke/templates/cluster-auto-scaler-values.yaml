@@ -1,0 +1,22 @@
+cloudProvider: gce
+
+rbac:
+  create: true
+  serviceAccount:
+    name: ${CLUSTER_NAME}-gce-autoscaler
+    annotations:
+      iam.gke.io/gcp-service-account: ${SERVICE_ACCOUNT}
+
+autoDiscovery:
+  clusterName: ${CLUSTER_NAME}
+
+extraArgs:
+  leader-elect: false
+
+autoscalingGroupsnamePrefix:
+  - name: gke-${CLUSTER_NAME}
+    minSize: ${MIN_COUNT}
+    maxSize: ${MAX_COUNT}
+
+#podDisruptionBudget:
+#  maxUnavailable: 100%

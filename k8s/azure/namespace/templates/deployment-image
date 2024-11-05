@@ -1,0 +1,6 @@
+#!/bin/sh
+
+az aks get-credentials --resource-group $resource_group_name --name "$cluster_name"-aks --admin
+
+kubectl get deployment -o=jsonpath="{range .items[*]}{'\n'}{.metadata.name}{': '}{range .spec.template.spec.containers[*]}{.image}{end}{end}" -n $namespace > imageValues.yaml
+cat imageValues.yaml

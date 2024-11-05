@@ -1,0 +1,98 @@
+# Name of the service
+name: ${name}
+
+image: ${image}
+
+imagePullSecrets:
+  %{~ for k, v in jsondecode(image_pull_secrets) ~}
+  - ${v}
+  %{~ endfor ~}
+
+schedule: "${schedule}"
+suspend: ${suspend}
+concurrencyPolicy: ${concurrency_policy}
+
+# Port on which container runs its services
+httpPort: ${http_port}
+metricsPort: ${metrics_port}
+
+# Resource allocations
+minCPU: ${min_cpu}
+minMemory: ${min_memory}
+maxCPU: ${max_cpu}
+maxMemory: ${max_memory}
+
+# All environment variables can be passed as a map
+env:
+  %{~ for k,v in jsondecode(env) ~}
+  ${k}: ${v}
+  %{~ endfor ~}
+
+envFrom:
+  secrets:
+    %{~ for i, v in jsondecode(app_secrets) ~}
+    - ${v}
+    %{~ endfor ~}
+    %{~ for i, v in jsondecode(secrets_list) ~}
+    - ${v}
+    %{~ endfor ~}
+  configmaps:
+    %{~ for i, v in jsondecode(configmaps_list) ~}
+    - ${v}
+    %{~ endfor ~}
+
+%{~ if length(jsondecode(app_secrets)) > 0 ~}
+app_secrets: true
+%{~ endif ~}
+
+volumeMounts:
+  configmaps:
+  %{~ for k, v in jsondecode(volume_mount_configmaps) ~}
+  - name: ${k}
+    mountPath: ${v.mount_path}
+    %{~ if v.sub_path != null ~}
+    subPath: ${v.sub_path}
+    %{~ endif ~}
+    %{~ if v.read_only != null ~}
+    readOnly: ${v.read_only}
+    %{~ endif ~}
+  %{~ endfor ~}
+  secrets:
+  %{~ for k, v in jsondecode(volume_mount_secrets) ~}
+  - name: ${k}
+    mountPath: ${v.mount_path}
+    %{~ if v.sub_path != null ~}
+    subPath: ${v.sub_path}
+    %{~ endif ~}
+    %{~ if v.read_only != null ~}
+    readOnly: ${v.read_only}
+    %{~ endif ~}
+  %{~ endfor ~}
+  %{~ if db_ssl_enabled ~}
+  - name: ssl-certs
+    mountPath: /etc/ssl
+  %{~ endif ~}
+  %{~ if pub_sub ~}
+  - name: "pubsub-key-${service_random_string}"
+    mountPath: /.config/gcloud
+  %{~ endif ~}
+  pvc:
+  %{~ for k, v in jsondecode(volume_mount_pvc) ~}
+  - name: ${k}
+    mountPath: ${v.mount_path}
+    %{~ if v.sub_path != null ~}
+    subPath: ${v.sub_path}
+    %{~ endif ~}
+    %{~ if v.read_only != null ~}
+    readOnly: ${v.read_only}
+    %{~ endif ~}
+  %{~ endfor ~}
+
+%{~ if infra_alerts != null ~}
+alerts:
+  standard:
+    infra:
+      %{~ if infra_alerts.cronjob_failed_threshold != null ~}
+      cronjob_failed_threshold: ${infra_alerts.cronjob_failed_threshold}
+      %{~ endif ~}
+    %{~ endif ~}

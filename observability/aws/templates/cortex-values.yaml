@@ -1,0 +1,399 @@
+tags:
+  blocks-storage-memcached: true
+config:
+  api:
+    response_compression_enabled: true
+  limits:
+    ingestion_rate: ${limits_ingestion_rate}
+    ingestion_burst_size: ${limits_ingestion_burst_size}
+    max_series_per_metric: ${limits_max_series_per_metric}
+    max_series_per_user: ${limits_max_series_per_user}
+    max_fetched_chunks_per_query: ${limits_max_fetched_chunks_per_query}
+  auth_enabled: true
+  storage:
+    engine: blocks
+  blocks_storage:
+    backend: s3
+    s3:
+      bucket_name: "${BUCKET_NAME}" # your bucket name
+      region: ${app_region}
+      # -- The S3 bucket endpoint. It could be an AWS S3 endpoint listed at
+      # https://docs.aws.amazon.com/general/latest/gr/s3.html or the address of an
+      # S3-compatible service in hostname:port format.
+      endpoint: s3.${app_region}.amazonaws.com
+      access_key_id: ${AWS_KEY}
+      secret_access_key: ${AWS_SECRET}
+    bucket_store:
+      sync_dir: "/data"
+      index_header_lazy_loading_enabled: true
+    tsdb:
+      dir: "/data"
+  ruler_storage:
+    backend: s3
+    s3:
+      bucket_name: "${BUCKET_NAME}"
+      endpoint: s3.us-west-2.amazonaws.com
+      access_key_id: "${AWS_KEY}"
+      secret_access_key: "${AWS_SECRET}"
+  memberlist:
+    bind_port: 7946
+    join_members:
+      - '{{ include "cortex.fullname" $ }}-memberlist'
+  store_gateway:
+    sharding_enabled: true
+    sharding_ring:
+      kvstore:
+        store: memberlist
+      replication_factor: ${store_gateway_replication_factor}
+  query_range:
+    results_cache:
+      cache:
+        memcached_client:
+          timeout: ${query_range_memcached_client_timeout}
+
+nginx:
+  enabled: false
+
+compactor:
+  enabled: ${compactor_enable}
+  replicas: ${compactor_replicas}
+  persistentVolume:
+    enabled: ${compactor_persistence_volume_enable}
+    size: ${compactor_persistence_volume_size}
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+  resources:
+    requests:
+
+      %{~ if  compactor_min_cpu != "null"  ~}
+      cpu: ${compactor_min_cpu}
+      %{~ endif ~}
+      
+      %{~ if  compactor_min_memory != "null"  ~}
+      memory: ${compactor_min_memory}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if  compactor_max_cpu != "null"  ~}
+      cpu: ${compactor_max_cpu}
+      %{~ endif ~}
+      
+      %{~ if  compactor_max_memory != "null"  ~}
+      memory: ${compactor_max_memory}
+      %{~ endif ~}
+  extraVolumes:
+    - name: ${cluster_name}-cortex-aws-credentials
+      secret:
+        secretName: ${cluster_name}-cortex-aws-credentials
+  extraVolumeMounts:
+    - name: ${cluster_name}-cortex-aws-credentials
+      mountPath: /etc/cortex/aws/
+  env:
+    - name: AWS_SHARED_CREDENTIALS_FILE
+      value: "/etc/cortex/aws/credentials"
+
+ingester:
+  replicas: ${ingester_replicas}
+  statefulSet:
+    enabled: true
+  autoscaling:
+    enabled: ${ingester_autoscaling}
+    minReplicas: ${ingester_min_replicas}
+    maxReplicas: ${ingester_max_replicas}
+    %{~ if ingester_memory_utilization != ""  ~}
+    targetMemoryUtilizationPercentage: ${ingester_memory_utilization}
+    %{~ endif ~}
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+  persistentVolume:
+    size: ${ingester_persistence_volume_size}
+  resources:
+    requests:
+
+      %{~ if  ingester_min_cpu != "null"  ~}
+      cpu: ${ingester_min_cpu}
+      %{~ endif ~}
+      
+      %{~ if  ingester_min_memory != "null"  ~}
+      memory: ${ingester_min_memory}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if  ingester_max_cpu != "null"  ~}
+      cpu: ${ingester_max_cpu}
+      %{~ endif ~}
+      
+      %{~ if  ingester_max_memory != "null"  ~}
+      memory: ${ingester_max_memory}
+      %{~ endif ~}
+
+query_frontend:
+  replicas: ${query_frontend_replicas}
+  enabled: ${query_frontend_enable}
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+
+querier:
+  replicas: ${querier_replicas}
+  autoscaling:
+    enabled: ${querier_autoscaling}
+    minReplicas: ${querier_min_replicas}
+    maxReplicas: ${querier_max_replicas}
+    targetCPUUtilizationPercentage: ${querier_cpu_utilization}
+    targetMemoryUtilizationPercentage: ${querier_memory_utilization}
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+  resources:
+    requests:
+
+      %{~ if  querier_min_cpu != "null"  ~}
+      cpu: ${querier_min_cpu}
+      %{~ endif ~}
+      
+      %{~ if  querier_min_memory != "null"  ~}
+      memory: ${querier_min_memory}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if  querier_max_cpu != "null"  ~}
+      cpu: ${querier_max_cpu}
+      %{~ endif ~}
+      
+      %{~ if  querier_max_memory != "null"  ~}
+      memory: ${querier_max_memory}
+      %{~ endif ~}
+
+store_gateway:
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+  persistentVolume:
+    size: ${store_gateway_persistence_volume_size}
+  replicas: ${store_gateway_replicas}
+  resources:
+    requests:
+
+      %{~ if  store_gateway_min_cpu != "null"  ~}
+      cpu: ${store_gateway_min_cpu}
+      %{~ endif ~}
+      
+      %{~ if  store_gateway_min_memory != "null"  ~}
+      memory: ${store_gateway_min_memory}
+      %{~ endif ~}
+    limits:
+
+      %{~ if  store_gateway_max_cpu != "null"  ~}
+      cpu: ${store_gateway_max_cpu}
+      %{~ endif ~}
+      
+      %{~ if  store_gateway_max_memory != "null"  ~}
+      memory: ${store_gateway_max_memory}
+      %{~ endif ~}
+
+  extraVolumes:
+    - name: ${cluster_name}-cortex-aws-credentials
+      secret:
+        secretName: ${cluster_name}-cortex-aws-credentials
+  extraVolumeMounts:
+    - name: ${cluster_name}-cortex-aws-credentials
+      mountPath: /etc/cortex/aws/
+  env:
+    - name: AWS_SHARED_CREDENTIALS_FILE
+      value: "/etc/cortex/aws/credentials"
+
+memcached-frontend:
+  enabled: ${memcached_frontend_enable}
+  resources:
+    requests:
+
+      %{~ if  memcached_frontend_min_cpu != "null"  ~}
+      cpu: ${memcached_frontend_min_cpu}
+      %{~ endif ~}
+
+      %{~ if  memcached_frontend_min_memory != "null"  ~}
+      memory: ${memcached_frontend_min_memory}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if  memcached_frontend_max_cpu != "null"  ~}
+      cpu: ${memcached_frontend_max_cpu}
+      %{~ endif ~}
+
+      %{~ if  memcached_frontend_max_memory != "null"  ~}
+      memory: ${memcached_frontend_max_memory}
+      %{~ endif ~}
+  metrics:
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
+  extraEnv:
+    - name: MEMCACHED_CACHE_SIZE
+      value: "4096"
+    - name: MEMCACHED_THREADS
+      value: "16"
+
+memcached-blocks-index:
+  enabled: ${memcached_blocks_index_enable}
+  resources:
+    requests:
+
+      %{~ if  memcached_blocks_index_min_cpu != "null"  ~}
+      cpu: ${memcached_blocks_index_min_cpu}
+      %{~ endif ~}
+
+      %{~ if  memcached_blocks_index_min_memory != "null"  ~}
+      memory: ${memcached_blocks_index_min_memory}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if  memcached_blocks_index_max_cpu != "null"  ~}
+      cpu: ${memcached_blocks_index_max_cpu}
+      %{~ endif ~}
+
+      %{~ if  memcached_blocks_index_max_memory != "null"  ~}
+      memory: ${memcached_blocks_index_max_memory}
+      %{~ endif ~}
+  metrics:
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
+  extraEnv:
+    - name: MEMCACHED_CACHE_SIZE
+      value: "4096"
+    - name: MEMCACHED_THREADS
+      value: "16"
+
+memcached-blocks:
+  enabled: ${memcached_blocks_enable}
+  resources:
+    requests:
+
+      %{~ if  memcached_blocks_min_cpu != "null"  ~}
+      cpu: ${memcached_blocks_min_cpu}
+      %{~ endif ~}
+
+      %{~ if  memcached_blocks_min_memory != "null"  ~}
+      memory: ${memcached_blocks_min_memory}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if  memcached_blocks_max_cpu != "null"  ~}
+      cpu: ${memcached_blocks_max_cpu}
+      %{~ endif ~}
+
+      %{~ if  memcached_blocks_max_memory != "null"  ~}
+      memory: ${memcached_blocks_max_memory}
+      %{~ endif ~}
+  metrics:
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
+  extraEnv:
+    - name: MEMCACHED_CACHE_SIZE
+      value: "4096"
+    - name: MEMCACHED_THREADS
+      value: "16"
+
+
+memcached-blocks-metadata:
+  enabled: ${memcached_blocks_metadata_enable}
+  resources:
+    requests:
+
+      %{~ if  memcached_blocks_metadata_min_cpu != "null"  ~}
+      cpu: ${memcached_blocks_metadata_min_cpu}
+      %{~ endif ~}
+
+      %{~ if  memcached_blocks_metadata_min_memory != "null"  ~}
+      memory: ${memcached_blocks_metadata_min_memory}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if  memcached_blocks_metadata_max_cpu != "null"  ~}
+      cpu: ${memcached_blocks_metadata_max_cpu}
+      %{~ endif ~}
+
+      %{~ if  memcached_blocks_metadata_max_memory != "null"  ~}
+      memory: ${memcached_blocks_metadata_max_memory}
+      %{~ endif ~}
+  metrics:
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
+  extraEnv:
+    - name: MEMCACHED_CACHE_SIZE
+      value: "4096"
+    - name: MEMCACHED_THREADS
+      value: "16"
+
+ruler:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+
+alertmanager:
+  enabled: false
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+
+distributor:
+  replicas: ${distributor_replicas}
+  resources:
+    requests:
+
+      %{~ if  distributor_min_cpu != "null"  ~}
+      cpu: ${distributor_min_cpu}
+      %{~ endif ~}
+
+      %{~ if  distributor_min_memory != "null"  ~}
+      memory: ${distributor_min_memory}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if  distributor_max_cpu != "null"  ~}
+      cpu: ${distributor_max_cpu}
+      %{~ endif ~}
+
+      %{~ if  distributor_max_memory != "null"  ~}
+      memory: ${distributor_max_memory}
+      %{~ endif ~}
+
+  autoscaling:
+    minReplicas: ${distributor_min_replicas}
+    maxReplicas: ${distributor_max_replicas}
+    enabled: ${distributor_autoscaling}
+    targetCPUUtilizationPercentage: ${distributor_cpu_utilization}
+    targetMemoryUtilizationPercentage: ${distributor_memory_utilization}
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus

@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql-init-${rds_name}
+  namespace: ${namespace}
+spec:
+  containers:
+    - name: mysql-init-role
+      image: jbergknoff/mysql-client
+      command: [ "mysql" ]
+      args: [ "-h", "${db_host}", "-u", "${db_user}", "-p$(MYSQL_ROOT_PASSWORD)", "-e", "source /etc/config/db-init.sql" ]
+      env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ${master_secret_name}
+              key: password
+      volumeMounts:
+        - name: secret-volume
+          mountPath: /etc/config
+  initContainers:
+    - name: mysql-init-db
+      image: jbergknoff/mysql-client
+      command: [ "mysql" ]
+      args: [ "-h", "${db_host}", "-u", "${db_user}", "-p$(MYSQL_ROOT_PASSWORD)", "-e", "source /etc/config/db-init.sql" ]
+      env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ${master_secret_name}
+              key: password
+      volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+  volumes:
+    - name: secret-volume
+      secret:
+        secretName: mysql-db-secret-${rds_name}
+    - name: config-volume
+      configMap:
+        name: mysql-db-config-${rds_name}-create-db
+  restartPolicy: Never

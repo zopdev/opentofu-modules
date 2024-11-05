@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: calert-config
+  namespace: monitoring
+  labels:
+    app: calert
+    chart: calert
+    heritage: calert
+    release: calert
+data:
+  message.tmpl: |
+    *({{.Labels.severity | toUpper }}) {{ .Labels.alertname | Title }} - {{ .Labels.namespace | Title }} - {{.Status | Title }}*
+    {{ range .Annotations.SortedPairs -}}
+    {{ .Name | Title }}: {{ .Value}}
+    {{ end -}}
+  config.toml: |
+    # All timeouts and durations are in milliseconds.      
+    [app]
+    address = "0.0.0.0:6000"
+    server_timeout = "60s"
+    enable_request_logs = true
+    log = "debug"
+    
+    %{~ for key, value in jsondecode(GOOGLE_CHAT_ENDPOINT_URL) ~}
+    [providers.${key}]
+    type =  "google_chat"
+    endpoint = "${value.data}"
+    max_idle_conns = "50"
+    timeout = "30s"
+    proxy_url = ""
+    template = "static/message.tmpl"
+    thread_ttl = "12h"
+    dry_run = "false"
+    %{~ endfor ~}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calert
+  namespace: monitoring
+  labels:
+    app: calert
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: calert
+      app.kubernetes.io/instance: calert
+  template:
+    metadata:
+      annotations:
+        configmap.reloader.stakater.com/reload: "calert-config"
+      labels:
+        app.kubernetes.io/name: calert
+        app.kubernetes.io/instance: calert
+    spec:
+      containers:
+        - name: "calert"
+          image: "ghcr.io/mr-karan/calert:v2.0.6"
+          imagePullPolicy: "Always"
+          args: ["--config=/app/static/config.toml"]
+          ports:
+            - containerPort: 6000
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /app/static/
+              name: config-dir
+          livenessProbe:
+            httpGet:
+              httpHeaders:
+                - name: X-Causation-ID
+                  value: kube-health
+              path: "/ping"
+              port: 6000
+            initialDelaySeconds: 10
+            periodSeconds: 60
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              httpHeaders:
+                - name: X-Causation-ID
+                  value: kube-health
+              path: "/ping"
+              port: 6000
+            initialDelaySeconds: 10
+            periodSeconds: 60
+            timeoutSeconds: 3
+      volumes:
+        - name: config-dir
+          configMap:
+            name: calert-config
+            items:
+              - key: config.toml
+                path: config.toml
+              - key: message.tmpl
+                path: message.tmpl
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: calert
+  namespace: monitoring
+  labels:
+    app: calert
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6000
+      targetPort: 6000
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: calert
+    app.kubernetes.io/instance: calert

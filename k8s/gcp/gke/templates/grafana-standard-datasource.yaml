@@ -1,0 +1,105 @@
+apiVersion: 1
+datasources:
+  %{~ if loki_create ~}
+  - name: ${datasource_name}-logs
+    type: loki
+    uid: ${datasource_name}-loki
+    url: http://loki-query-frontend.loki:3100
+    basicAuth: false
+    editable: false
+    isDefault: false
+    jsonData:
+      %{~ if tempo_create ~}
+      derivedFields:
+        - datasourceUid: Tempo
+          name: X-Correlation-Id
+          matcherRegex: "\"X-Correlation-Id\":\"([a-zA-Z0-9-]+)\""
+          url: '$${__value.raw}'
+        - datasourceUid: Tempo
+          name: correlationId
+          matcherRegex: "\"correlationId\":\"([a-zA-Z0-9-]+)\""
+          url: '$${__value.raw}'
+      %{~ endif ~}
+      httpHeaderName1: "X-Scope-OrgID"
+    secureJsonData:
+      httpHeaderValue1: '${datasource_header_value}'
+  %{~ endif ~}
+  %{~ if tempo_create ~}
+  - name: Tempo
+    uid: Tempo
+    type: tempo
+    url: http://tempo-query-frontend.tempo:3100
+    basicAuth: false
+    editable: false
+    isDefault: false
+    jsonData:
+      httpMethod: GET
+      %{~ if loki_create ~}
+      tracesToLogs:
+        datasourceUid: ${datasource_name}-loki
+        tags: [ 'traceID', 'correlationId' ]
+        mappedTags: [ { key: 'service.name', value: 'service' } ]
+        mapTagNamesEnabled: true
+        filterByTraceID: true
+        filterBySpanID: true
+      %{~ endif ~}
+      tracesToMetrics:
+        datasourceUid: 'prometheus'
+        tags: [{ key: 'service.name', value: 'service' }]
+      serviceMap:
+        datasourceUid: 'prometheus'
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      %{~ if loki_create ~}
+      lokiSearch:
+        datasourceUid: ${datasource_name}-loki
+      %{~ endif ~}
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+      spanBar:
+        type: 'Tag'
+        tag: 'http.path'
+  %{~ endif ~}
+  %{~ if prometheus_create ~}
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    url: http://prometheus-kube-prometheus-prometheus.monitoring:9090/
+    access: proxy
+    isDefault: true
+    jsonData:
+      timeInterval: 30s
+  %{~ endif ~}    
+  %{~ if gcloud_monitoring ~}
+  - name: Google Cloud Monitoring
+    type: stackdriver
+    access: proxy
+    jsonData:
+      tokenUri: https://oauth2.googleapis.com/token
+      clientEmail: ${svc_account_id}
+      authenticationType: jwt
+      defaultProject: ${project_id}
+    secureJsonData:
+      privateKey: |
+        -----BEGIN PRIVATE KEY-----${key}-----END PRIVATE KEY-----
+  %{~ endif ~}
+  %{~ if mimir_create ~}
+  - name: ${datasource_name}-metrics
+    uid: ${datasource_name}-mimir
+    type: prometheus
+    access: proxy
+    url: http://mimir-query-frontend.mimir:8080/prometheus
+    basicAuth: false
+    editable: false
+    isDefault: false
+    jsonData:
+      httpMethod: GET
+      timeInterval: 30s
+      httpHeaderName1: 'X-Scope-OrgID'
+    secureJsonData:
+      httpHeaderValue1: '${datasource_header_value}'
+  %{~ endif ~}

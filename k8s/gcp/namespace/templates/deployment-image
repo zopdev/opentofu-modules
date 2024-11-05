@@ -1,0 +1,6 @@
+#!/bin/sh
+
+gcloud container clusters get-credentials $cluster_name --region=$region --project=$provider_id
+
+kubectl get deployment -o=jsonpath="{range .items[*]}{'\n'}{.metadata.name}{': '}{range .spec.template.spec.containers[*]}{.image}{end}{end}" -n $namespace > imageValues.yaml
+cat imageValues.yaml

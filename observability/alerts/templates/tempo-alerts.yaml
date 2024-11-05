@@ -1,0 +1,132 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  generation: 1
+  namespace: tempo
+  labels:
+    app: kube-prometheus-stack
+    heritage: Helm
+    release: prometheus
+  name: ${cluster_name}-tempo-alerts
+spec:
+  groups:
+    - name: tempo-alerts
+      rules:
+        # Alert if Tempo distributor recieved bytes are zero .
+        - alert: ${cluster_name}_cluster_tempo_ingester_recieved_bytes_zero.
+          annotations:
+            description: "${cluster_name} cluster tempo ingester recieved bytes is zero"
+          expr: sum(rate(tempo_ingester_bytes_received_total[5m])) < ${ingester_bytes_received_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}
+
+        # Alert if tempo ingester append total is zero
+        - alert: ${cluster_name}_cluster_tempo_ingester_append_is_zero
+          annotations:
+            description: "${cluster_name} cluster tempo ingester appends total is zero "
+          expr:  sum(rate(tempo_distributor_ingester_appends_total[5m])) < ${distributor_ingester_appends_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}
+
+        # Alert if tempo ingester append failure greater than the threshold
+        - alert: ${cluster_name}_cluster_tempo_append_failure_total
+          annotations:
+            description: "${cluster_name} tempo ingester append failure is greater than threshold."
+          expr: sum(rate(tempo_distributor_ingester_append_failures_total[5m])) > ${distributor_ingester_append_failures_threshold}
+          labels:
+            severity: warning
+            servicealert: "true"
+            cluster: ${cluster_name}
+
+        # Alert if tempo ingester live traces exceeds the limit.
+        - alert: ${cluster_name}_cluster_tempo_ingester_live_traces_exceeded_limit.
+          annotations:
+            description: "${cluster_name} cluster tempo ingester live traces exceeded the limit"
+          expr: sum(tempo_ingester_live_traces) > ${ingester_live_traces_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}
+
+        # Alert if tempo distributor spans recieved spans is zero
+        - alert: ${cluster_name}_cluster_tempo_distributor_spans_recieved_zero
+          annotations:
+            description: "${cluster_name} cluster tempo distributor spans recieved is zero "
+          expr: sum by(cluster) (rate(tempo_distributor_spans_received_total{}[5m])) < ${distributor_spans_received_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}
+
+        # Alert if tempo distributor bytes recieved is zero
+        - alert: ${cluster_name}_cluster_tempo_distributor_bytes_recieved_zero
+          annotations:
+            description: "${cluster_name} cluster tempo distributor bytes recieved  is zero"
+          expr: sum(rate(tempo_distributor_bytes_received_total[5m])) by (tenant) < ${distributor_bytes_received_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}
+
+        # Alert if tempo ingester blocks flushed is zero
+        - alert: ${cluster_name}_cluster_tempo_ingester_blocks_flushed_zero
+          annotations:
+            description: "${cluster_name} cluster tempo ingester block flushed is zero"
+          expr: sum(tempo_ingester_blocks_flushed_total) < ${ingester_blocks_flushed_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}
+
+        # Alert if tempo db blocklist length is greater than threshold
+        - alert: ${cluster_name}_cluster_tempo_db_blocklist_length_greater_than_20000.
+          annotations:
+            description: "${cluster_name} cluster tempo db blocklist length is greater than 20000"
+          expr: avg(tempodb_blocklist_length{}) > ${tempodb_blocklist_threshold}
+          labels:
+            severity: warning
+            servicealert: "true"
+            cluster: ${cluster_name}
+
+        # Alert if tempo queryfrontend replica is below the threshold
+        - alert: ${cluster_name}_tempo_queryfrontend_replica_below_${queryfrontend_replica_threshold}
+          annotations:
+            description: "${cluster_name} tempo queryfrontend replica count is below ${queryfrontend_replica_threshold} of the allocated replica."
+          expr: kube_deployment_status_replicas_available{namespace="tempo", deployment="tempo-query-frontend"} < ${queryfrontend_replica_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}
+        # Alert if tempo distributor replica is below the threshold
+        - alert: ${cluster_name}_tempo_distributor_replica_below_${distributor_replica_threshold}
+          annotations:
+            description: "${cluster_name} tempo distributor replica count is below ${distributor_replica_threshold} of the allocated replica."
+          expr: kube_deployment_status_replicas_available{namespace="tempo", deployment="tempo-distributor"} < ${distributor_replica_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}
+
+        # Alert if tempo ingester replica is below the threshold
+        - alert: ${cluster_name}_tempo_ingester_replica_below_${ingester_replica_threshold}
+          annotations:
+            description: "${cluster_name} tempo ingester replica count is below ${ingester_replica_threshold} of the allocated replica."
+          expr: kube_statefulset_status_replicas_available{namespace="tempo", statefulset="tempo-ingester"} < ${ingester_replica_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}
+
+        # Alert if tempo querier replica is below the threshold
+        - alert: ${cluster_name}_tempo_querier_replica_below_${querier_replica_threshold}
+          annotations:
+            description: "${cluster_name} tempo querier replica count is below ${querier_replica_threshold} of the allocated replica."
+          expr: kube_statefulset_status_replicas_available{namespace="tempo", statefulset="tempo-querier"} < ${querier_replica_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}

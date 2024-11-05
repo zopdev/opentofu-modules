@@ -1,0 +1,22 @@
+architecture: standalone
+
+fullnameOverride: ${redis_name}
+auth:
+  enabled: false
+
+master:
+  persistence:
+    enabled: true
+    size: ${disk_size}
+    storageClass: ${storage_class}
+
+  resources:
+    limits:
+      cpu: ${max_cpu}
+      memory: ${max_memory}
+    requests:
+      cpu: ${min_cpu}
+      memory: ${min_memory}
+
+  pdb:
+    create: true

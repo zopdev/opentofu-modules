@@ -1,0 +1,121 @@
+podSecurityPolicy:
+  enabled: true
+kubeScheduler:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeProxy:
+  enabled: false
+  %{~ if ALERTS_ENABLED ~}
+alertmanager:
+  alertmanagerSpec:
+    externalUrl: https://${GRAFANA_HOST}
+  config:
+    global:
+      resolve_timeout: 5m
+    receivers:
+      - name: 'null'
+      %{~ if MS_TEAMS_ALERT_ENABLED ~}
+      %{~ for k,v in jsondecode(teams_webhook_alerts) ~}
+      - name: prometheus-msteams-${k}
+        webhook_configs:
+          - url: "http://prometheus-msteams:2000/_dynamicwebhook/${v.data}"
+            send_resolved: true
+      %{~ endfor ~}
+      %{~ endif ~}
+      %{~ if MOOGSOFT_ALERTS_ENABLED ~}
+      %{~ for k,v in jsondecode(cluster_moogsoft_alerts) ~}
+      - name: Moogsoft-${k}
+        webhook_configs:
+          - url: ${v.data}
+            http_config:
+              basic_auth:
+                username: ${MOOGSOFT_USERNAME}
+                password: ${MOOGSOFT_ENDPOINT_API_KEY}
+      %{~ endfor ~}
+      %{~ endif ~}
+      %{~ if PAGER_DUTY_ALERTS_ENABLED ~}
+      %{~ for k,v in jsondecode(PAGER_DUTY_ENDPOINT_URL) ~}
+      - name: Pagerduty-${k}
+        pagerduty_configs:
+          - service_key: ${PAGER_DUTY_KEY}
+            url: ${v.data}
+            send_resolved: true
+      %{~ endfor ~}
+      %{~ endif ~}
+      %{~ if GOOGLE_CHAT_ALERTS_ENABLED ~}
+      %{~ for k,v in jsondecode(GOOGLE_CHAT_CONFIGS)}
+      - name: ${k}
+        webhook_configs:
+          - url: 'http://calert:6000/dispatch'
+            send_resolved: true
+      %{~ endfor ~}
+      %{~ endif ~}
+      %{~ if SLACK_CHAT_ALERTS_ENABLED ~}
+      %{~ for k,v in jsondecode(SLACK_CONFIGS)}
+      - name: ${k}
+        slack_configs:
+          - api_url: ${ v.url }
+            channel: ${ v.channel }
+            send_resolved: true
+      %{~ endfor ~}
+      %{~ endif ~}
+
+    route:
+      group_by: ["job", "service", "deployment", "alertname"]
+      group_interval: 5m
+      group_wait: 30s
+      repeat_interval: 12h
+      receiver: 'null'
+      routes:
+        %{~ for k,v in jsondecode(cluster_teams_alerts) ~}
+        - match:
+            %{~ for n, s in v.labels ~}
+            ${n}: ${s}
+            %{~ endfor ~}
+          continue: true
+          receiver: prometheus-msteams-${k}
+        %{~ endfor ~}
+        %{~ if GOOGLE_CHAT_ALERTS_ENABLED ~}
+        %{~ for k,v in jsondecode(GOOGLE_CHAT_CONFIGS)}
+        - match:
+            %{~ for n, s in v.labels ~}
+            ${n}: ${s}
+            %{~ endfor ~}
+          receiver: ${k}
+          continue: true
+        %{~ endfor ~}
+        %{~ endif ~}
+        %{~ if SLACK_CHAT_ALERTS_ENABLED ~}
+        %{~ for k,v in jsondecode(SLACK_CONFIGS)}
+        - match:
+            %{~ for n, s in v.labels ~}
+            ${n}: ${s}
+            %{~ endfor ~}
+          receiver: ${k}
+          continue: true
+        %{~ endfor ~}
+        %{~ endif ~}
+
+  %{~ endif ~}
+grafana:
+  enabled: false
+prometheus:
+  prometheusSpec:
+    retentionSize: ${PROMETHEUS_RETENTION_SIZE}
+    retention: ${PROMETHEUS_RETENTION_DURATION}
+    storageSpec:
+      ## Using PersistentVolumeClaim
+      volumeClaimTemplate:
+        spec:
+          storageClassName: default
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: ${PROMETHEUS_DISK_SIZE}
+    remoteWrite:
+      %{~ for k,v in jsondecode(REMOTE_WRITE_CONFIGS) ~}
+      - url: ${v.host}
+        headers:
+          ${v.key}: ${v.value}
+      %{~ endfor ~}
