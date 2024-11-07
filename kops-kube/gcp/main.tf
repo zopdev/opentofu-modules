@@ -1,7 +1,7 @@
 resource "helm_release" "service_helm"{
   name        = "kops-kube"
   namespace   = "kube-system"
-  repository  = "https://kops-dev.github.io/helm"
+  repository  = "https://helm.zop.dev"
   version     = "v0.0.2"
   chart       = "service"
 
