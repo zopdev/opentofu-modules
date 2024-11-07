@@ -56,14 +56,15 @@ resource "google_project_iam_custom_role" "zop_system_role" {
     "container.customResourceDefinitions.delete",
     "container.customResourceDefinitions.get",
     "container.customResourceDefinitions.list",
-    "container.customResourceDefinitions.update"
+    "container.customResourceDefinitions.update",
+    "container.secrets.create"
   ]
 }
 
 
 resource "google_project_iam_member" "zop_system_permissions" {
   project  = var.provider_id
-  role     = "projects/${var.provider_id}/roles/${google_project_iam_custom_role.zop_system_role}"
+  role     = "projects/${var.provider_id}/roles/${google_project_iam_custom_role.zop_system_role.role_id}"
   member   = "serviceAccount:${google_service_account.kube_management_api_svc_acc.email}"
 }
 
@@ -87,7 +88,7 @@ resource "kubernetes_secret" "kube_management_api_secrets" {
 
 data "google_secret_manager_secret_version" "zop_system_api_image_pull_secrets" {
   provider = google.shared-services
-  secret  = "zop-system-kops-kube-image-pull-secretss"
+  secret  = "kops-kube-image-pull-secrets"
 }
 
 resource "kubernetes_secret_v1" "image_pull_secrets" {
@@ -114,8 +115,7 @@ resource "kubernetes_secret_v1" "image_pull_secrets" {
 resource "kubernetes_service_account" "ksa_zop" {
   metadata {
     name      = "ksa-zop"
-    namespace = "zop-system"
-    
+
     annotations = {
       "iam.gke.io/gcp-service-account" = google_service_account.kube_management_api_svc_acc.email
     }
@@ -137,6 +137,21 @@ resource "kubernetes_cluster_role_binding" "zop_system_admin_role_binding" {
   subject {
     kind      = "ServiceAccount"
     name      = kubernetes_service_account.ksa_zop.metadata[0].name
-    namespace = kubernetes_service_account.ksa_zop.metadata[0].namespace
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "zop_system_admin_role_binding_gcp_sa" {
+  metadata {
+    name      = "zop_system_role_binding_gcp_sa"
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "admin"
+  }
+
+  subject {
+    kind      = "User"
+    name      = google_service_account.kube_management_api_svc_acc.email
   }
 }
