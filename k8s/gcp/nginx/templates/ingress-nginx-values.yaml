@@ -1,0 +1,37 @@
+controller:
+  opentelemetry:
+    enabled: true
+  config:
+    enable-opentelemetry: "true"
+    otlp-collector-host: "tempo-distributor.tempo:4317"
+    use-gzip: true
+    %{ if prometheus_enabled }
+    proxy-body-size: "4m"
+    proxy_buffer_size: "16k"
+    proxy_buffers: "32 16k"
+    %{ endif }
+  service:
+    type: LoadBalancer
+    loadBalancerIP: ${lb_ip}
+    annotations:
+      kubernetes.io/ingress.global-static-ip-name: ${cluster_name}-https-lb-ip
+      cloud.google.com/load-balancer-ip: ${lb_ip}
+    replicaCount: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 11
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
+
+      

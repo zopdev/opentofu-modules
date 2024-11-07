@@ -1,0 +1,151 @@
+# Name of the service
+name: ${name}
+
+# Number of replicas to run
+replicaCount: ${replica_count}
+
+image: ${image}
+
+imagePullSecrets:
+  %{~ for k, v in jsondecode(image_pull_secrets) ~}
+  - ${v}
+  %{~ endfor ~}
+
+# Port on which container runs its services
+httpPort: ${http_port}
+metricsPort: ${metrics_port}
+
+ports:
+  %{~ for k,v in jsondecode(ports) ~}
+  ${k}: ${v}
+  %{~ endfor ~}
+
+# Resource allocations
+minCPU: ${min_cpu}
+minMemory: ${min_memory}
+maxCPU: ${max_cpu}
+maxMemory: ${max_memory}
+
+minAvailable: ${min_available}
+
+# HPA configurations
+hpa_enable: ${hpa_enable}
+minReplicas: ${hpa_min_replicas}
+maxReplicas: ${hpa_max_replicas}
+
+%{~ if hpa_cpu_limit != "null" ~}
+hpaCPU: "${hpa_cpu_limit}"
+%{~ endif ~}
+
+
+%{~ if hpa_memory_limit != "null" ~}
+hpaMemory: "${hpa_memory_limit}"
+%{~ endif ~}
+
+# Whether application is a CLI service
+cliService: ${cli_service}
+
+# Heartbeat URL
+heartbeatURL: ${heartbeat_url}
+
+
+readinessProbe:
+  enable: ${enable_readiness_probe}
+  initialDelaySeconds: ${readiness_initial_delay_seconds}
+  timeoutSeconds: ${readiness_period_seconds}
+  periodSeconds: ${readiness_timeout_seconds}
+  failureThreshold: ${readiness_failure_threshold}
+
+livenessProbe:
+  enable: ${enable_liveness_probe}
+  initialDelaySeconds: ${liveness_initial_delay_seconds}
+  timeoutSeconds: ${liveness_period_seconds}
+  periodSeconds: ${liveness_timeout_seconds}
+  failureThreshold: ${liveness_failure_threshold}
+
+# All environment variables can be passed as a map
+env:
+  %{~ for k,v in jsondecode(env) ~}
+  ${k}: ${v}
+  %{~ endfor ~}
+
+envFrom:
+  secrets:
+    %{~ for i, v in jsondecode(app_secrets) ~}
+    - ${v}
+    %{~ endfor ~}
+    %{~ for i, v in jsondecode(secrets_list) ~}
+    - ${v}
+    %{~ endfor ~}
+  configmaps:
+    %{~ for i, v in jsondecode(configmaps_list) ~}
+    - ${v}
+    %{~ endfor ~}
+
+%{~ if length(jsondecode(app_secrets)) > 0 ~}
+app_secrets: true
+%{~ endif ~}
+
+volumeMounts:
+  configmaps:
+  %{~ for k, v in jsondecode(volume_mount_configmaps) ~}
+    - name: ${k}
+      mountPath: ${v.mount_path}
+      %{~ if v.sub_path != null ~}
+      subPath: ${v.sub_path}
+      %{~ endif ~}
+      %{~ if v.read_only != null ~}
+      readOnly: ${v.read_only}
+      %{~ endif ~}
+  %{~ endfor ~}
+  secrets:
+  %{~ for k, v in jsondecode(volume_mount_secrets) ~}
+    - name: ${k}
+      mountPath: ${v.mount_path}
+      %{~ if v.sub_path != null ~}
+      subPath: ${v.sub_path}
+      %{~ endif ~}
+      %{~ if v.read_only != null ~}
+      readOnly: ${v.read_only}
+      %{~ endif ~}
+  %{~ endfor ~}
+  %{~ if db_ssl_enabled ~}
+    - name: ssl-certs
+      mountPath: /etc/ssl
+  %{~ endif ~}
+  %{~ if pub_sub ~}
+    - name: "pubsub-key-${service_random_string}"
+      mountPath: /.config/gcloud
+  %{~ endif ~}
+  pvc:
+  %{~ for k, v in jsondecode(volume_mount_pvc) ~}
+  - name: ${k}
+    mountPath: ${v.mount_path}
+    %{~ if v.sub_path != null ~}
+    subPath: ${v.sub_path}
+    %{~ endif ~}
+    %{~ if v.read_only != null ~}
+    readOnly: ${v.read_only}
+    %{~ endif ~}
+  %{~ endfor ~}
+
+%{~ if infra_alerts != null ~}
+alerts:
+  standard:
+    infra:
+      %{~ if infra_alerts.unavailable_replicas_threshold != null ~}
+      unavailable_replicas_threshold: ${infra_alerts.unavailable_replicas_threshold}
+      %{~ endif ~}
+      %{~ if infra_alerts.pod_restarts_threshold != null ~}
+      pod_restart_threshold: ${infra_alerts.pod_restarts_threshold}
+      %{~ endif ~}
+      %{~ if infra_alerts.hpa_nearing_max_pod_threshold != null ~}
+      hpa_nearing_max_pod_threshold: ${infra_alerts.hpa_nearing_max_pod_threshold}
+      %{~ endif ~}
+      %{~ if infra_alerts.memory_utilisation_threshold != null ~}
+      service_memory_utilization_threshold: ${infra_alerts.memory_utilisation_threshold}
+      %{~ endif ~}
+      %{~ if infra_alerts.cpu_utilisation_threshold != null ~}
+      service_cpu_utilization_threshold: ${infra_alerts.cpu_utilisation_threshold}
+      %{~ endif ~}
+  %{~ endif ~}

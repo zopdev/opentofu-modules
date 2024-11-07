@@ -1,0 +1,209 @@
+mimir:
+  config: |
+    usage_stats:
+      installation_mode: helm
+    activity_tracker:
+      filepath: /active-query-tracker/activity.log
+    limits:
+      ingestion_rate: ${limits_ingestion_rate}
+      ingestion_burst_size: ${limits_ingestion_burst_size}
+      max_fetched_chunks_per_query: ${limits_max_fetched_chunks_per_query}
+      max_global_series_per_user: 1000000
+      max_cache_freshness: ${limits_max_cache_freshness}
+    memberlist:
+      join_members:
+      - dns+{{ include "mimir.fullname" . }}-gossip-ring.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ include "mimir.memberlistBindPort" . }}
+    blocks_storage:
+      backend: s3
+      s3:
+        bucket_name: ${BUCKET_NAME}
+        region: ${app_region}
+        endpoint: s3.${app_region}.amazonaws.com
+        access_key_id: ${AWS_KEY}
+        secret_access_key: ${AWS_SECRET}
+      bucket_store:
+        sync_dir: "/data"
+      tsdb:
+        dir: "/data"
+    compactor:
+      data_dir: "/data"
+    frontend:
+      scheduler_address: mimir-query-scheduler.mimir.svc:9095
+    frontend_worker:
+      scheduler_address: mimir-query-scheduler.mimir.svc:9095
+    alertmanager:
+      data_dir: /data
+    query_scheduler:
+      max_outstanding_requests_per_tenant: ${limits_max_outstanding_requests_per_tenant}
+    ruler:
+      rule_path: /data
+    runtime_config:
+      file: /var/{{ include "mimir.name" . }}/runtime.yaml
+    store_gateway:
+      sharding_ring:
+        kvstore:
+          prefix: multi-zone/
+          store: memberlist
+        replication_factor: ${store_gateway_replication_factor}
+
+nginx:
+  enabled: false
+minio:
+  enabled: false
+
+compactor:
+  replicas: ${compactor_replicas}
+  persistentVolume:
+    enabled: ${compactor_persistence_volume_enable}
+    size: ${compactor_persistence_volume_size}
+  resources:
+    requests:
+
+      %{~ if  compactor_min_cpu != "null"  ~}
+      cpu: ${compactor_min_cpu}
+      %{~ endif ~}
+      
+      %{~ if  compactor_min_memory != "null"  ~}
+      memory: ${compactor_min_memory}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if  compactor_max_cpu != "null"  ~}
+      cpu: ${compactor_max_cpu}
+      %{~ endif ~}
+
+      %{~ if  compactor_max_memory != "null"  ~}
+      memory: ${compactor_max_memory}
+      %{~ endif ~}
+
+  extraVolumes:
+    - name: ${cluster_name}-mimir-aws-credentials
+      secret:
+        secretName: ${cluster_name}-mimir-aws-credentials
+  extraVolumeMounts:
+    - name: ${cluster_name}-mimir-aws-credentials
+      mountPath: /etc/mimir/aws/
+  env:
+    - name: AWS_SHARED_CREDENTIALS_FILE
+      value: "/etc/mimir/aws/credentials"
+
+ingester:
+  replicas: ${ingester_replicas}
+  statefulSet:
+    enabled: true
+  zoneAwareReplication:
+    enabled: false
+  persistentVolume:
+    size: ${ingester_persistence_volume_size}
+  resources:
+    requests:
+
+      %{~ if  ingester_min_cpu != "null"  ~}
+      cpu: ${ingester_min_cpu}
+      %{~ endif ~}
+
+      %{~ if  ingester_min_memory != "null"  ~}
+      memory: ${ingester_min_memory}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if  ingester_max_cpu != "null"  ~}
+      cpu: ${ingester_max_cpu}
+      %{~ endif ~}
+
+      %{~ if  ingester_max_memory != "null"  ~}
+      memory: ${ingester_max_memory}
+      %{~ endif ~}
+
+querier:
+  replicas: ${querier_replicas}
+  resources:
+    requests:
+
+      %{~ if  querier_min_cpu != "null"  ~}
+      cpu: ${querier_min_cpu}
+      %{~ endif ~}
+
+      %{~ if  querier_min_memory != "null"  ~}
+      memory: ${querier_min_memory}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if  querier_max_cpu != "null"  ~}
+      cpu: ${querier_max_cpu}
+      %{~ endif ~}
+
+      %{~ if  querier_max_memory != "null"  ~}
+      memory: ${querier_max_memory}
+      %{~ endif ~}
+
+query_frontend:
+  replicas: ${query_frontend_replicas}
+
+
+store_gateway:
+  zoneAwareReplication:
+    enabled: false
+  persistentVolume:
+    size: ${store_gateway_persistence_volume_size}
+  replicas: ${store_gateway_replicas}
+  resources:
+    requests:
+
+      %{~ if  store_gateway_min_cpu != "null"  ~}
+      cpu: ${store_gateway_min_cpu}
+      %{~ endif ~}
+
+      %{~ if  store_gateway_min_memory != "null"  ~}
+      memory: ${store_gateway_min_memory}
+      %{~ endif ~}
+    limits:
+
+      %{~ if  store_gateway_max_cpu != "null"  ~}
+      cpu: ${store_gateway_max_cpu}
+      %{~ endif ~}
+
+      %{~ if  store_gateway_max_memory != "null"  ~}
+      memory: ${store_gateway_max_memory}
+      %{~ endif ~}
+
+  extraVolumes:
+    - name: ${cluster_name}-mimir-aws-credentials
+      secret:
+        secretName: ${cluster_name}-mimir-aws-credentials
+  extraVolumeMounts:
+    - name: ${cluster_name}-mimir-aws-credentials
+      mountPath: /etc/mimir/aws/
+  env:
+    - name: AWS_SHARED_CREDENTIALS_FILE
+      value: "/etc/mimir/aws/credentials"
+
+distributor:
+  replicas: ${distributor_replicas}
+  resources:
+    requests:
+
+      %{~ if  distributor_min_cpu != "null"  ~}
+      cpu: ${distributor_min_cpu}
+      %{~ endif ~}
+
+      %{~ if  distributor_min_memory != "null"  ~}
+      memory: ${distributor_min_memory}
+      %{~ endif ~}
+
+    limits:
+
+      %{~ if  distributor_max_cpu != "null"  ~}
+      cpu: ${distributor_max_cpu}
+      %{~ endif ~}
+
+      %{~ if  distributor_max_memory != "null"  ~}
+      memory: ${distributor_max_memory}
+      %{~ endif ~}
+
+
+alertmanager:
+  enabled: true

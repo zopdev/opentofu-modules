@@ -1,0 +1,13 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+namespace: ${NAMESPACE}
+metadata:
+  name: ${NAME}
+  annotations:
+    kubernetes.io/ingress.class: kong
+username: ${NAME}
+credentials:
+%{~ for secret in jsondecode(SECRET_LIST) }
+- ${secret}
+%{~ endfor ~}
+custom_id: "${CUSTOM_ID}"

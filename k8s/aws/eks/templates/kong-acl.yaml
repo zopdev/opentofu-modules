@@ -1,0 +1,12 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+namespace: ${NAMESPACE}
+metadata:
+  name: ${NAME}
+plugin: acl
+config:
+  allow:
+  %{~ for allow_list in  jsondecode(ALLOW_LIST) }
+  - ${allow_list}
+  %{~ endfor ~}
+hide_groups_header: true

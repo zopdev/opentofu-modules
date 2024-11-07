@@ -1,0 +1,15 @@
+cloudProvider: aws
+awsRegion: ${CLUSTER_REGION}
+
+rbac:
+  create: true
+  serviceAccount:
+    # This value should match k8s service account name for autoscaler
+    name: cluster-oidc-service-account
+    annotations:
+      # This value should match the ARN of the role created by module.iam_assumable_role_admin
+      eks.amazonaws.com/role-arn: "arn:aws:iam::${ACCOUNT_ID}:role/${CLUSTER_NAME}-oidc-role"
+
+autoDiscovery:
+  clusterName: ${CLUSTER_NAME}
+  enabled: true

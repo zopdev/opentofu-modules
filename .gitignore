@@ -1,0 +1,23 @@
+# Local .terraform directories
+**/.terraform*
+# Local .editor conf folders
+.idea
+*.iml
+# **/packer/
+**certs/
+**temp/
+# .tfstate files
+*.tfstate
+*.tfstate.*
+# .tfvars files
+*.tfvars
+# Other files that should not be kept.
+id_rsa*
+*.zip
+*.pem
+*.conf
+*.auto.tfvars
+.DS_Store
+*.p12
+*.key
+*.crt

@@ -1,0 +1,13 @@
+#connectors:
+#  - alertmanager: {WEBHOOK_URL}
+replicaCount: 1
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 128Mi
+metrics:
+  serviceMonitor:
+    enabled: true

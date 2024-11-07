@@ -1,0 +1,52 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  generation: 1
+  namespace: mimir
+  labels:
+    app: kube-prometheus-stack
+    heritage: Helm
+    release: prometheus
+  name: ${cluster_name}-mimir-alerts
+spec:
+  groups:
+    - name: mimir-alerts
+      rules:
+        # Alert if mimir queryfrontend replica is below the threshold
+        - alert: ${cluster_name}_mimir_queryfrontend_replica_below_${queryfrontend_replica_threshold}
+          annotations:
+            description: "${cluster_name} mimir queryfrontend replica count is below ${queryfrontend_replica_threshold} of the allocated replica."
+          expr: kube_deployment_status_replicas_available{namespace="mimir", deployment="mimir-query-frontend"} < ${queryfrontend_replica_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}
+        # Alert if mimir distributor replica is below the threshold
+        - alert: ${cluster_name}_mimir_distributor_replica_below_${distributor_replica_threshold}
+          annotations:
+            description: "${cluster_name} mimir distributor replica count is below ${distributor_replica_threshold} of the allocated replica."
+          expr: kube_deployment_status_replicas_available{namespace="mimir", deployment="mimir-distributor"} < ${distributor_replica_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}
+
+        # Alert if mimir ingester replica is below the threshold
+        - alert: ${cluster_name}_mimir_ingester_replica_below_${ingester_replica_threshold}
+          annotations:
+            description: "${cluster_name} mimir ingester replica count is below ${ingester_replica_threshold} of the allocated replica."
+          expr: kube_statefulset_status_replicas_available{namespace="mimir", statefulset="mimir-ingester"} < ${ingester_replica_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}
+
+        # Alert if mimir querier replica is below the threshold
+        - alert: ${cluster_name}_mimir_querier_replica_below_${querier_replica_threshold}
+          annotations:
+            description: "${cluster_name} mimir querier replica count is below ${querier_replica_threshold} of the allocated replica."
+          expr: kube_statefulset_status_replicas_available{namespace="mimir", statefulset="mimir-querier"} < ${querier_replica_threshold}
+          labels:
+            severity: critical
+            servicealert: "true"
+            cluster: ${cluster_name}

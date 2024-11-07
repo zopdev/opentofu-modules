@@ -1,0 +1,6 @@
+#!/bin/sh
+
+aws eks update-kubeconfig --region $region --name $cluster_name
+
+kubectl get cronjob -o=jsonpath="{range .items[*]}{'\n'}{.metadata.name}{': '}{range .spec.jobTemplate.spec.template.spec.containers[*]}{.image}{end}{end}" -n $namespace > cronImageValues.yaml
+cat cronImageValues.yaml

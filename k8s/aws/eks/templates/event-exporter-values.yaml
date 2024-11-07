@@ -1,0 +1,96 @@
+replicaCount: 1
+
+image:
+  registry: docker.io
+  repository: bitnami/kubernetes-event-exporter
+  tag: 1.6.1-debian-11-r1
+
+config:
+  logLevel: ${LOG_LEVEL}
+  logFormat: json
+  maxEventAgeSeconds: ${MAX_EVENT_AGE_SECONDS}
+  route:
+    routes:
+      %{~ for k,v in jsondecode(LOKI_RECEIVER_CONFIGS) ~}
+      - match:
+          - receiver: ${v.name}
+      %{~ endfor ~}
+      %{~ for k,v in jsondecode(WEBHOOK_RECEIVER_CONFIGS) ~}
+      - match:
+          - receiver: ${v.name}
+      %{~ endfor ~}
+  receivers:
+    %{~ for k,v in jsondecode(LOKI_RECEIVER_CONFIGS) ~}
+    - name: ${v.name}
+      loki:
+        url: ${v.url}
+        headers:
+          Content-Type: "application/json"
+          User-Agent: "kube-event-exporter"
+          %{~ if v.header_key != "" }
+          ${v.header_key}: ${v.header_value}
+          %{~ endif ~}
+        streamLabels:
+          source: "event-exporter"
+          cluster: ${CLUSTER_NAME}
+          %{~ if v.cluster_id != ""  }
+          cluster_id: ${ v.cluster_id }
+          %{~ endif ~}
+        layout:
+          streams:
+            message: "{{ .Message }}"
+            reason: "{{ .Reason }}"
+            host: "{{ .Source.Host }}"
+            component: "{{ .Source.Component }}"
+            severity: "{{ .Type }}"
+            name: "{{ .InvolvedObject.Name }}"
+            namespace: "{{ .InvolvedObject.Namespace }}"
+            kind: "{{ .InvolvedObject.Kind }}"
+      %{~ endfor ~}
+      %{~ for k,v in jsondecode(WEBHOOK_RECEIVER_CONFIGS) ~}
+    - name: ${v.name}
+      ${v.type}:
+        endpoint: ${v.url}
+        headers:
+          %{~ if v.header_key != "" }
+          ${v.header_key}: ${v.header_value}
+          %{~ endif ~}
+          User-Agent: kube-event-exporter 1.0
+        streamLabels:
+          source: "event-exporter"
+          cluster: ${CLUSTER_NAME}
+        layout:
+          streams:
+            - stream:
+                severity: "{{ .Type }}"
+                name: "{{ .InvolvedObject.Name }}"
+                namespace: "{{ .InvolvedObject.Namespace }}"
+                kind: "{{ .InvolvedObject.Kind }}"
+                host: "{{ .Source.Host }}"
+                component: "{{ .Source.Component }}"
+              values:
+                - - "{{ mul .GetTimestampMs 1000000 }}"
+                  - "severity={{ .Type }} namespace={{ .InvolvedObject.Namespace }} object={{ .InvolvedObject.Kind }}/{{ .InvolvedObject.Name }} reason={{ .Reason }} message={{ .Message }}"
+      %{~ endfor ~}
+
+serviceAccount:
+  create: true
+
+metrics:
+  enabled: true
+  service:
+    ports:
+      http: 2121
+  serviceMonitor:
+    enabled: true
+
+rbac:
+  create: true
+
+resources:
+  limits:
+    cpu: ${LIMIT_CPU}
+    memory: ${LIMIT_MEMORY}
+  requests:
+    cpu: ${REQUEST_CPU}
+    memory: ${REQUEST_MEMORY}

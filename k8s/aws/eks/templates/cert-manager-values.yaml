@@ -1,0 +1,14 @@
+serviceAccount:
+  create: true
+  name: ${CLUSTER_NAME}-cert-manager
+  annotations:
+    eks.amazonaws.com/role-arn: ${role_arn}
+  automountServiceAccountToken: true
+
+ingressShim:
+  defaultIssuerName: "letsencrypt-prod"
+  defaultIssuerKind: "ClusterIssuer"
+
+securityContext:
+  runAsNonRoot: true
+  fsGroup: 1001
