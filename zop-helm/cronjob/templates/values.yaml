@@ -42,7 +42,7 @@ envFrom:
     %{~ endfor ~}
 
 %{~ if length(jsondecode(app_secrets)) > 0 ~}
-app_secrets: true
+appSecrets: true
 %{~ endif ~}
 
 volumeMounts:
