@@ -62,7 +62,7 @@ resource "kubernetes_secret" "zop_system_secrets" {
 
 data "google_secret_manager_secret_version" "zop_system_image_pull_secrets" {
   provider = google.shared-services
-  secret  = "zop-system-kops-kube-image-pull-secretss"
+  secret  = "kops-kube-image-pull-secrets"
 }
 
 resource "kubernetes_secret_v1" "image_pull_secrets" {

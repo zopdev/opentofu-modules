@@ -19,7 +19,7 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "name"
-    value = "zop-system"
+    value = "kube-management-api"
   }
 
   set {

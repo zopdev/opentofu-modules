@@ -1,5 +1,5 @@
 data "azurerm_kubernetes_cluster" "cluster" {
-  name                = var.cluster_name
+  name                = "${var.cluster_name}-aks"
   resource_group_name = var.resource_group_name
 }
 
