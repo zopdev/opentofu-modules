@@ -16,17 +16,9 @@ resource "azurerm_public_ip" "app_public_ip" {
 }
 
 resource "azurerm_dns_a_record" "a_record" {
-  name                  = local.cluster_name
+  name                  = "*"
   zone_name             = data.azurerm_dns_zone.dns_zone.name
   resource_group_name   = data.azurerm_dns_zone.dns_zone.resource_group_name
   ttl                   = 60
   records               = [azurerm_public_ip.app_public_ip.ip_address]
-}
-
-resource "azurerm_dns_cname_record" "wild_card" {
-  name                 = var.provisioner == "zop-dev" ? "*.${local.cluster_name}" : "*"
-  zone_name            = data.azurerm_dns_zone.dns_zone.name
-  resource_group_name  = data.azurerm_dns_zone.dns_zone.resource_group_name
-  ttl                  = 60
-  record               = azurerm_dns_a_record.a_record.fqdn
 }
