@@ -24,7 +24,7 @@ resource "kubernetes_persistent_volume_claim_v1" "badger_db_for_services" {
     namespace = var.namespace
   }
   spec {
-    access_modes = ["ReadWriteOnce"]
+    access_modes = ["ReadWriteMany"]
     resources {
       requests = {
         storage = "1.5Gi"
