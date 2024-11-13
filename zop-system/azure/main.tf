@@ -24,7 +24,7 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "image"
-    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kube-management-api-azure:v0.0.1"
+    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kube-management-api-azure:v0.0.2"
   }
 
   set_list {
@@ -121,7 +121,7 @@ resource "kubernetes_ingress_v1" "kube_management_api_ingress" {
         path {
           backend {
             service {
-              name = "zop-system"
+              name = "kube-management-api"
               port {
                 number = 8000
               }
