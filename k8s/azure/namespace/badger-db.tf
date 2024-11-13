@@ -42,7 +42,7 @@ resource "kubernetes_persistent_volume_claim_v1" "badger_db_for_crons" {
     namespace = var.namespace
   }
   spec {
-    access_modes = ["ReadWriteMany"]
+    access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
         storage = "1.5Gi"
