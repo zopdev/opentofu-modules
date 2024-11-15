@@ -13,8 +13,10 @@ resource "helm_release" "cron_helm"{
   name        = var.name
   namespace   = var.namespace
   repository  = "https://helm.zop.dev"
-  version     = "v0.0.2"
+  version     = "v0.0.3"
   chart       = "cron-job"
+  reuse_values = true
+
 
   values = [templatefile("${path.module}/templates/values.yaml", {
     name                            = var.name
