@@ -121,7 +121,7 @@ resource "kubernetes_ingress_v1" "kube_management_api_ingress" {
         path {
           backend {
             service {
-              name = "zop-system"
+              name = "kube-management-api"
               port {
                 number = 8000
               }
