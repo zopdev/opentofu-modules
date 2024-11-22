@@ -24,7 +24,7 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "image"
-    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kube-management-api-aws:e657e316a1f7bcc3199991ebd439a82a2d7f3d6f"
+    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kube-management-api-aws:6b7229dace18fec5916d52b877a7dff2c3620aec"
   }
 
   set_list {
