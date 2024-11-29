@@ -13,7 +13,7 @@ resource "helm_release" "service_helm"{
   name        = var.name
   namespace   = var.namespace
   repository  = "https://helm.zop.dev"
-  version     = "v0.0.6"
+  version     = "v0.0.7"
   chart       = "service"
   reuse_values = true
 
@@ -54,7 +54,7 @@ resource "helm_release" "service_helm"{
     volume_mount_configmaps         = jsonencode(var.volume_mount_configmaps)
     volume_mount_secrets            = jsonencode(var.volume_mount_secrets)
     infra_alerts                    = var.infra_alerts
-    volume_mount_pvc                = jsonencode(var.volume_mount_pvc)
+    volume_mount_pvc                = jsonencode(merge(var.volume_mount_pvc,var.volume_mount_pvc_badger))
     db_ssl_enabled                  = var.db_ssl_enabled
     pub_sub                         = var.pub_sub
     service_random_string           = var.service_random_string

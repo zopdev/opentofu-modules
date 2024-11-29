@@ -32,6 +32,8 @@ output "service_configs" {
       basic_auth_user_name                  = (v.enable_basic_auth != null ? v.enable_basic_auth : false) ? "${k}-${random_string.basic_auth_user_name_suffix[k].result}" : ""
       basic_auth_password                   = (v.enable_basic_auth != null ? v.enable_basic_auth : false) ? random_password.basic_auth_password[k].result : ""
       deployment_service_account_key        = sensitive(google_service_account_key.service_deployment_svc_acc[k].private_key)
+      pvc = v.helm_configs != null ? ( v.helm_configs.volume_mounts != null ? (v.helm_configs.volume_mounts.pvc != null ? v.helm_configs.volume_mounts.pvc : {}) : {} ) : {}
+
     }
   }
   sensitive = true
@@ -78,4 +80,13 @@ output "custom_secrets_name_list" {
   value = {
   for  secret_key in var.custom_namespace_secrets : secret_key =>
   "${local.cluster_name}-${var.namespace}-${secret_key}-secret" }
+}
+
+output "service_configs_pvc" {
+  value = {
+    for k, v in var.services : k =>
+    {
+      pvc = v.helm_configs != null ? ( v.helm_configs.volume_mounts != null ? (v.helm_configs.volume_mounts.pvc != null ? v.helm_configs.volume_mounts.pvc : {}) : {} ) : {}
+    }
+  }
 }

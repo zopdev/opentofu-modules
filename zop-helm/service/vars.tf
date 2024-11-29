@@ -195,7 +195,7 @@ variable "volume_mount_pvc" {
   }))
 }
 
-variable "volume_mount_badger" {
+variable "volume_mount_pvc_badger" {
   description = "List of pvc that should be mounted onto the container"
   type        = map(object({
     mount_path = string

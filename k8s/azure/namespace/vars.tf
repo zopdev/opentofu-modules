@@ -177,6 +177,11 @@ variable "services" {
           sub_path   = optional(string)
           read_only  = optional(bool)
         })))
+        pvc      = optional(map(object({
+          mount_path = string
+          sub_path   = optional(string)
+          read_only  = optional(bool)
+        })))
       }))
       infra_alerts = optional(object({
         unavailable_replicas_threshold = optional(number)

@@ -14,8 +14,7 @@ locals {
   common_tags        = merge(var.common_tags,
     tomap({
       Project     = local.cluster_name,
-      Provisioner = "TERRAFORM",
-      Environment = local.environment,
+      Provisioner = "zop-dev",
     }))
 }
 
@@ -66,6 +65,12 @@ module "aks" {
   workload_identity_enabled          = true
   oidc_issuer_enabled                = true
   temporary_name_for_rotation        = "${var.app_name}1"
+
+  tags = merge(local.common_tags,
+    tomap({
+      "Name" = local.cluster_name
+    })
+  )
 }
 
 resource "null_resource" "aks_vmss_managed_identity" {
