@@ -195,6 +195,16 @@ variable "volume_mount_pvc" {
   }))
 }
 
+variable "volume_mount_pvc_badger" {
+  description = "List of pvc that should be mounted onto the container"
+  type        = map(object({
+    mount_path = string
+    sub_path   = optional(string)
+    read_only  = optional(bool)
+  }))
+  default = {}
+}
+
 variable "db_ssl_enabled" {
   description = "Boolean value whether to mount the DB SSL secrets on the container or not"
   type        = bool

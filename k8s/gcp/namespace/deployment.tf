@@ -85,7 +85,8 @@ module "service_deployment" {
   secrets_list    = each.value.helm_configs != null ? (each.value.helm_configs.secrets_list != null ?  each.value.helm_configs.secrets_list : [] ): []
   volume_mount_configmaps  = each.value.helm_configs != null ? ( each.value.helm_configs.volume_mounts != null ? (each.value.helm_configs.volume_mounts.configmaps != null ? each.value.helm_configs.volume_mounts.configmaps : {}) : {} ) : {}
   volume_mount_secrets  = each.value.helm_configs != null ? ( each.value.helm_configs.volume_mounts != null ? (each.value.helm_configs.volume_mounts.secrets != null ? each.value.helm_configs.volume_mounts.secrets : {}) : {} ) : {}
-  volume_mount_pvc      = coalesce(each.value.badger_db, false) ? local.badger_db_volume_mounts_services[each.key] : {}
+  volume_mount_pvc_badger      = coalesce(each.value.badger_db, false) ? local.badger_db_volume_mounts_services[each.key] : {}
+  volume_mount_pvc =  each.value.helm_configs != null ? ( each.value.helm_configs.volume_mounts != null ? (each.value.helm_configs.volume_mounts.pvc != null ? each.value.helm_configs.volume_mounts.pvc : {}) : {} ) : {}
   db_ssl_enabled   = local.ssl
   pub_sub = each.value.pub_sub != null ? each.value.pub_sub : false
   infra_alerts     = each.value.helm_configs != null ? (each.value.helm_configs.infra_alerts != null ? each.value.helm_configs.infra_alerts : null ) : null
