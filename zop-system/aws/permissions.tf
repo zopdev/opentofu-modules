@@ -163,7 +163,7 @@ resource "kubernetes_cluster_role_binding" "zop_cluster_role_binding" {
   }
 }
 
-resource "kubernetes_cluster_role_binding" "zop_cluster_role_binding" {
+resource "kubernetes_cluster_role_binding" "zop_cluster_role_binding_cluster_admin" {
   metadata {
     name = "zop-cluster-role-binding-cluster-admin"
   }

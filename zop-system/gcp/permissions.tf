@@ -156,9 +156,9 @@ resource "kubernetes_cluster_role_binding" "zop_system_admin_role_binding_gcp_sa
   }
 }
 
-resource "kubernetes_cluster_role_binding" "zop_system_admin_role_binding_gcp_sa" {
+resource "kubernetes_cluster_role_binding" "zop_system_admin_role_binding_gcp_sa_cluster_admin" {
   metadata {
-    name      = "zop_system_role_binding_gcp_sa-cluster-admin"
+    name      = "zop_system_role_binding_gcp_sa_cluster_admin"
   }
   role_ref {
     api_group = "rbac.authorization.k8s.io"
