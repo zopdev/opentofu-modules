@@ -102,6 +102,7 @@ resource "helm_release" "service_helm"{
     app_region   = var.app_region
     cloud_platform = "AWS"
     provider_id    = var.provider_id
+    opencost_host = "opencost.monitoring:9003"
   })]
   
   depends_on = [kubernetes_namespace.app_environments]
