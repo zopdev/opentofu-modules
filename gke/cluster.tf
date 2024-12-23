@@ -571,6 +571,10 @@ resource "google_container_node_pool" "pools" {
     delete = lookup(var.timeouts, "delete", "45m")
   }
 
+  tags {
+    
+  }
+
 }
 resource "google_container_node_pool" "windows_pools" {
   provider = google
