@@ -26,7 +26,7 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "image"
-    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kube-management-api-gcp:v0.0.13"
+    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kube-management-api-gcp:v0.0.14"
   }
 
   set_list {
@@ -104,6 +104,7 @@ resource "helm_release" "service_helm"{
     app_region   = var.app_region
     cloud_platform = "GCP"
     provider_id    = var.provider_id
+    opencost_host = "opencost.monitoring:9003"
   })]
 
   depends_on = [kubernetes_namespace.app_environments]

@@ -3,3 +3,4 @@ env:
   APP_REGION: ${app_region}
   CLOUD_PLATFORM: ${cloud_platform}
   RESOURCE_GROUP: ${resource_group}
+  OPENCOST_HOST: ${opencost_host}
