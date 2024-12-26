@@ -570,7 +570,7 @@ resource "google_container_node_pool" "pools" {
     update = lookup(var.timeouts, "update", "45m")
     delete = lookup(var.timeouts, "delete", "45m")
   }
-
+  
 }
 resource "google_container_node_pool" "windows_pools" {
   provider = google
