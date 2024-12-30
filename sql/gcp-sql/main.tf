@@ -70,7 +70,6 @@ resource "google_sql_database_instance" "postgres_sql_db" {
     }
 
     backup_configuration {
-      binary_log_enabled              = var.availability_type == "REGIONAL" ? true : false
       enabled                         = var.availability_type == "REGIONAL" ? true : false
       point_in_time_recovery_enabled  = var.availability_type == "REGIONAL" ? true : false
     }
@@ -106,7 +105,6 @@ resource "google_sql_database_instance" "sql_db" {
     backup_configuration {
       binary_log_enabled              = var.availability_type == "REGIONAL" ? true : false
       enabled                         = var.availability_type == "REGIONAL" ? true : false
-      point_in_time_recovery_enabled  = var.availability_type == "REGIONAL" ? true : false
     }
   }
 
