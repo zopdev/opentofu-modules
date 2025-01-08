@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql-init-${rds_name}
+  namespace: ${namespace}
+spec:
+  containers:
+    - name: mysql-init-role
+      image: imega/mysql-client
+      command: ["mysql"]
+      args:
+        %{~ if enable_ssl ~}
+        ["-h", "${db_host}", "-u", "${db_user}", "-p$(PGPASSWORD)", "--ssl-ca=/etc/ssl/server.pem", "--ssl-cert=/etc/ssl/client.pem", "--ssl-key=/etc/ssl/private.pem", "-e", "source /etc/config/db-init.sql"]
+        %{~ else ~}
+        ["-h", "${db_host}", "-u", "${db_user}", "-p$(PGPASSWORD)", "-e", "source /etc/config/db-init.sql"]
+        %{~ endif ~}
+      env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ${master_secret_name}
+              key: password
+      volumeMounts:
+        - name: secret-volume
+          mountPath: /etc/config
+        %{~ if enable_ssl ~}
+        - name: ssl-volume
+          mountPath: /etc/ssl
+        %{~ endif ~}
+    #  initContainers:
+    #    - name: psql-init-db
+    #      image: jbergknoff/postgresql-client
+    #      args: ["postgresql://${db_user}@${db_host}:${db_port}/postgres", "-f", "/etc/config/db-init.sql"]
+    #      env:
+    #        - name: PGPASSWORD
+    #          valueFrom:
+    #            secretKeyRef:
+    #              name: ${master_secret_name}
+    #              key: password
+    #      volumeMounts:
+    #        - name: config-volume
+    #          mountPath: /etc/config
+  volumes:
+    - name: secret-volume
+      secret:
+        secretName: db-secret-${rds_name}
+    %{~ if enable_ssl ~}
+    - name: ssl-volume
+      secret:
+        secretName: ${name_prefix}-ssl-certs
+        defaultMode: 0o600
+    %{~ endif ~}
+  restartPolicy: Never
