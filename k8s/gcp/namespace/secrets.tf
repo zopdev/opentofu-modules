@@ -33,14 +33,13 @@ resource "kubernetes_service_account" "secrets" {
 resource "kubectl_manifest" "secrets_provider" {
   for_each = { for k,v in var.services : k => v }
 
-  yaml_body = templatefile("${path.module}/templates/secret-provider-class.yaml",
-    {
-      secrets = jsonencode(concat(
-        (lookup(local.sql_config_list, each.key, null) != null && lookup(local.sql_config_list, each.key).db_name != null) ?
-        [{ key = "DB_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-${lookup(local.sql_config_list, each.key).db_name}-db-secret" }] :
-        (each.value.db_name != null ? 
-          [{ key = "DB_PASSWORD", value = "${local.cluster_name}-${var.namespace}-${each.value.db_name}-db-secret" }] :
-          []),
+  yaml_body = templatefile("${path.module}/templates/secret-provider-class.yaml", {
+    secrets = jsonencode(concat(
+      (lookup(local.sql_config_list, each.key, null) != null && try(lookup(local.sql_config_list[each.key], "db_name", null), null) != null) ?
+      [{ key = "DB_PASSWORD", value = "${local.cluster_name}-${var.namespace}-${lookup(local.sql_config_list[each.key], "db_name", "")}-db-secret" }] :
+      (try(each.value.db_name, null) != null ?
+        [{ key = "DB_PASSWORD", value = "${local.cluster_name}-${var.namespace}-${each.value.db_name}-db-secret" }] :
+        []),
         #        var.cassandra_db == null ? [] : ["${local.cluster_name}-${var.namespace}-cassandra-secret"],
         try([for secret in each.value.custom_secrets  : { key = secret, value = "${local.cluster_name}-${var.namespace}-${each.key}-${secret}-secret"}], []),
         try([for ns in var.custom_namespace_secrets : { key = ns , value = "${local.cluster_name}-${var.namespace}-${ns}-secret"}], []),
@@ -56,14 +55,13 @@ resource "kubectl_manifest" "secrets_provider" {
 resource "kubectl_manifest" "secrets_provider_cron_jobs" {
   for_each = { for k,v in var.cron_jobs : k => v }
 
-  yaml_body = templatefile("${path.module}/templates/secret-provider-class.yaml",
-    {
-      secrets = jsonencode(concat(
-        (lookup(local.sql_config_list, each.key, null) != null && lookup(local.sql_config_list, each.key).db_name != null) ?
-        [{ key = "DB_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-${lookup(local.sql_config_list, each.key).db_name}-db-secret" }] :
-        (each.value.db_name != null ? 
-          [{ key = "DB_PASSWORD", value = "${local.cluster_name}-${var.namespace}-${each.value.db_name}-db-secret" }] :
-          []),
+  yaml_body = templatefile("${path.module}/templates/secret-provider-class.yaml", {
+    secrets = jsonencode(concat(
+      (lookup(local.sql_config_list, each.key, null) != null && try(lookup(local.sql_config_list[each.key], "db_name", null), null) != null) ?
+      [{ key = "DB_PASSWORD", value = "${local.cluster_name}-${var.namespace}-${lookup(local.sql_config_list[each.key], "db_name", "")}-db-secret" }] :
+      (try(each.value.db_name, null) != null ?
+        [{ key = "DB_PASSWORD", value = "${local.cluster_name}-${var.namespace}-${each.value.db_name}-db-secret" }] :
+        []),
         #        var.cassandra_db == null ? [] : ["${local.cluster_name}-${var.namespace}-cassandra-secret"],
         try([for secret in each.value.custom_secrets  : { key = secret, value = "${local.cluster_name}-${var.namespace}-${each.key}-${secret}-secret"}], []),
         try([for ns in var.custom_namespace_secrets : { key = ns , value = "${local.cluster_name}-${var.namespace}-${ns}-secret"}], []),
