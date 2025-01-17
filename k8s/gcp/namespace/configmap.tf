@@ -28,11 +28,11 @@ resource "kubernetes_config_map" "service_configs" {
       "PUBSUB_BACKEND"         = each.value.pub_sub != null ? "GOOGLE" : null
       "GOOGLE_PROJECT_ID"      = each.value.pub_sub != null ? var.provider_id : null
       "APP_NAME"        = each.key
-      "DB_NAME"         = each.value.db_name != null ? each.value.db_name : null
-      "DB_USER"         = each.value.db_name != null ? module.sql_db[0].db_user["${var.namespace}-${each.value.db_name}"] : null
-      "DB_DIALECT"      = each.value.db_name != null ? module.sql_db[0].db_type : null
-      "DB_HOST"         = each.value.db_name != null ? "${var.namespace}-sql.db" : null
-      "DB_PORT"         = each.value.db_name != null ? module.sql_db[0].db_port : null
+      "DB_NAME"         = each.value.db_name != null ? each.value.db_name : each.value.datastore_configs != null ? each.value.datastore_configs.databse : null
+      "DB_USER"         = each.value.db_name != null ? module.sql_db[0].db_user["${var.namespace}-${each.value.db_name}"] : each.value.datastore_configs != null ? module.sql_db_multiple[each.value.datastore_configs.name].db_user["${var.namespace}-${each.value.db_name}"] : null
+      "DB_DIALECT"      = each.value.db_name != null ? module.sql_db[0].db_type :  each.value.datastore_configs != null ?  module.sql_db_multiple[each.value.datastore_configs.name].db_type : null
+      "DB_HOST"         = each.value.db_name != null ? "${var.namespace}-sql.db" : each.value.datastore_configs != null ?  "${each.key}-sql.db" : null
+      "DB_PORT"         = each.value.db_name != null ? module.sql_db[0].db_port : each.value.datastore_configs != null ?  module.sql_db_multiple[each.value.datastore_configs.name].db_port : null
       "REDIS_HOST"      = each.value.redis == true || each.value.local_redis == true ? (each.value.redis == true ? "${var.namespace}-redis" : (each.value.local_redis == true ? "redis-master-master" : null)): null
       "REDIS_PORT"      = each.value.redis == true || each.value.local_redis == true ? "6379" : null
     })
@@ -50,11 +50,11 @@ resource "kubernetes_config_map" "cron_jobs_configs" {
       "PUBSUB_BACKEND"         = each.value.pub_sub != null ? "GOOGLE" : null
       "GOOGLE_PROJECT_ID"      = each.value.pub_sub != null ? var.provider_id : null
       "APP_NAME"        = each.key
-      "DB_NAME"         = each.value.db_name != null ? each.value.db_name : null
-      "DB_USER"         = each.value.db_name != null ? module.sql_db[0].db_user["${var.namespace}-${each.value.db_name}"] : null
-      "DB_DIALECT"      = each.value.db_name != null ? module.sql_db[0].db_type : null
-      "DB_HOST"         = each.value.db_name != null ? "${var.namespace}-sql.db" : null
-      "DB_PORT"         = each.value.db_name != null ? module.sql_db[0].db_port : null
+      "DB_NAME"         = each.value.db_name != null ? each.value.db_name : each.value.datastore_configs != null ? each.value.datastore_configs.databse : null
+      "DB_USER"         = each.value.db_name != null ? module.sql_db[0].db_user["${var.namespace}-${each.value.db_name}"] : each.value.datastore_configs != null ? module.sql_db_multiple[each.value.datastore_configs.name].db_user["${var.namespace}-${each.value.db_name}"] : null
+      "DB_DIALECT"      = each.value.db_name != null ? module.sql_db[0].db_type :  each.value.datastore_configs != null ?  module.sql_db_multiple[each.value.datastore_configs.name].db_type : null
+      "DB_HOST"         = each.value.db_name != null ? "${var.namespace}-sql.db" : each.value.datastore_configs != null ?  "${each.key}-sql.db" : null
+      "DB_PORT"         = each.value.db_name != null ? module.sql_db[0].db_port : each.value.datastore_configs != null ?  module.sql_db_multiple[each.value.datastore_configs.name].db_port : null
       "REDIS_HOST"      = each.value.redis == true || each.value.local_redis == true ? (each.value.redis == true ? "${var.namespace}-redis" : (each.value.local_redis == true ? "redis-master-master" : null)): null
       "REDIS_PORT"      = each.value.redis == true || each.value.local_redis == true ? "6379" : null
     })
