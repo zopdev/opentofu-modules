@@ -67,6 +67,10 @@ variable "services" {
       name = optional(string)
       databse = optional(string)
     }))
+    redis_configs = optional(object({
+      name = optional(string)
+      port = optional(number)
+    }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
       replica_count    = optional(number)
@@ -154,6 +158,10 @@ variable "cron_jobs" {
     datastore_configs = optional(object({
       name = optional(string)
       databse = optional(string)
+    }))
+    redis_configs = optional(object({
+      name = optional(string)
+      port = optional(number)
     }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
