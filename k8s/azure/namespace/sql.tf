@@ -2,6 +2,25 @@ locals {
 
   enable_db = try(var.sql_db.enable, false)
   db_list = distinct(concat(distinct([for key, value in var.services: value.db_name]), distinct([for key, value in var.cron_jobs: value.db_name])))
+  
+  database_map = merge(
+  {
+    for service_key, service_value in var.services :
+      service_value.datastore_configs.name => [
+        service_value.datastore_configs.databse
+      ]
+      if try(service_value.datastore_configs.name, null) != null &&
+         try(service_value.datastore_configs.databse, null) != null
+  },
+  {
+    for cron_key, cron_value in var.cron_jobs :
+      cron_value.datastore_configs.name => [
+        cron_value.datastore_configs.databse
+      ]
+      if try(cron_value.datastore_configs.name, null) != null &&
+         try(cron_value.datastore_configs.databse, null) != null
+  }
+)
 }
 
 module "mysql" {
@@ -82,6 +101,96 @@ resource "kubernetes_service" "postgresql_db_service" {
     external_name = module.postgresql[0].db_url
     port {
       port = module.postgresql[0].db_port
+    }
+  }
+}
+
+module "mysql_v2" {
+  source                     = "../../../sql/azure-mysql"
+  resource_group_name        = var.resource_group_name
+  location                   = var.app_region
+
+  for_each = var.sql_list != null ? {
+    for key, value in var.sql_list : key => value if value.type == "mysql"
+  } : {}
+  
+  cluster_name               = local.cluster_name
+  namespace                  = var.namespace
+  mysql_server_name          = each.key
+  databases                  = local.database_map[each.key]
+
+  sku_name                   = each.value.sku_name != null ? each.value.sku_name : "GP_Standard_D2ds_v4"
+  administrator_login        = each.value.admin_user != null ? each.value.admin_user : "mysqladmin"
+  storage                    = each.value.storage != null ? each.value.storage : 20
+  storage_scaling            = each.value.storage_scaling != null ? each.value.storage_scaling : true
+  iops                       = each.value.iops != null ? each.value.iops : 360
+  io_scaling_enabled         = each.value.iops_scaling != null ? each.value.iops_scaling : false
+  read_replica               = each.value.read_replica != null ? each.value.read_replica : false
+  key_vault_id               = data.azurerm_key_vault.secrets.id
+  tags                       = local.common_tags
+}
+
+
+resource "kubernetes_service" "mysql_db_service_v2" {
+  for_each = var.sql_list != null ? {
+    for key, value in var.sql_list : key => value if value.type == "mysql"
+  } : {}
+  
+  metadata {
+    name      = "${each.key}-sql"
+    namespace = "db"
+  }
+
+  spec {
+    type          = "ExternalName"
+    external_name = module.mysql_v2[each.key].db_url
+    port {
+      port = module.mysql_v2[each.key].db_port
+    }
+  }
+}
+
+module "postgres_v2" {
+  source                     = "../../../sql/azure-postgres"
+  resource_group_name        = var.resource_group_name
+  location                   = var.app_region
+
+  for_each = var.sql_list != null ? {
+    for key, value in var.sql_list : key => value if value.type == "postgresql"
+  } : {}
+
+  cluster_name               = local.cluster_name
+  namespace                  = var.namespace
+  postgres_server_name       = each.key
+  databases                  = local.database_map[each.key]
+
+  sku_name                   = each.value.sku_name != null ? each.value.sku_name : "GP_Standard_D2s_v3"
+  administrator_login        = each.value.admin_user != null ? each.value.admin_user : "postgresqladmin"
+  storage_mb                 = each.value.storage != null ? each.value.storage : 32768
+  storage_scaling            = each.value.storage_scaling != null ? each.value.storage_scaling : false
+  storage_tier               = each.value.storage_tier != null ? each.value.storage_tier : "P4"
+  read_replica               = each.value.read_replica != null ? each.value.read_replica : false
+  key_vault_id               = data.azurerm_key_vault.secrets.id
+  enable_ssl                 = each.value.enable_ssl != null ? each.value.enable_ssl : false
+
+  tags                       = local.common_tags
+}
+
+resource "kubernetes_service" "postgres_v2_db_service" {
+  for_each = var.sql_list != null ? {
+    for key, value in var.sql_list : key => value if value.type == "postgresql"
+  } : {}
+
+  metadata {
+    name      = "${each.key}-sql"
+    namespace = "db"
+  }
+
+  spec {
+    type          = "ExternalName"
+    external_name = module.postgres_v2[each.key].db_url
+    port {
+      port = module.postgres_v2[each.key].db_port
     }
   }
 }
