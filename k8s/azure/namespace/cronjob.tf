@@ -76,7 +76,7 @@ module "cronjob" {
   volume_mount_pvc      = coalesce(each.value.badger_db, false) ? local.badger_db_volume_mounts_crons[each.key] : {}
   infra_alerts     = each.value.helm_configs != null ? (each.value.helm_configs.infra_alerts != null ? each.value.helm_configs.infra_alerts : null ) : null
 
-  depends_on = [module.postgresql, module.mysql, module.local_redis]
+  depends_on = [module.postgresql, module.postgres_v2, module.mysql, module.mysql_v2, module.local_redis]
 
 }
 

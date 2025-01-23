@@ -173,7 +173,11 @@ module "postgres_v2" {
   key_vault_id               = data.azurerm_key_vault.secrets.id
   enable_ssl                 = each.value.enable_ssl != null ? each.value.enable_ssl : false
 
-  tags                       = local.common_tags
+  tags                       = merge(local.common_tags,
+    tomap({
+      "Name" = "test-server-psql"
+    })
+  )
 }
 
 resource "kubernetes_service" "postgres_v2_db_service" {

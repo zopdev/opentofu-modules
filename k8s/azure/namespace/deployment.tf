@@ -92,7 +92,7 @@ module "service_deployment" {
   db_ssl_enabled   = local.ssl
   infra_alerts     = each.value.helm_configs != null ? (each.value.helm_configs.infra_alerts != null ? each.value.helm_configs.infra_alerts : null ) : null
 
-  depends_on = [module.postgresql, module.mysql, module.local_redis]
+  depends_on = [module.postgresql, module.postgres_v2, module.mysql, module.mysql_v2, module.local_redis]
 }
 
 resource "azuread_application" "acr_sp" {

@@ -334,6 +334,7 @@ variable "sql_list" {
     storage                 = optional(number)
     storage_scaling         = optional(bool)
     iops                    = optional(number)
+    storage_tier            = optional(string)
     iops_scaling            = optional(bool)
     read_replica            = optional(bool)
     disk_autoresize         = optional(string)
