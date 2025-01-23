@@ -38,7 +38,7 @@ resource "kubectl_manifest" "db_init_create_db" {
   depends_on = [
     kubernetes_secret.mysql_db_init_script_master_password,
     kubernetes_secret.mysql_db_init_script_create_role,
-    azurerm_postgresql_flexible_server_database.postgres_db
+    azurerm_mysql_flexible_database.mysql_db
   ]
 
   for_each  = local.db_map
