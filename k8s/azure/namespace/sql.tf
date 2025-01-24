@@ -175,7 +175,7 @@ module "postgres_v2" {
 
   tags                       = merge(local.common_tags,
     tomap({
-      "Name" = "test-server-psql"
+      "Name" = each.key
     })
   )
 }
