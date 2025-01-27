@@ -28,8 +28,8 @@ resource "kubernetes_config_map" "service_configs" {
       "DB_DIALECT"             = each.value.db_name != null ? module.rds[0].db_type : null
       "DB_HOST"                = each.value.db_name != null ? "${var.namespace}-rds.db" : null
       "DB_PORT"                = each.value.db_name != null ? module.rds[0].db_port : null
-      "REDIS_HOST"             = each.value.redis == true || each.value.local_redis == true ? (each.value.redis == true ? "${var.namespace}-redis" : (each.value.local_redis == true ? "redis-master-master" : null)): null
-      "REDIS_PORT"             = each.value.redis == true || each.value.local_redis == true ? "6379" : null
+      "REDIS_HOST"             = each.value.redis == true || each.value.local_redis == true ? (each.value.redis == true ? "${var.namespace}-redis" : "redis-master-master") : (each.value.redis_configs != null ? "${each.value.redis_configs.name}-${var.namespace}-redis" : null),
+      "REDIS_PORT"             = each.value.redis == true || each.value.local_redis == true ? "6379" : (each.value.redis_configs != null ? each.value.redis_configs.port : null)
       "DB_SSL"                 = local.ssl ? "require" : null
     })
 }
@@ -49,8 +49,8 @@ resource "kubernetes_config_map" "cron_jobs_configs" {
       "DB_DIALECT"             = each.value.db_name != null ? module.rds[0].db_type : null
       "DB_HOST"                = each.value.db_name != null ? "${var.namespace}-rds.db" : null
       "DB_PORT"                = each.value.db_name != null ? module.rds[0].db_port : null
-      "REDIS_HOST"             = each.value.redis == true || each.value.local_redis == true ? (each.value.redis == true ? "${var.namespace}-redis" : (each.value.local_redis == true ? "redis-master-master" : null)): null
-      "REDIS_PORT"             = each.value.redis == true || each.value.local_redis == true ? "6379" : null
+      "REDIS_HOST"             = each.value.redis == true || each.value.local_redis == true ? (each.value.redis == true ? "${var.namespace}-redis" : "redis-master-master") : (each.value.redis_configs != null ? "${each.value.redis_configs.name}-${var.namespace}-redis" : null),
+      "REDIS_PORT"             = each.value.redis == true || each.value.local_redis == true ? "6379" : (each.value.redis_configs != null ? each.value.redis_configs.port : null)
       "DB_SSL"                 = local.ssl ? "require" : null
     })
 }

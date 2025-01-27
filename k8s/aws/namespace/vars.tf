@@ -42,6 +42,10 @@ variable "cron_jobs" {
     service_deployer = string
     ingress_list = optional(list(string))
     badger_db          = optional(bool)
+    redis_configs = optional(object({
+      name = optional(string)
+      port = optional(number)
+    }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
       schedule           = string
@@ -92,6 +96,10 @@ variable "services" {
     service_deployer = string
     ingress_list = optional(list(string))
     badger_db          = optional(bool)
+    redis_configs = optional(object({
+      name = optional(string)
+      port = optional(number)
+    }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
       replica_count    = optional(number)
