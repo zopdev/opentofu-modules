@@ -51,7 +51,7 @@ data "azurerm_virtual_network" "avn" {
 }
 
 resource "azurerm_redis_cache" "redis_cluster" {
-  name                 = "${local.cluster_name}-${var.namespace}-redis"
+  name                 = var.redis.name != "" && var.redis.name != null ? var.redis.name : "${local.cluster_name}-${var.namespace}-redis"
   location             = var.app_region
   resource_group_name  = var.resource_group_name
   sku_name             = var.redis.sku_name
@@ -63,7 +63,7 @@ resource "azurerm_redis_cache" "redis_cluster" {
 
 resource "kubernetes_service" "redis_service" {
   metadata {
-    name            = "${var.namespace}-redis"
+    name            = var.redis.name != "" && var.redis.name != null ? "${var.redis.name}-${var.namespace}-redis" : "${var.namespace}-redis"
     namespace       = var.namespace
   }
   spec {
@@ -76,7 +76,7 @@ resource "kubernetes_service" "redis_service" {
 }
 
 resource "azurerm_key_vault_secret" "redis_access_key" {
-  name         = "${local.cluster_name}-${var.namespace}-redis-secret"
+  name         = var.redis.name != "" && var.redis.name != null ? "${var.redis.name}-${var.namespace}-redis-secret" : "${local.cluster_name}-${var.namespace}-redis-secret"
   value        = azurerm_redis_cache.redis_cluster.primary_access_key
   key_vault_id = data.azurerm_key_vault.secrets.id
 }

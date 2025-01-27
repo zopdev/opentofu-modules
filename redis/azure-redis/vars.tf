@@ -25,12 +25,14 @@ variable "redis" {
   description = "Inputs to provision Redis instances in the cloud platform"
   type        = object(
       {
+        name                      = optional(string)
         sku_name                  = string
         redis_cache_capacity      = number
         redis_cache_family        = string
         redis_enable_non_ssl_port = bool
       })
   default = {
+    name                      = ""
     sku_name                  = "Basic"
     redis_cache_capacity      = 1
     redis_cache_family        = "C"

@@ -81,6 +81,10 @@ variable "cron_jobs" {
     enable_basic_auth      = optional(bool)
     enable_default_ingress = optional(bool)
     badger_db          = optional(bool)
+    redis_configs = optional(object({
+      name = optional(string)
+      port = optional(number)
+    }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
       schedule           = string
@@ -129,6 +133,10 @@ variable "services" {
     custom_secrets     = optional(list(string))
     enable_basic_auth      = optional(bool)
     badger_db          = optional(bool)
+    redis_configs = optional(object({
+      name = optional(string)
+      port = optional(number)
+    }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
       replica_count    = optional(number)
