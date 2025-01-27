@@ -32,7 +32,7 @@ resource "random_string" "db_username" {
 }
 
 resource "aws_secretsmanager_secret" "db_secret" {
-  name     = "${var.cluster_name}-${var.namespace}-db-secret"
+  name     = "${var.cluster_name}-${var.namespace}-${var.rds_name}-db-secret"
   tags     = var.tags
 }
 
