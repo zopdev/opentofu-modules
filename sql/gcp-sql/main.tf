@@ -62,6 +62,7 @@ resource "google_sql_database_instance" "postgres_sql_db" {
     disk_type         = var.disk_type
     availability_type = var.availability_type
     user_labels       = var.labels
+    deletion_protection_enabled = var.deletion_protection
 
     ip_configuration {
       ipv4_enabled          = false
@@ -95,6 +96,7 @@ resource "google_sql_database_instance" "sql_db" {
     disk_type         = var.disk_type
     availability_type = var.availability_type
     user_labels       = var.labels
+    deletion_protection_enabled = var.deletion_protection
 
     ip_configuration {
       ipv4_enabled          = false
@@ -144,6 +146,7 @@ resource "google_sql_database_instance" "sql_db_replica" {
     disk_type         = var.disk_type
     availability_type = "ZONAL"
     user_labels       = var.labels
+    deletion_protection_enabled = var.deletion_protection
   }
 }
 
