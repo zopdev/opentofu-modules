@@ -14,7 +14,7 @@ resource "helm_release" "service_helm"{
   name        = "kube-management-api"
   namespace   = "zop-system"
   repository  = "https://helm.zop.dev"
-  version     = "v0.0.15"
+  version     = "v0.0.16"
   chart       = "service"
 
   set {
@@ -24,7 +24,7 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "image"
-    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kube-management-api-azure:68e4d6a89e1065bb9245468cc6415c6346a3fee9"
+    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kube-management-api-azure:f4a26ebffe87d832fb4a15656abc6afda284b18a"
   }
 
   set_list {
