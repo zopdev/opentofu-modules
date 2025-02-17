@@ -58,16 +58,6 @@ resource "helm_release" "service_helm"{
   }
 
   set {
-    name  = "maxCPU"
-    value = "200m"
-  }
-
-  set {
-    name  = "maxMemory"
-    value = "200M"
-  }
-
-  set {
     name  = "minAvailable"
     value = 1
   }
