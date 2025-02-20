@@ -16,7 +16,7 @@ resource "helm_release" "service_helm"{
   name        = "kube-management-api"
   namespace   = "zop-system"
   repository  = "https://helm.zop.dev"
-  version     = "v0.0.19"
+  version     = "v0.0.18"
   chart       = "service"
 
   set {
