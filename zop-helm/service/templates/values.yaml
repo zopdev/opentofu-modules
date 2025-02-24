@@ -134,18 +134,18 @@ alerts:
   standard:
     infra:
       %{~ if infra_alerts.unavailable_replicas_threshold != null ~}
-      unavailable_replicas_threshold: ${infra_alerts.unavailable_replicas_threshold}
+      unavailableReplicasThreshold: ${infra_alerts.unavailable_replicas_threshold}
       %{~ endif ~}
       %{~ if infra_alerts.pod_restarts_threshold != null ~}
-      pod_restart_threshold: ${infra_alerts.pod_restarts_threshold}
+      podRestartThreshold: ${infra_alerts.pod_restarts_threshold}
       %{~ endif ~}
       %{~ if infra_alerts.hpa_nearing_max_pod_threshold != null ~}
-      hpa_nearing_max_pod_threshold: ${infra_alerts.hpa_nearing_max_pod_threshold}
+      hpaNearingMaxPodThreshold: ${infra_alerts.hpa_nearing_max_pod_threshold}
       %{~ endif ~}
       %{~ if infra_alerts.memory_utilisation_threshold != null ~}
-      service_memory_utilization_threshold: ${infra_alerts.memory_utilisation_threshold}
+      serviceMemoryUtilizationThreshold: ${infra_alerts.memory_utilisation_threshold}
       %{~ endif ~}
       %{~ if infra_alerts.cpu_utilisation_threshold != null ~}
-      service_cpu_utilization_threshold: ${infra_alerts.cpu_utilisation_threshold}
+      serviceCpuUtilizationThreshold: ${infra_alerts.cpu_utilisation_threshold}
       %{~ endif ~}
   %{~ endif ~}
