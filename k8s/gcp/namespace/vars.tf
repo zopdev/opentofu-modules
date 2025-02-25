@@ -358,16 +358,17 @@ variable "cert_issuer_config"{
 
 variable "sql_list" {
   type = map(object({
-    type = string
-    sql_version = string
-    machine_type = string
-    enable_ssl = string
-    availability_type = string
-    db_collation = string
-    activation_policy = string
-    deletion_protection = string
-    read_replica = string
-    disk_autoresize = string
-    disk_size = string
+    type                    = optional(string)
+    sql_version             = optional(string)
+    machine_type            = optional(string)
+    enable_ssl              = optional(string)
+    availability_type       = optional(string)
+    db_collation            = optional(string)
+    activation_policy       = optional(string)
+    deletion_protection     = optional(string)
+    read_replica            = optional(string)
+    disk_autoresize         = optional(string)
+    disk_size               = optional(string)
   }))
+  default = null
 }
