@@ -61,7 +61,7 @@ module "aks" {
   agents_max_count                   = var.node_config.max_count
   agents_min_count                   = var.node_config.min_count
   key_vault_secrets_provider_enabled = true
-  kubernetes_version                 = 1.28
+  kubernetes_version                 = 1.29
   workload_identity_enabled          = true
   oidc_issuer_enabled                = true
   temporary_name_for_rotation        = "${var.app_name}1"
