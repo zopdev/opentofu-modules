@@ -129,3 +129,9 @@ variable "storage_tier" {
   type        = string
   default     = "P4"
 }
+
+variable "multi_ds" {
+  description = "Whether to create multiple databases in the same instance"
+  type        = bool
+  default     = false
+}

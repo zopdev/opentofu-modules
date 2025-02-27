@@ -32,7 +32,7 @@ resource "random_string" "postgres_reader_password" {
 }
 
 resource "azurerm_key_vault_secret" "postgres_db_secret" {
-  name         = "${var.cluster_name}-${var.namespace}-${var.postgres_server_name}-postgres-db-secret"
+  name         = var.multi_ds ? "${var.cluster_name}-${var.namespace}-${var.postgres_server_name}-postgres-db-secret" : "${var.cluster_name}-${var.namespace}-postgres-db-secret"
   value        = random_password.postgresql_db_password.result
   key_vault_id = var.key_vault_id
 }

@@ -1,6 +1,6 @@
 resource "kubernetes_secret" "mysql_db_init_script_master_password" {
   metadata {
-    name      = "mysql-db-master-secret-${var.namespace}-${var.mysql_server_name}"
+    name      = var.multi_ds ? "mysql-db-master-secret-${var.namespace}-${var.mysql_server_name}" : "mysql-db-master-secret-${var.namespace}"
     namespace = "db"
   }
 
@@ -50,7 +50,7 @@ resource "kubectl_manifest" "db_init_create_db" {
       db_port            = 3306
       namespace          = "db"
       rds_name           = "mysql-db-secret-${replace(each.key, "_" , "-")}"
-      master_secret_name = "mysql-db-master-secret-${var.namespace}-${var.mysql_server_name}"
+      master_secret_name = var.multi_ds ? "mysql-db-master-secret-${var.namespace}-${var.mysql_server_name}" : "mysql-db-master-secret-${var.namespace}"
     }
   )
 }

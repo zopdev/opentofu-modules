@@ -126,6 +126,7 @@ module "mysql_v2" {
   iops                       = each.value.iops != null ? each.value.iops : 360
   io_scaling_enabled         = each.value.iops_scaling != null ? each.value.iops_scaling : false
   read_replica               = each.value.read_replica != null ? each.value.read_replica : false
+  multi_ds                   = true
   key_vault_id               = data.azurerm_key_vault.secrets.id
   tags                       = local.common_tags
 }
@@ -171,6 +172,7 @@ module "postgres_v2" {
   storage_tier               = each.value.storage_tier != null ? each.value.storage_tier : "P4"
   read_replica               = each.value.read_replica != null ? each.value.read_replica : false
   key_vault_id               = data.azurerm_key_vault.secrets.id
+  multi_ds                   = true
   enable_ssl                 = each.value.enable_ssl != null ? each.value.enable_ssl : false
 
   tags                       = merge(local.common_tags,

@@ -32,7 +32,7 @@ resource "random_string" "mysql_reader_password" {
 }
 
 resource "azurerm_key_vault_secret" "mysql_db_secret" {
-  name         = "${var.cluster_name}-${var.namespace}-${var.mysql_server_name}-mysql-db-secret"
+  name         = var.multi_ds ? "${var.cluster_name}-${var.namespace}-${var.mysql_server_name}-mysql-db-secret" : "${var.cluster_name}-${var.namespace}-mysql-db-secret"
   value        = random_password.mysql_db_password.result
   key_vault_id = var.key_vault_id
 }
