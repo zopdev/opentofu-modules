@@ -93,6 +93,6 @@ alerts:
   standard:
     infra:
       %{~ if infra_alerts.cronjob_failed_threshold != null ~}
-      cronjob_failed_threshold: ${infra_alerts.cronjob_failed_threshold}
+      cronjobFailedThreshold: ${infra_alerts.cronjob_failed_threshold}
       %{~ endif ~}
     %{~ endif ~}
