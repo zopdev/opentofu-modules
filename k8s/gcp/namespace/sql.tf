@@ -108,7 +108,7 @@ module "sql_db_v2" {
   sql_name              = each.key
   sql_type              = each.value.type
   sql_version           = each.value.sql_version != null ? each.value.sql_version : ""
-  databases             = local.database_map[each.key]
+  databases             = try(local.database_map[each.key], [])
   machine_type          = each.value.machine_type != null ? each.value.machine_type : "db-f1-micro"
   disk_size             = each.value.disk_size != null ? each.value.disk_size : 10
   disk_autoresize       = var.app_env == "prod" ? true : false
