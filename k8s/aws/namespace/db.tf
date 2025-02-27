@@ -118,9 +118,9 @@ module "rds_v2" {
   vpc_id                     = local.vpc_id
   ext_rds_sg_cidr_block      = var.rds_local_access == false ? local.subnet_cidrs : local.ext_rds_sg_cidr_block
   rds_name                   = each.key
-  read_replica               = try(each.value.read_replica, false)
+  read_replica               = try(each.value.read_replica != null ? each.value.read_replica : false)
   admin_user                 = each.value.admin_user != null ? each.value.admin_user : "postgresadmin"
-  databases                  = local.database_map[each.key]
+  databases                  = try(local.database_map[each.key], [])
   rds_type                   = each.value.type != null ? each.value.type : "postgresql"
   allocated_storage          = each.value.disk_size != null ? each.value.disk_size : 10
   instance_class             = each.value.node_type != null ? each.value.node_type : "db.t3.small"
@@ -129,10 +129,11 @@ module "rds_v2" {
   deletion_protection        = each.value.deletion_protection != null ? each.value.deletion_protection : true
   apply_immediately          = each.value.apply_changes_immediately != null ? each.value.apply_changes_immediately : false
   max_allocated_storage      = each.value.rds_max_allocated_storage != null ? each.value.rds_max_allocated_storage : (each.value.disk_size == null ? 200 : (each.value.disk_size >= 200 ? each.value.disk_size + 100 : 200))
-  monitoring_interval        = try(each.value.monitoring_interval, 0)
+  monitoring_interval        = try(each.value.monitoring_interval != null ? each.value.monitoring_interval : 0)
   log_min_duration_statement = each.value.log_min_duration_statement != null ? each.value.log_min_duration_statement : -1
   iops                       = each.value.provisioned_iops != null ? each.value.provisioned_iops : 0
   postgresql_engine_version  = each.value.engine_version != null ? each.value.engine_version : "16.1"
+  multi_ds                   = true
 
   tags = local.common_tags
 }
