@@ -36,7 +36,7 @@ resource "kubernetes_config_map" "service_configs" {
       "REDIS_HOST" = (
         each.value.redis == true || each.value.local_redis == true
         ? (each.value.redis == true ? "${var.namespace}-redis" : "redis-master-master")
-        : (lookup(each.value, "redis_configs", null) != null && lookup(each.value.redis_configs, "name", null) != null
+        : (try(each.value.redis_configs.name, null) != null
         ? "${each.value.redis_configs.name}-${var.namespace}-redis"
         : null)
       ),
@@ -44,10 +44,9 @@ resource "kubernetes_config_map" "service_configs" {
       "REDIS_PORT" = (
         each.value.redis == true || each.value.local_redis == true
         ? "6379"
-        : (lookup(each.value, "redis_configs", null) != null && lookup(each.value.redis_configs, "port", null) != null
-        ? each.value.redis_configs.port
-        : "6379")
-      ),   })
+        : try(each.value.redis_configs.port, "6379")
+      ),
+    })
 }
 
 
@@ -70,7 +69,7 @@ resource "kubernetes_config_map" "cron_jobs_configs" {
       "REDIS_HOST" = (
         each.value.redis == true || each.value.local_redis == true
         ? (each.value.redis == true ? "${var.namespace}-redis" : "redis-master-master")
-        : (lookup(each.value, "redis_configs", null) != null && lookup(each.value.redis_configs, "name", null) != null
+        : (try(each.value.redis_configs.name, null) != null
         ? "${each.value.redis_configs.name}-${var.namespace}-redis"
         : null)
       ),
@@ -78,11 +77,10 @@ resource "kubernetes_config_map" "cron_jobs_configs" {
       "REDIS_PORT" = (
         each.value.redis == true || each.value.local_redis == true
         ? "6379"
-        : (lookup(each.value, "redis_configs", null) != null && lookup(each.value.redis_configs, "port", null) != null
-        ? each.value.redis_configs.port
-        : "6379")
-      ),    })
-}
+        : try(each.value.redis_configs.port, "6379")
+      ),
+
+    }
 
 resource "kubernetes_config_map" "env_service_configmap" {
   for_each  = var.services
