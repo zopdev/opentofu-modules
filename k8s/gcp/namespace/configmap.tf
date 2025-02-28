@@ -44,7 +44,7 @@ resource "kubernetes_config_map" "service_configs" {
       "REDIS_PORT" = (
         each.value.redis == true || each.value.local_redis == true
         ? "6379"
-        : try(each.value.redis_configs.port, "6379")
+        : try(each.value.redis_configs.port, null)
       ),
     })
 }
