@@ -16,7 +16,7 @@ locals {
 }
 
 resource "google_compute_firewall" "sql-ingress-firewall" {
-  name               = "${var.app_uid}-ingress"
+  name               = var.multi_ds ? "${var.app_uid}-${var.sql_name}-ingress" : "${var.app_uid}-ingress"
   description        = "${var.sql_name}-ingress-firewall"
   network            = var.vpc_name
 
@@ -31,7 +31,7 @@ resource "google_compute_firewall" "sql-ingress-firewall" {
 }
 
 resource "google_compute_firewall" "sql-egress-firewall" {
-  name               = "${var.app_uid}-egress"
+  name               = var.multi_ds ? "${var.app_uid}-${var.sql_name}-egress" : "${var.app_uid}-egress"
   network            = var.vpc_name
 
   direction       = "EGRESS"
