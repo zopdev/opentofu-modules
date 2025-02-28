@@ -42,6 +42,11 @@ variable "cron_jobs" {
     service_deployer = string
     ingress_list = optional(list(string))
     badger_db          = optional(bool)
+    datastore_configs = optional(object({
+      name = optional(string)
+      databse = optional(string)
+      type = optional(string)
+    }))
     redis_configs = optional(object({
       name = optional(string)
       port = optional(number)
@@ -96,6 +101,11 @@ variable "services" {
     service_deployer = string
     ingress_list = optional(list(string))
     badger_db          = optional(bool)
+    datastore_configs = optional(object({
+      name = optional(string)
+      databse = optional(string)
+      type = optional(string)
+    }))
     redis_configs = optional(object({
       name = optional(string)
       port = optional(number)
@@ -387,4 +397,27 @@ variable "cert_issuer_config"{
     env   = optional(string)
     email = string
   })
+}
+
+variable "sql_list" {
+  description = "Map of RDS inputs for multiple SQL databases"
+  type = map(object({
+    enable                     = optional(bool)
+    admin_user                 = optional(string)
+    node_type                  = optional(string)
+    disk_size                  = optional(number)
+    type                       = optional(string)
+    multi_az                   = optional(bool)
+    read_replica_multi_az      = optional(bool)
+    deletion_protection        = optional(bool)
+    read_replica               = optional(bool)
+    apply_changes_immediately  = optional(bool)
+    rds_max_allocated_storage  = optional(number)
+    monitoring_interval        = optional(number)
+    log_min_duration_statement = optional(number)
+    provisioned_iops           = optional(number)
+    engine_version             = optional(string)
+    enable_ssl                 = optional(bool)
+  }))
+  default = {}
 }

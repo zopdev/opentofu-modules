@@ -161,3 +161,9 @@ variable "enable_ssl" {
   type        = bool
   default     = false
 }
+
+variable "multi_ds" {
+  description = "Whether to create multiple databases in the same instance"
+  type        = bool
+  default     = false
+}
