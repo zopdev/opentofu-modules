@@ -47,6 +47,10 @@ variable "cron_jobs" {
       databse = optional(string)
       type = optional(string)
     }))
+    redis_configs = optional(object({
+      name = optional(string)
+      port = optional(number)
+    }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
       schedule           = string
@@ -101,6 +105,10 @@ variable "services" {
       name = optional(string)
       databse = optional(string)
       type = optional(string)
+    }))
+    redis_configs = optional(object({
+      name = optional(string)
+      port = optional(number)
     }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
