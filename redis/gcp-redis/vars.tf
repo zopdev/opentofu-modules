@@ -45,6 +45,7 @@ variable "redis" {
   description = "Inputs to provision Redis instances in the cloud platform"
   type        = object(
     {
+      name                   = string
       machine_type           = string
       memory_size            = string
       replica_count          = number
@@ -53,11 +54,17 @@ variable "redis" {
     }
   )
   default = {
+    name                   = ""
     machine_type           = "BASIC"
     memory_size            = "1"
     replica_count          = 1
     connect_mode           = "DIRECT_PEERING"
     redis_version          = "REDIS_7_0" 
+  }
+  
+  validation {
+    condition = can(regex("^([a-z0-9]([-a-z0-9.]*[a-z0-9])?)?$", var.redis.name))
+    error_message = "The Redis instance name doesn't match the required conditions."
   }
 }
 
