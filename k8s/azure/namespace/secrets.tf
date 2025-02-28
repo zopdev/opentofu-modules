@@ -28,6 +28,9 @@ resource "kubectl_manifest" "secrets_provider" {
         (each.value.db_name != null ? ( var.sql_db != null ? (var.sql_db.type == "mysql" ?
           [{ key = "DB_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-${replace(each.value.db_name,"_","-")}-mysql-db-secret" }] :
           [{ key = "DB_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-${replace(each.value.db_name,"_","-")}-postgres-db-secret" }]) : []) : []),
+        (each.value.datastore_configs != null ? ( each.value.datastore_configs.type != null ? (each.value.datastore_configs.type == "mysql" ?
+          [{ key = "DB_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-${replace(each.value.datastore_configs.databse,"_","-")}-mysql-db-secret" }] :
+          [{ key = "DB_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-${replace(each.value.datastore_configs.databse,"_","-")}-postgres-db-secret" }]) : []) : []),
         (each.value.redis == true ? [{ key = "REDIS_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-redis-secret" }] : []),
         try([for ns in var.custom_namespace_secrets[var.namespace].secrets : { key = ns, value = "${local.cluster_name}-${var.namespace}-${ns}-secret"}], []),
         try([for secret in each.value.custom_secrets  : { key = secret, value = strcontains(secret, "_") ? "${local.cluster_name}-${var.namespace}-${each.key}-${replace(secret, "_", "-underscore-")}-secret"  : "${local.cluster_name}-${var.namespace}-${each.key}-${secret}-secret"}], []),
@@ -50,6 +53,9 @@ resource "kubectl_manifest" "secrets_provider_cron_jobs" {
         (each.value.db_name != null ? ( var.sql_db != null ? (var.sql_db.type == "mysql" ?
         [{ key = "DB_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-${replace(each.value.db_name,"_","-")}-mysql-db-secret" }] :
         [{ key = "DB_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-${replace(each.value.db_name,"_","-")}-postgres-db-secret" }]) : []) : []),
+        (each.value.datastore_configs != null ? ( each.value.datastore_configs.type != null ? (each.value.datastore_configs.type == "mysql" ?
+          [{ key = "DB_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-${replace(each.value.datastore_configs.databse,"_","-")}-mysql-db-secret" }] :
+          [{ key = "DB_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-${replace(each.value.datastore_configs.databse,"_","-")}-postgres-db-secret" }]) : []) : []),        
         (each.value.redis == true ? [{ key = "REDIS_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-redis-secret" }] : []),
         try([for ns in var.custom_namespace_secrets[var.namespace].secrets : { key = ns, value = "${local.cluster_name}-${var.namespace}-${ns}-secret"}], []),
         try([for secret in each.value.custom_secrets  : { key = secret, value = strcontains(secret, "_") ? "${local.cluster_name}-${var.namespace}-${each.key}-${replace(secret, "_", "-underscore-")}-secret"  : "${local.cluster_name}-${var.namespace}-${each.key}-${secret}-secret"}], []),
