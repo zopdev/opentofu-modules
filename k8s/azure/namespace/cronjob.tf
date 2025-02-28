@@ -64,7 +64,7 @@ module "cronjob" {
   max_cpu       = each.value.helm_configs != null ? (each.value.helm_configs.max_cpu != null ? each.value.helm_configs.max_cpu : "500m") : "500m"
   max_memory    = each.value.helm_configs != null ? (each.value.helm_configs.max_memory != null ? each.value.helm_configs.max_memory : "512M") : "512M"
   env           = merge((each.value.helm_configs != null ? (each.value.helm_configs.env != null ? each.value.helm_configs.env : {}) : {}), (local.ssl ? {DB_ENABLE_SSL = true} : {DB_ENABLE_SSL = false}))
-  app_secrets   = each.value.db_name != null || each.value.custom_secrets != null || each.value.datastore_configs != null ? ["${each.key}-application-secrets"] : []
+  app_secrets   = each.value.db_name != null || each.value.custom_secrets != null || each.value.datastore_configs != null || each.value.redis == true || each.value.redis_configs != null ? ["${each.key}-application-secrets"] : []
   db_ssl_enabled   = local.ssl
   schedule      = each.value.helm_configs != null ? each.value.helm_configs.schedule : ""
   suspend       = each.value.helm_configs != null ? (each.value.helm_configs.suspend != null ? each.value.helm_configs.suspend : false) : false
