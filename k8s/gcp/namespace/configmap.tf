@@ -79,8 +79,8 @@ resource "kubernetes_config_map" "cron_jobs_configs" {
         ? "6379"
         : try(each.value.redis_configs.port, "6379")
       ),
-
-    }
+    })
+}
 
 resource "kubernetes_config_map" "env_service_configmap" {
   for_each  = var.services
