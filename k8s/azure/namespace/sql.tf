@@ -117,7 +117,7 @@ module "mysql_v2" {
   cluster_name               = local.cluster_name
   namespace                  = var.namespace
   mysql_server_name          = each.key
-  databases                  = local.database_map[each.key]
+  databases                  = try(local.database_map[each.key], [])
 
   sku_name                   = each.value.sku_name != null ? each.value.sku_name : "GP_Standard_D2ds_v4"
   administrator_login        = each.value.admin_user != null ? each.value.admin_user : "mysqladmin"
@@ -163,7 +163,7 @@ module "postgres_v2" {
   cluster_name               = local.cluster_name
   namespace                  = var.namespace
   postgres_server_name       = each.key
-  databases                  = local.database_map[each.key]
+  databases                  = try(local.database_map[each.key], [])
 
   sku_name                   = each.value.sku_name != null ? each.value.sku_name : "GP_Standard_D2s_v3"
   administrator_login        = each.value.admin_user != null ? each.value.admin_user : "postgresqladmin"
