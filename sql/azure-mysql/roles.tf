@@ -1,6 +1,6 @@
 resource "kubernetes_secret" "mysql_db_init_script_master_password" {
   metadata {
-    name      = "mysql-db-master-secret-${var.namespace}"
+    name      = var.multi_ds ? "mysql-db-master-secret-${var.namespace}-${var.mysql_server_name}" : "mysql-db-master-secret-${var.namespace}"
     namespace = "db"
   }
 
@@ -37,7 +37,8 @@ resource "kubernetes_secret" "mysql_db_init_script_create_role" {
 resource "kubectl_manifest" "db_init_create_db" {
   depends_on = [
     kubernetes_secret.mysql_db_init_script_master_password,
-    kubernetes_secret.mysql_db_init_script_create_role
+    kubernetes_secret.mysql_db_init_script_create_role,
+    azurerm_mysql_flexible_database.mysql_db
   ]
 
   for_each  = local.db_map
@@ -49,7 +50,7 @@ resource "kubectl_manifest" "db_init_create_db" {
       db_port            = 3306
       namespace          = "db"
       rds_name           = "mysql-db-secret-${replace(each.key, "_" , "-")}"
-      master_secret_name = "mysql-db-master-secret-${var.namespace}"
+      master_secret_name = var.multi_ds ? "mysql-db-master-secret-${var.namespace}-${var.mysql_server_name}" : "mysql-db-master-secret-${var.namespace}"
     }
   )
 }

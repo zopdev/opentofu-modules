@@ -50,7 +50,7 @@ data "aws_vpc" "vpc" {
 }
 
 resource "aws_security_group" "redis_group" {
-  name_prefix = "${local.cluster_name}-${var.namespace}-sg"
+  name_prefix = var.redis.name != "" && var.redis.name != null ? "${local.cluster_name}-${var.namespace}-${var.redis.name}-sg" : "${local.cluster_name}-${var.namespace}-sg"
   vpc_id      = local.vpc_id
 
   ingress {
@@ -84,7 +84,7 @@ resource "aws_elasticache_replication_group" "redis_cluster" {
   at_rest_encryption_enabled    = true
   engine_version                = var.redis.engine_version
   security_group_ids            = [aws_security_group.redis_group.id]
-  replication_group_id          = "${local.cluster_name}-${var.namespace}-redis"
+  replication_group_id          = var.redis.name != "" && var.redis.name != null ? var.redis.name : "${local.cluster_name}-${var.namespace}-redis"
   description                   = "redis replication group"
   node_type                     = var.redis.node_type
   parameter_group_name          = "default.redis6.x.cluster.on"
@@ -106,7 +106,7 @@ resource "aws_elasticache_replication_group" "redis" {
   at_rest_encryption_enabled    = true
   engine_version                = var.redis.engine_version
   security_group_ids            = [aws_security_group.redis_group.id]
-  replication_group_id          = "${local.cluster_name}-${var.namespace}-redis"
+  replication_group_id          = var.redis.name != "" && var.redis.name != null ? var.redis.name : "${local.cluster_name}-${var.namespace}-redis"
   description                   = "redis replication group"
   node_type                     = var.redis.node_type
   num_cache_clusters            = var.redis.replicas_per_node_group
@@ -119,14 +119,14 @@ resource "aws_elasticache_replication_group" "redis" {
 }
 
 resource "aws_elasticache_subnet_group" "redis_subnets" {
-  name       = "${local.cluster_name}-${var.namespace}-cache-subnet"
+  name       = var.redis.name != "" && var.redis.name != null ? "${local.cluster_name}-${var.namespace}-${var.redis.name}-cache-subnet" : "${local.cluster_name}-${var.namespace}-cache-subnet"
   subnet_ids = local.db_subnets_ids
   tags       = var.tags
 }
 
 resource "kubernetes_service" "redis_service" {
   metadata {
-    name      = "${var.namespace}-redis"
+    name      = var.redis.name != "" && var.redis.name != null ? "${var.redis.name}-${var.namespace}-redis" : "${var.namespace}-redis"
     namespace = var.namespace
   }
   spec {
