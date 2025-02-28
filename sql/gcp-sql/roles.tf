@@ -1,7 +1,7 @@
 resource "kubernetes_secret" "db_init_script_master_password" {
 
   metadata {
-    name      = "db-master-secret-${var.namespace}"
+    name      = var.multi_ds ? "db-master-secret-${var.namespace}-${var.sql_name}" : "db-master-secret-${var.namespace}"
     namespace = "db"
   }
 
@@ -52,7 +52,7 @@ resource "kubectl_manifest" "postgres_db_init_create_db" {
       db_port            = local.db_type[var.sql_type].port
       namespace          = "db"
       rds_name           = replace(each.key, "_" , "-")
-      master_secret_name = "db-master-secret-${var.namespace}"
+      master_secret_name = var.multi_ds ? "db-master-secret-${var.namespace}-${var.sql_name}" : "db-master-secret-${var.namespace}"
       name_prefix        = var.namespace
       enable_ssl         = var.enable_ssl
     }
@@ -76,7 +76,7 @@ resource "kubectl_manifest" "db_init_create_db" {
       db_port            = local.db_type[var.sql_type].port
       namespace          = "db"
       rds_name           = replace(each.key, "_" , "-")
-      master_secret_name = "db-master-secret-${var.namespace}"
+      master_secret_name = var.multi_ds ? "db-master-secret-${var.namespace}-${var.sql_name}" : "db-master-secret-${var.namespace}"
       name_prefix        = var.namespace
       enable_ssl         = var.enable_ssl
     }
