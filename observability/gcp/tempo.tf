@@ -98,7 +98,7 @@ data "template_file" "tempo_template"{
     distributor_cpu_utilization                          = try(var.tempo.distributor.cpu_utilization != null ? var.tempo.distributor.cpu_utilization : "","")
     querier_replicas                                     = try(var.tempo.querier.replicas != null ? var.tempo.querier.replicas : "1", "1")
     queryFrontend_replicas                               = try(var.tempo.queryFrontend.replicas != null ? var.tempo.queryFrontend.replicas : "1", "1")
-    metrics_generator_enable                             = false
+    metrics_generator_enable                             = try(var.tempo.metrics_generator.enable != null ? var.tempo.metrics_generator.enable : false, false)
     metrics_generator_replicas                           = try(var.tempo.metrics_generator.replicas != null ? var.tempo.metrics_generator.replicas : "1", "1")
     metrics_generator_service_graphs_max_items           = try(var.tempo.metrics_generator.service_graphs_max_items != null ? var.tempo.metrics_generator.service_graphs_max_items : "30000", "30000")
     metrics_generator_service_graphs_wait                = try(var.tempo.metrics_generator.service_graphs_wait != null ? var.tempo.metrics_generator.service_graphs_wait : "30s", "30s")
