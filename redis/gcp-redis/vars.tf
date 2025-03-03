@@ -45,7 +45,7 @@ variable "redis" {
   description = "Inputs to provision Redis instances in the cloud platform"
   type        = object(
     {
-      name                   = string
+      name                   = optional(string)
       machine_type           = string
       memory_size            = string
       replica_count          = number
