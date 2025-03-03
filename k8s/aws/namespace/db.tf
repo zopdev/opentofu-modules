@@ -57,7 +57,7 @@ module "rds" {
   monitoring_interval        = try(var.sql_db.monitoring_interval != null ? var.sql_db.monitoring_interval : 0)
   log_min_duration_statement = var.sql_db.log_min_duration_statement  != null ? var.sql_db.log_min_duration_statement  : -1
   iops                       = var.sql_db.provisioned_iops != null ? var.sql_db.provisioned_iops : 0
-  postgresql_engine_version  = var.sql_db.engine_version != null ? var.sql_db.engine_version : "16.1"
+  postgresql_engine_version  = var.sql_db.engine_version != null ? var.sql_db.engine_version : "16.3"
 
   tags                  = local.common_tags
 }
