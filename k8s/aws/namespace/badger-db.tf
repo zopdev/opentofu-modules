@@ -16,39 +16,3 @@ locals {
   })
 
 }
-
-resource "kubernetes_persistent_volume_claim_v1" "badger_db_for_services" {
-  for_each = {for k,v in var.services : k => v if v.badger_db!= null ? v.badger_db : false }
-  metadata {
-    name = each.key
-    namespace = var.namespace
-  }
-  spec {
-    access_modes = ["ReadWriteOnce"]
-    resources {
-      requests = {
-        storage = "1.5Gi"
-      }
-    }
-    storage_class_name = "gp2"
-    volume_mode = "Filesystem"
-  }
-}
-
-resource "kubernetes_persistent_volume_claim_v1" "badger_db_for_crons" {
-  for_each = {for k,v in var.cron_jobs : k => v if v.badger_db!= null ? v.badger_db : false }
-  metadata {
-    name = each.key
-    namespace = var.namespace
-  }
-  spec {
-    access_modes = ["ReadWriteOnce"]
-    resources {
-      requests = {
-        storage = "1.5Gi"
-      }
-    }
-    storage_class_name = "gp2"
-    volume_mode = "Filesystem"
-  }
-}
