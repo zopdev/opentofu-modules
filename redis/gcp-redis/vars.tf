@@ -60,12 +60,7 @@ variable "redis" {
     replica_count          = 1
     connect_mode           = "DIRECT_PEERING"
     redis_version          = "REDIS_7_0" 
-  }
-  
-  validation {
-    condition = can(regex("^([a-z0-9]([-a-z0-9.]*[a-z0-9])?)?$", var.redis.name))
-    error_message = "The Redis instance name doesn't match the required conditions."
-  }
+  } 
 }
 
 variable "cluster_prefix" {
