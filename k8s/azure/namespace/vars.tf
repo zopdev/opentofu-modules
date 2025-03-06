@@ -81,6 +81,15 @@ variable "cron_jobs" {
     enable_basic_auth      = optional(bool)
     enable_default_ingress = optional(bool)
     badger_db          = optional(bool)
+    datastore_configs = optional(object({
+      name = optional(string)
+      databse = optional(string)
+      type = optional(string)
+    }))
+    redis_configs = optional(object({
+      name = optional(string)
+      port = optional(number)
+    }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
       schedule           = string
@@ -129,6 +138,15 @@ variable "services" {
     custom_secrets     = optional(list(string))
     enable_basic_auth      = optional(bool)
     badger_db          = optional(bool)
+    datastore_configs = optional(object({
+      name = optional(string)
+      databse = optional(string)
+      type = optional(string)
+    }))
+    redis_configs = optional(object({
+      name = optional(string)
+      port = optional(number)
+    }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
       replica_count    = optional(number)
@@ -315,4 +333,21 @@ variable "cert_issuer_config"{
     env   = optional(string)
     email = string
   })
+}
+variable "sql_list" {
+  type = map(object({
+    type                    = optional(string)
+    sku_name                = optional(string)
+    admin_user              = optional(string)
+    storage                 = optional(number)
+    storage_scaling         = optional(bool)
+    iops                    = optional(number)
+    storage_tier            = optional(string)
+    iops_scaling            = optional(bool)
+    read_replica            = optional(bool)
+    disk_autoresize         = optional(string)
+    disk_size               = optional(string)
+    enable_ssl              = optional(bool)
+  }))
+  default = null
 }

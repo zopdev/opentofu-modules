@@ -53,7 +53,7 @@ resource "google_redis_instance" "redis_cluster" {
   count                   = var.redis.replica_count > 1 ? 1 : 0
   provider                = google-beta
   project                 = var.provider_id
-  name                    = "${local.cluster_name}-${var.namespace}"
+  name                    = var.redis.name != "" && var.redis.name != null ? var.redis.name : "${local.cluster_name}-${var.namespace}"
   tier                    = var.redis.machine_type
   memory_size_gb          = var.redis.memory_size
   connect_mode            = var.redis.connect_mode
@@ -70,7 +70,7 @@ resource "google_redis_instance" "redis" {
   count                   = var.redis.replica_count > 1 ? 0 : 1
   provider                = google-beta
   project                 = var.provider_id
-  name                    = "${local.cluster_name}-${var.namespace}"
+  name                    = var.redis.name != "" && var.redis.name != null ? var.redis.name : "${local.cluster_name}-${var.namespace}"
   tier                    = var.redis.machine_type
   memory_size_gb          = var.redis.memory_size
   connect_mode            = var.redis.connect_mode
@@ -90,7 +90,7 @@ resource "random_string" "redis_name_suffix" {
 
 resource "kubernetes_service" "redis_service" {
   metadata {
-    name      = "${var.namespace}-redis"
+    name      = var.redis.name != "" && var.redis.name != null ? "${var.redis.name}-${var.namespace}-redis" : "${var.namespace}-redis"
     namespace = var.namespace 
   }
   spec {

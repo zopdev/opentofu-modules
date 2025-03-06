@@ -83,7 +83,7 @@ module "service_deployment" {
   liveness_timeout_seconds = each.value.helm_configs != null ? (each.value.helm_configs.liveness_probes != null ? (each.value.helm_configs.liveness_probes.timeout_seconds != null ? each.value.helm_configs.liveness_probes.timeout_seconds : 3) : 3) : 3
   liveness_failure_threshold = each.value.helm_configs != null ? (each.value.helm_configs.liveness_probes != null ? (each.value.helm_configs.liveness_probes.failure_threshold != null ? each.value.helm_configs.liveness_probes.failure_threshold : 3) : 3) : 3
   configmaps_list = each.value.helm_configs != null ? (each.value.helm_configs.configmaps_list != null ? concat(["${each.key}-infra", var.namespace, each.key], each.value.helm_configs.configmaps_list) : ["${each.key}-infra", var.namespace, each.key] ): ["${each.key}-infra", var.namespace, each.key]
-  app_secrets     = each.value.db_name != null || each.value.custom_secrets != null ? ["${each.key}-application-secrets"] : []
+  app_secrets     = each.value.db_name != null || each.value.custom_secrets != null || each.value.datastore_configs != null || each.value.redis == true || each.value.redis_configs != null ? ["${each.key}-application-secrets"] : []
   secrets_list    = each.value.helm_configs != null ? (each.value.helm_configs.secrets_list != null ?  each.value.helm_configs.secrets_list : [] ): []
   volume_mount_configmaps  = each.value.helm_configs != null ? ( each.value.helm_configs.volume_mounts != null ? (each.value.helm_configs.volume_mounts.configmaps != null ? each.value.helm_configs.volume_mounts.configmaps : {}) : {} ) : {}
   volume_mount_secrets  = each.value.helm_configs != null ? ( each.value.helm_configs.volume_mounts != null ? (each.value.helm_configs.volume_mounts.secrets != null ? each.value.helm_configs.volume_mounts.secrets : {}) : {} ) : {}
@@ -92,7 +92,7 @@ module "service_deployment" {
   db_ssl_enabled   = local.ssl
   infra_alerts     = each.value.helm_configs != null ? (each.value.helm_configs.infra_alerts != null ? each.value.helm_configs.infra_alerts : null ) : null
 
-  depends_on = [module.postgresql, module.mysql, module.local_redis]
+  depends_on = [module.postgresql, module.postgres_v2, module.mysql, module.mysql_v2, module.local_redis]
 }
 
 resource "azuread_application" "acr_sp" {

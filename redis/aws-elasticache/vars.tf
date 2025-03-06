@@ -6,6 +6,7 @@ variable "tags" {
 variable "redis" {
   description = "Inputs to provision Redis instances in the cloud platform"
   type        = object({
+    name                    = optional(string)
     enable                  = optional(bool)
     node_type               = optional(string)
     replicas_per_node_group = optional(number)
@@ -13,6 +14,7 @@ variable "redis" {
     engine_version          = optional(string)
   })
   default = {
+    name                    = ""
     enable                  = true
     node_type               = "cache.m5.large"
     replicas_per_node_group = 1

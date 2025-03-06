@@ -35,7 +35,7 @@ resource "kubernetes_config_map" "mysql_db_init_script_create_db" {
 resource "kubernetes_secret" "db_init_script_master_password" {
 
   metadata {
-    name      = "db-master-secret-${var.namespace}"
+    name      = var.multi_ds ? "db-master-secret-${var.namespace}-${var.rds_name}" : "db-master-secret-${var.namespace}"
     namespace = "db"
   }
 
@@ -109,7 +109,7 @@ resource "kubectl_manifest" "psql_db_init_create_db" {
       db_port            = aws_db_instance.db_instance.port
       namespace          = "db"
       rds_name           = replace(each.key, "_" , "-")
-      master_secret_name = "db-master-secret-${each.value.master_db}"
+      master_secret_name = var.multi_ds ? "db-master-secret-${var.namespace}-${var.rds_name}" : "db-master-secret-${var.namespace}"
     }
   )
 }
@@ -130,7 +130,7 @@ resource "kubectl_manifest" "mysql_db_init_create_db" {
       db_port            = aws_db_instance.db_instance.port
       namespace          = "db"
       rds_name           = replace(each.key, "_" , "-")
-      master_secret_name = "db-master-secret-${each.value.master_db}"
+      master_secret_name = var.multi_ds ? "db-master-secret-${var.namespace}-${var.rds_name}" : "db-master-secret-${var.namespace}"
     }
   )
 }
