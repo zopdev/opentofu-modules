@@ -93,7 +93,7 @@ output "gchat" {
   value = local.google_chat_alerts
 }
 
-output "admin_credentials" {
+output "grafana_admin_credentials" {
   value = { for key, pwd in random_password.admin_passwords : key => {
     email    = key
     password = pwd.result
@@ -101,7 +101,7 @@ output "admin_credentials" {
   sensitive = true
 }
 
-output "editor_credentials" {
+output "grafana_editor_credentials" {
   value = { for key, pwd in random_password.editor_passwords : key => {
     email    = key
     password = pwd.result
@@ -109,7 +109,7 @@ output "editor_credentials" {
   sensitive = true
 }
 
-output "viewer_credentials" {
+output "grafana_viewer_credentials" {
   value = { for key, pwd in random_password.viewer_passwords : key => {
     email    = key
     password = pwd.result

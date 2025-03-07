@@ -108,7 +108,7 @@ output "cortex_host_url" {
   value = try(module.observability[0].cortex_host_url,"")
 }
 
-output "admin_credentials" {
+output "grafana_admin_credentials" {
   value = { for key, pwd in random_password.admin_passwords : key => {
     email    = key
     password = pwd.result
@@ -116,7 +116,7 @@ output "admin_credentials" {
   sensitive = true
 }
 
-output "editor_credentials" {
+output "grafana_editor_credentials" {
   value = { for key, pwd in random_password.editor_passwords : key => {
     email    = key
     password = pwd.result
@@ -124,7 +124,7 @@ output "editor_credentials" {
   sensitive = true
 }
 
-output "viewer_credentials" {
+output "grafana_viewer_credentials" {
   value = { for key, pwd in random_password.viewer_passwords : key => {
     email    = key
     password = pwd.result
