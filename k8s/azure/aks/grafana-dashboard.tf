@@ -26,45 +26,54 @@ locals {
 }
 
 resource "random_password" "admin_passwords" {
-  for_each = toset(var.user_access.app_admins)
+  for_each = coalesce(toset(var.user_access.app_admins), toset([]))
   length   = 16
   special  = true
 }
 
 resource "random_password" "editor_passwords" {
-  for_each = toset(var.user_access.app_editors)
+  for_each = coalesce(toset(var.user_access.app_editors), toset([]))
   length   = 16
   special  = true
 }
 
 resource "random_password" "viewer_passwords" {
-  for_each = toset(var.user_access.app_viewers)
+  for_each = coalesce(toset(var.user_access.app_viewers), toset([]))
   length   = 16
   special  = true
 }
 
 resource "grafana_user" "admins" {
-  for_each = toset(var.user_access.app_admins)
-  name     = each.key
-  email    = "${each.key}@gmail.com"
-  login    = each.key
+  for_each = coalesce(toset(var.user_access.app_admins), toset([]))
+  name     = split("@", each.key)[0]
+  email    = each.key
+  login    = split("@", each.key)[0]
   password = random_password.admin_passwords[each.key].result
+  is_admin = true
+
+  depends_on = [helm_release.grafana]
 }
 
 resource "grafana_user" "editors" {
-  for_each = toset(var.user_access.app_editors)
-  name     = each.key
-  email    = "${each.key}@gmail.com"
-  login    = each.key
+  for_each = coalesce(toset(var.user_access.app_editors), toset([]))
+  name     = split("@", each.key)[0]
+  email    = each.key
+  login    = split("@", each.key)[0]
   password = random_password.editor_passwords[each.key].result
+  is_admin = false
+
+  depends_on = [helm_release.grafana]
 }
 
 resource "grafana_user" "viewers" {
-  for_each = toset(var.user_access.app_viewers)
-  name     = each.key
-  email    = "${each.key}@gmail.com"
-  login    = each.key
+  for_each = coalesce(toset(var.user_access.app_viewers), toset([]))
+  name     = split("@", each.key)[0]
+  email    = each.key
+  login    = split("@", each.key)[0]
   password = random_password.viewer_passwords[each.key].result
+  is_admin = false
+
+  depends_on = [helm_release.grafana]
 }
 
 resource "grafana_folder" "dashboard_folder" {
@@ -78,27 +87,6 @@ resource "grafana_dashboard" "dashboard" {
   config_json = file("./templates/${each.value.dashboard}.json")
   folder      = grafana_folder.dashboard_folder[each.value.folder].id
   depends_on  = [grafana_folder.dashboard_folder]
-}
-
-resource "grafana_dashboard_permission_item" "admin_permissions" {
-  for_each        = toset(var.user_access.app_admins)
-  dashboard_uid   = grafana_dashboard.dashboard.uid
-  user            = grafana_user.admins[each.key].id
-  permission      = "Admin"
-}
-
-resource "grafana_dashboard_permission_item" "editor_permissions" {
-  for_each        = toset(var.user_access.app_editors)
-  dashboard_uid   = grafana_dashboard.dashboard.uid
-  user            = grafana_user.editors[each.key].id
-  permission      = "Editor"
-}
-
-resource "grafana_dashboard_permission_item" "viewer_permissions" {
-  for_each        = toset(var.user_access.app_viewers)
-  dashboard_uid   = grafana_dashboard.dashboard.uid
-  user            = grafana_user.viewers[each.key].id
-  permission      = "Viewer"
 }
 
 provider "grafana" {

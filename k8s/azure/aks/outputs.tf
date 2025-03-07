@@ -107,3 +107,27 @@ output "tempo_host_url" {
 output "cortex_host_url" {
   value = try(module.observability[0].cortex_host_url,"")
 }
+
+output "admin_credentials" {
+  value = { for key, pwd in random_password.admin_passwords : key => {
+    email    = key
+    password = pwd.result
+  }}
+  sensitive = true
+}
+
+output "editor_credentials" {
+  value = { for key, pwd in random_password.editor_passwords : key => {
+    email    = key
+    password = pwd.result
+  }}
+  sensitive = true
+}
+
+output "viewer_credentials" {
+  value = { for key, pwd in random_password.viewer_passwords : key => {
+    email    = key
+    password = pwd.result
+  }}
+  sensitive = true
+}
