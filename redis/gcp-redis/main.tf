@@ -35,7 +35,7 @@ provider "kubernetes" {
 }
 
 resource "google_compute_firewall" "redis-firewall" {
-  name       = "${local.cluster_name}-${var.namespace}-firewall"
+  name       =  var.redis.name != "" && var.redis.name != null ? "${ var.redis.name}-firewall" :  "${local.cluster_name}-${var.namespace}-firewall"
   network    = data.google_compute_network.vpc.self_link
 
   direction  = "INGRESS"
