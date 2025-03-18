@@ -46,6 +46,6 @@ resource "helm_release" "cron_helm"{
 
   set {
     name  = "env"
-    value = jsonencode(var.env)
+    value = jsonencode(local.updated_env)
   }
 }
