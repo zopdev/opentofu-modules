@@ -62,6 +62,9 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "env"
-    value = "  ${replace(indent(2, yamlencode(local.updated_env)), "/\n/", "\n  ")}"
+    value = <<EOT
+  ${replace(replace(yamlencode(local.updated_env), "/\"/", ""), "/\n/", "\n  ")}
+  EOT
   }
+
 }
