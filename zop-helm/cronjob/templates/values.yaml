@@ -41,9 +41,7 @@ envFrom:
     - ${v}
     %{~ endfor ~}
 
-%{~ if length(jsondecode(app_secrets)) > 0 ~}
-appSecrets: true
-%{~ endif ~}
+appSecrets: %{ if length(jsondecode(app_secrets)) > 0 }true%{ else }false%{ endif }
 
 volumeMounts:
   configmaps:
