@@ -62,6 +62,6 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "env"
-    value = yamlencode(local.updated_env)
+    value = join(",", [for k, v in local.updated_env : "${k}=${v}"])
   }
 }
