@@ -46,6 +46,6 @@ resource "helm_release" "cron_helm"{
 
   set {
     name  = "env"
-    value = join(",", [for k, v in local.updated_env : "${k}=${v}"])
+    value = jsonencode(merge(updated_env, {})) # Ensures it's treated as a map
   }
 }
