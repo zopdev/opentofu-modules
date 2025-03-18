@@ -60,11 +60,12 @@ resource "helm_release" "service_helm"{
     service_random_string           = var.service_random_string
   })]
 
-  set {
-    name  = "env"
-    value = <<EOT
-  ${replace(replace(yamlencode(local.updated_env), "/\"/", ""), "/\n/", "\n  ")}
-  EOT
+  dynamic "set" {
+    for_each = local.updated_env
+    content {
+      name  = "env.${set.key}"
+      value = set.value
+    }
   }
 
 }
