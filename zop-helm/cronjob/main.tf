@@ -46,6 +46,6 @@ resource "helm_release" "cron_helm"{
 
   set {
     name  = "env"
-    value = join("\n", [for k, v in local.updated_env : "${k}=${v}"])
+    value = yamlencode(local.updated_env) # Convert map to YAML
   }
 }
