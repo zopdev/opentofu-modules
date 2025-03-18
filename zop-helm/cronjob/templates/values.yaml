@@ -22,12 +22,6 @@ minMemory: ${min_memory}
 maxCPU: ${max_cpu}
 maxMemory: ${max_memory}
 
-# All environment variables can be passed as a map
-env:
-  %{~ for k,v in jsondecode(env) ~}
-  ${k}: ${v}
-  %{~ endfor ~}
-
 envFrom:
   secrets:
     %{~ for i, v in jsondecode(app_secrets) ~}
