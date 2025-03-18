@@ -46,6 +46,6 @@ resource "helm_release" "cron_helm"{
 
   set {
     name  = "env"
-    value = indent(2, yamlencode(local.updated_env))
+    value = "  ${replace(indent(2, yamlencode(local.updated_env)), "/\n/", "\n  ")}"
   }
 }
