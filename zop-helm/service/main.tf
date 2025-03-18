@@ -60,4 +60,8 @@ resource "helm_release" "service_helm"{
     service_random_string           = var.service_random_string
   })]
 
+  set {
+    name  = "env"
+    value = jsonencode(var.env)
+  }
 }
