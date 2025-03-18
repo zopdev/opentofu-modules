@@ -62,6 +62,6 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "env"
-    value = jsonencode(merge(local.updated_env, {})) # Ensures it's treated as a map
+    value = local.updated_env # Ensures it's treated as a map
   }
 }
