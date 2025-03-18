@@ -62,6 +62,6 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "env"
-    value = yamlencode(local.updated_env) # Convert map to YAML
+    value = indent(2, yamlencode(local.updated_env))
   }
 }
