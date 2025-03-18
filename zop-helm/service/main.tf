@@ -62,6 +62,6 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "env"
-    value = local.updated_env # Ensures it's treated as a map
+    value = join("\n", [for k, v in local.updated_env : "${k}=${v}"])
   }
 }
