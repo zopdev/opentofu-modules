@@ -44,12 +44,10 @@ resource "helm_release" "cron_helm"{
     service_random_string           = var.service_random_string
   })]
 
-  dynamic "set" {
-    for_each = local.updated_env
-    content {
-      name  = "env.${set.key}"
-      value = set.value
-    }
+  set {
+    name  = "env"
+    value = yamlencode(local.updated_env)
+    type  = "auto"  # This will try to determine the right type
   }
 
 }
