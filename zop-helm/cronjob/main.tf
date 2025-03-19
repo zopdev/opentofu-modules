@@ -46,7 +46,7 @@ resource "helm_release" "cron_helm"{
 
   set {
     name  = "env"
-    value = yamlencode(local.updated_env)
+    value = jsonencode(local.updated_env)
     type  = "string"  # This will try to determine the right type
   }
 
