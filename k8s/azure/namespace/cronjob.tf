@@ -11,7 +11,11 @@ locals {
   })
 
   cron_new_images = tomap({
-    for k,v in var.cron_jobs : k => "zopdev/sample-go-api:latest" if (! contains(keys(local.cron_api_image_map), k ))
+    for k,v in var.cron_jobs : k =>(
+      (v.helm_configs != null && v.helm_configs.image != null && v.helm_configs.image != "")
+      ? v.helm_configs.image
+      : "zopdev/sample-go-api:latest"
+    ) if (!contains(keys(local.deployment_api_image_map), k))
   })
 
   cron_all_images = merge(local.cron_existing_images, local.cron_new_images)

@@ -43,9 +43,4 @@ resource "helm_release" "cron_helm"{
     pub_sub                         = var.pub_sub
     service_random_string           = var.service_random_string
   })]
-
-  set {
-    name  = "env"
-    value = "\"APP_NAME\":\"service1\""
-  }
 }
