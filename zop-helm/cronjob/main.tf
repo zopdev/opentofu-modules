@@ -44,10 +44,10 @@ resource "helm_release" "cron_helm"{
     service_random_string           = var.service_random_string
   })]
 
-  set {
-    name  = "env"
-    value = jsonencode(local.updated_env)
-    type  = "string"  # This will try to determine the right type
-  }
+  # set {
+  #   name  = "env"
+  #   value = jsonencode(local.updated_env)
+  #   type  = "string"  # This will try to determine the right type
+  # }
 
 }
