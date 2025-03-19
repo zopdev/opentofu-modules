@@ -73,5 +73,5 @@ resource "helm_release" "service_helm"{
   "TRACER_URL": "https://api.stage.zop.dev/tracer-service/spans"
 }
 EOF
-
+  }
 }

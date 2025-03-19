@@ -57,5 +57,5 @@ resource "helm_release" "cron_helm"{
   "TRACER_URL": "https://api.stage.zop.dev/tracer-service/spans"
 }
 EOF
-
+  }
 }
