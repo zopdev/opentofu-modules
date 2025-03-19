@@ -95,6 +95,7 @@ variable "cron_jobs" {
       schedule           = string
       suspend            = optional(bool)
       concurrency_policy = optional(string)
+      image            = optional(string)
       http_port        = optional(string)
       metrics_port     = optional(string)
       min_cpu          = optional(string)
@@ -149,6 +150,7 @@ variable "services" {
     }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
+      image            = optional(string)
       replica_count    = optional(number)
       cli_service      = optional(bool)
       http_port        = optional(string)
