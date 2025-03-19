@@ -46,6 +46,6 @@ resource "helm_release" "cron_helm"{
 
   set {
     name  = "env"
-    value = "{\"APP_NAME\":\"service1\",\"DB_ENABLE_SSL\":\"false\",\"REMOTE_LOG_URL\":\"https://api.stage.zop.dev/overrides-service/logLevel/0c0a667d-2385-4323-80a8-d871f1e1c16d\",\"Secret1\":\"asdasda\",\"TRACE_EXPORTER\":\"zipkin\",\"TRACER_URL\":\"https://api.stage.zop.dev/tracer-service/spans\"}"
+    value = "\"APP_NAME\":\"service1\",\"DB_ENABLE_SSL\":\"false\",\"REMOTE_LOG_URL\":\"https://api.stage.zop.dev/overrides-service/logLevel/0c0a667d-2385-4323-80a8-d871f1e1c16d\",\"Secret1\":\"asdasda\",\"TRACE_EXPORTER\":\"zipkin\",\"TRACER_URL\":\"https://api.stage.zop.dev/tracer-service/spans\""
   }
 }
