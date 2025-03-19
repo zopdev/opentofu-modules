@@ -63,7 +63,7 @@ resource "helm_release" "service_helm"{
   set {
     name  = "env"
     value = yamlencode(local.updated_env)
-    type  = "auto"  # This will try to determine the right type
+    type  = "string"  # This will try to determine the right type
   }
 
 }
