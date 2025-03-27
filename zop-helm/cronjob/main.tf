@@ -43,19 +43,4 @@ resource "helm_release" "cron_helm"{
     pub_sub                         = var.pub_sub
     service_random_string           = var.service_random_string
   })]
-
-  set_sensitive {
-    name  = "env"
-    value = <<EOF
-{
-  "APP_NAME": "service1",
-  "DB_ENABLE_SSL": "false",
-  "REMOTE_LOG_URL": "https://api.stage.zop.dev/overrides-service/logLevel/0c0a667d-2385-4323-80a8-d871f1e1c16d",
-  "Secret1": "asdasda",
-  "TRACE_EXPORTER": "zipkin",
-  "TRACER_AUTH_KEY": "75d2c8ed-0386-4b79-9739-72ae67ccee9d",
-  "TRACER_URL": "https://api.stage.zop.dev/tracer-service/spans"
-}
-EOF
-  }
 }
