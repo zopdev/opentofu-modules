@@ -60,6 +60,7 @@ resource "oci_core_subnet" "public_subnets" {
   freeform_tags = {
     Environment = each.key
     Name        = "${each.key}-public-subnet"
+    Type        = "Public"
   }
   depends_on = [ oci_core_vcn.vcn ]
 }
@@ -80,6 +81,7 @@ resource "oci_core_subnet" "private_subnets" {
   freeform_tags = {
     Environment = each.key
     Name        = "${each.key}-private-subnet"
+    Type        = "Private"
   }
   depends_on = [ oci_core_vcn.vcn ]
 }
@@ -100,6 +102,7 @@ resource "oci_core_subnet" "db_subnets" {
   freeform_tags = {
     Environment = each.key
     Name        = "${each.key}-db-subnet"
+    Type        = "DB"
   }
   depends_on = [ oci_core_vcn.vcn ]
 }
