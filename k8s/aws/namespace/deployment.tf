@@ -11,7 +11,11 @@ locals {
   })
 
   deployment_new_images = tomap({
-    for k,v in var.services : k => "zopdev/sample-go-api:latest" if (! contains(keys(local.deployment_api_image_map), k ))
+    for k, v in var.services : k => (
+      (v.helm_configs != null && v.helm_configs.image != null && v.helm_configs.image != "")
+      ? v.helm_configs.image
+      : "zopdev/sample-go-api:latest"
+    ) if (!contains(keys(local.deployment_api_image_map), k))
   })
 
   deployment_all_images = merge(local.deployment_existing_images, local.deployment_new_images)
