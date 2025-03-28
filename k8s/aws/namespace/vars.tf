@@ -63,7 +63,7 @@ variable "cron_jobs" {
       max_cpu          = optional(string)
       max_memory       = optional(string)
       env              = optional(map(any))
-      envList          = optional(list(object({
+      env_list          = optional(list(object({
         name  = string
         value = string
       })))
@@ -128,7 +128,7 @@ variable "services" {
       min_available    = optional(number)
       heartbeat_url    = optional(string)
       env              = optional(map(any))
-      envList          = optional(list(object({
+      env_list          = optional(list(object({
         name  = string
         value = string
       })))

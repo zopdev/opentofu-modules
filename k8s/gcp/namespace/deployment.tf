@@ -69,7 +69,7 @@ module "service_deployment" {
   hpa_cpu_limit     = each.value.helm_configs != null ? (each.value.helm_configs.hpa!= null ? (each.value.helm_configs.hpa.cpu_limit != null ? each.value.helm_configs.hpa.cpu_limit : "null") : "null"): "null"
   hpa_memory_limit  = each.value.helm_configs != null ? (each.value.helm_configs.hpa!= null ? (each.value.helm_configs.hpa.memory_limit != null ? each.value.helm_configs.hpa.memory_limit : "null") : "null") : "null"
   heartbeat_url  = each.value.helm_configs != null ? (each.value.helm_configs.heartbeat_url != null ? each.value.helm_configs.heartbeat_url : "") : ""
-  env            = merge((each.value.helm_configs != null ? (each.value.helm_configs.env != null ? each.value.helm_configs.env : {}) : {}), (local.ssl ? {DB_ENABLE_SSL = true} : {DB_ENABLE_SSL = false}))
+  env            = (each.value.helm_configs != null ? (each.value.helm_configs.env != null ? each.value.helm_configs.env : {}) : {})
   env_list       = each.value.helm_configs != null ? (each.value.helm_configs.env_list != null ? each.value.helm_configs.env_list : []) : []
   enable_readiness_probe = each.value.helm_configs != null ? (each.value.helm_configs.readiness_probes != null ? (each.value.helm_configs.readiness_probes.enable != null ? each.value.helm_configs.readiness_probes.enable : false) : false) : false
   enable_liveness_probe  = each.value.helm_configs != null ? (each.value.helm_configs.liveness_probes != null ? (each.value.helm_configs.liveness_probes.enable != null ? each.value.helm_configs.liveness_probes.enable : false) : false) : false
