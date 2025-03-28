@@ -63,6 +63,10 @@ variable "cron_jobs" {
       max_cpu          = optional(string)
       max_memory       = optional(string)
       env              = optional(map(any))
+      env_list          = optional(list(object({
+        name  = string
+        value = string
+      })))
       configmaps_list  = optional(list(string))
       secrets_list     = optional(list(string))
       volume_mounts  = optional(object({
@@ -124,6 +128,10 @@ variable "services" {
       min_available    = optional(number)
       heartbeat_url    = optional(string)
       env              = optional(map(any))
+      env_list          = optional(list(object({
+        name  = string
+        value = string
+      })))
       configmaps_list  = optional(list(string))
       secrets_list     = optional(list(string))
       hpa              = optional(object({

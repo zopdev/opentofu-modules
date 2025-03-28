@@ -59,7 +59,8 @@ module "cronjob" {
   min_memory    = each.value.helm_configs != null ? (each.value.helm_configs.min_memory != null ? each.value.helm_configs.min_memory : "128M") : "128M"
   max_cpu       = each.value.helm_configs != null ? (each.value.helm_configs.max_cpu != null ? each.value.helm_configs.max_cpu : "500m") : "500m"
   max_memory    = each.value.helm_configs != null ? (each.value.helm_configs.max_memory != null ? each.value.helm_configs.max_memory : "512M") : "512M"
-  env           = merge((each.value.helm_configs != null ? (each.value.helm_configs.env != null ? each.value.helm_configs.env : {}) : {}), (local.ssl ? {DB_ENABLE_SSL = true} : {DB_ENABLE_SSL = false}))
+  env           = (each.value.helm_configs != null ? (each.value.helm_configs.env != null ? each.value.helm_configs.env : {}) : {})
+  env_list       = each.value.helm_configs != null ? each.value.helm_configs.env_list != null ? each.value.helm_configs.env_list : null : null
   app_secrets   = each.value.db_name != null || each.value.custom_secrets != null || each.value.datastore_configs != null ? ["${each.key}-application-secrets"] : []
   db_ssl_enabled   = local.ssl
   schedule      = each.value.helm_configs != null ? each.value.helm_configs.schedule : ""

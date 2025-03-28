@@ -63,11 +63,26 @@ livenessProbe:
   periodSeconds: ${liveness_timeout_seconds}
   failureThreshold: ${liveness_failure_threshold}
 
-# All environment variables can be passed as a map
+%{~ if length(jsondecode(env)) > 0 ~}
 env:
   %{~ for k,v in jsondecode(env) ~}
   ${k}: ${v}
   %{~ endfor ~}
+%{~ else ~}
+env: null
+%{~ endif ~}
+
+
+
+%{~ if length(jsondecode(envList)) > 0 ~}
+envList:
+  %{~ for item in jsondecode(envList) ~}
+  - name: "${item.name}"
+    value: "${item.value}"
+  %{~ endfor ~}
+%{~ else ~}
+envList: null
+%{~ endif ~}
 
 envFrom:
   secrets:
