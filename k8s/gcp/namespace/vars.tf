@@ -85,6 +85,10 @@ variable "services" {
       heartbeat_url    = optional(string)
       ports            = optional(map(any))
       env              = optional(map(any))
+      envList          = optional(list(object({
+        name  = string
+        value = string
+      })))
       configmaps_list  = optional(list(string))
       secrets_list     = optional(list(string))
       hpa              = optional(object({
@@ -175,6 +179,10 @@ variable "cron_jobs" {
       max_cpu          = optional(string)
       max_memory       = optional(string)
       env              = optional(map(any))
+      envList          = optional(list(object({
+        name  = string
+        value = string
+      })))
       configmaps_list  = optional(list(string))
       secrets_list     = optional(list(string))
       volume_mounts  = optional(object({

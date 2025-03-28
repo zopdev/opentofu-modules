@@ -49,8 +49,18 @@ variable "max_memory" {
 }
 
 variable "env" {
-  description = "Environment variables to be defined for a container"
+  description = "Environment variables to be defined for a container (legacy map format)"
   type        = map(any)
+  default     = {}
+}
+
+variable "env_list" {
+  description = "Environment variables to be defined for a container (new list format)"
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  default = []
 }
 
 variable "schedule" {
