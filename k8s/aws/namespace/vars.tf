@@ -33,7 +33,6 @@ variable "cron_jobs" {
     ecr_repo       = optional(string)
     region         = optional(string)
     account_id     = optional(string)
-    image              = optional(string)
     db_name        = optional(string)
     redis          = optional(bool)
     local_redis    = optional(bool)
@@ -56,6 +55,7 @@ variable "cron_jobs" {
       image_pull_secrets = optional(list(string))
       schedule           = string
       suspend            = optional(bool)
+      image              = optional(string)
       concurrency_policy = optional(string)
       http_port        = optional(string)
       metrics_port     = optional(string)
@@ -97,7 +97,6 @@ variable "services" {
     ecr_repo       = optional(string)
     region         = optional(string)
     account_id     = optional(string)
-    image              = optional(string)
     db_name        = optional(string)
     redis          = optional(bool)
     local_redis    = optional(bool)
@@ -119,6 +118,7 @@ variable "services" {
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
       replica_count    = optional(number)
+      image              = optional(string)
       cli_service      = optional(bool)
       http_port        = optional(string)
       metrics_port     = optional(string)

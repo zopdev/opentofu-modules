@@ -72,7 +72,6 @@ variable "cron_jobs" {
     repo_name          = optional(string)
     acr_name           = optional(string)
     acr_resource_group = optional(string)
-    image              = optional(string)
     db_name        = optional(string)
     redis          = optional(bool)
     local_redis    = optional(bool)
@@ -93,6 +92,7 @@ variable "cron_jobs" {
     }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
+      image              = optional(string)
       schedule           = string
       suspend            = optional(bool)
       concurrency_policy = optional(string)
@@ -136,7 +136,6 @@ variable "services" {
     acr_name           = optional(string)
     acr_resource_group = optional(string)
     db_name            = optional(string)
-    image              = optional(string)
     redis              = optional(bool)
     local_redis    = optional(bool)
     enable_default_ingress = optional(bool)
@@ -155,6 +154,7 @@ variable "services" {
     }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
+      image              = optional(string)
       replica_count    = optional(number)
       cli_service      = optional(bool)
       http_port        = optional(string)
