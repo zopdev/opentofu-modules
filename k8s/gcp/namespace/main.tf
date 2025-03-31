@@ -86,13 +86,6 @@ resource "google_project_iam_member" "namespace_svc_acc_cluster" {
   member      = "serviceAccount:${google_service_account.service_deployment_svc_acc[each.key].email}"
 }
 
-resource "google_project_iam_member" "namespace_svc_acc_container" {
-  for_each    = local.gar_name_map
-  project     = var.provider_id
-  role        = "roles/container.developer"
-  member      = "serviceAccount:${google_service_account.service_deployment_svc_acc[each.key].email}"
-}
-
 resource "google_artifact_registry_repository_iam_member" "artifact_member" {
   for_each   = local.gar_name_map
   provider   = google.artifact-registry
