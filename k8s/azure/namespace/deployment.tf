@@ -96,6 +96,7 @@ module "service_deployment" {
   volume_mount_pvc =  each.value.helm_configs != null ? ( each.value.helm_configs.volume_mounts != null ? (each.value.helm_configs.volume_mounts.pvc != null ? each.value.helm_configs.volume_mounts.pvc : {}) : {} ) : {}
   db_ssl_enabled   = local.ssl
   infra_alerts     = each.value.helm_configs != null ? (each.value.helm_configs.infra_alerts != null ? each.value.helm_configs.infra_alerts : null ) : null
+  command = each.value.helm_configs != null ? (each.value.helm_configs.command != null ? each.value.helm_configs.command : null ) : null
 
   depends_on = [module.postgresql, module.postgres_v2, module.mysql, module.mysql_v2, module.local_redis]
 }
