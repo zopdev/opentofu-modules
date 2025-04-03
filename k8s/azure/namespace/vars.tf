@@ -107,6 +107,7 @@ variable "cron_jobs" {
         name  = string
         value = string
       })))
+      command = optional(list(string))
       configmaps_list  = optional(list(string))
       secrets_list     = optional(list(string))
       volume_mounts  = optional(object({
@@ -180,6 +181,7 @@ variable "services" {
         cpu_limit        = optional(number)
         memory_limit     = optional(number)
       }))
+      command = optional(list(string))
       readiness_probes        = optional(object({
         enable                = optional(bool)
         initial_delay_seconds = optional(number)

@@ -23,6 +23,11 @@ variable "http_port" {
   type        = number
 }
 
+variable "command" {
+  description = "command for docker run"
+  type        = list(string)
+}
+
 variable "metrics_port" {
   description = "Port number to be used for metrics"
   type        = number
