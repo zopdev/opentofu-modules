@@ -48,6 +48,7 @@ cliService: ${cli_service}
 # Heartbeat URL
 heartbeatURL: ${heartbeat_url}
 
+command: ${command}
 
 readinessProbe:
   enable: ${enable_readiness_probe}
