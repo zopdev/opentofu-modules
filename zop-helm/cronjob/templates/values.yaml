@@ -31,7 +31,10 @@ env:
 env: null
 %{~ endif ~}
 
-command: ${command}
+%{~ if length(command) > 0 ~}
+command: 
+${command}
+%{~ endif}
 
 %{~ if length(jsondecode(envList)) > 0 ~}
 envList:
