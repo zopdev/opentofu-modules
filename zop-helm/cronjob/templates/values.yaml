@@ -31,6 +31,7 @@ env:
 env: null
 %{~ endif ~}
 
+
 %{~ if length(command) > 0 ~}
 command: 
 ${command}
