@@ -33,6 +33,7 @@ resource "helm_release" "cron_helm"{
     min_memory                      = var.min_memory
     max_cpu                         = var.max_cpu
     max_memory                      = var.max_memory
+    command                        = yamlencode(var.command)
     env                             = jsonencode(var.env)
     envList                         = jsonencode(local.updated_env_list)
     configmaps_list                 = jsonencode(var.configmaps_list)

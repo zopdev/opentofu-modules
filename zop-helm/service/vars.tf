@@ -113,6 +113,12 @@ variable "env_list" {
   default = []
 }
 
+variable "command" {
+  description = "values to be passed as command to the container"
+  type = list(string)
+  default = [ ]
+}
+
 variable "enable_readiness_probe" {
   description = "To enable readiness probe on the container or not"
   type        = bool
