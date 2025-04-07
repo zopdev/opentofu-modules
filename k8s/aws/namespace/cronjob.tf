@@ -76,6 +76,7 @@ module "cronjob" {
   volume_mount_secrets     = each.value.helm_configs != null ? ( each.value.helm_configs.volume_mounts != null ? (each.value.helm_configs.volume_mounts.secrets != null ? each.value.helm_configs.volume_mounts.secrets : {}) : {} ) : {}
   volume_mount_pvc      = coalesce(each.value.badger_db, false) ? local.badger_db_volume_mounts_crons[each.key] : {}
   infra_alerts     = each.value.helm_configs != null ? (each.value.helm_configs.infra_alerts != null ? each.value.helm_configs.infra_alerts : null ) : null
+  command = each.value.helm_configs != null ? (each.value.helm_configs.command != null ? each.value.helm_configs.command : null ) : null
 
   depends_on = [module.rds, module.rds_v2, module.local_redis]
 }

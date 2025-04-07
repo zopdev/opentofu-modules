@@ -90,6 +90,7 @@ variable "services" {
         name  = string
         value = string
       })))
+      command = optional(list(string))
       configmaps_list  = optional(list(string))
       secrets_list     = optional(list(string))
       hpa              = optional(object({
@@ -185,6 +186,7 @@ variable "cron_jobs" {
         name  = string
         value = string
       })))
+      command = optional(list(string))
       configmaps_list  = optional(list(string))
       secrets_list     = optional(list(string))
       volume_mounts  = optional(object({
