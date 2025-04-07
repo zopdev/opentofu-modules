@@ -26,6 +26,7 @@ variable "http_port" {
 variable "command" {
   description = "command for docker run"
   type        = list(string)
+  default = [ ]
 }
 
 variable "metrics_port" {
