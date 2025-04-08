@@ -64,9 +64,4 @@ resource "helm_release" "service_helm"{
     pub_sub                         = var.pub_sub
     service_random_string           = var.service_random_string
   })]
-
-  set {
-    name  = "env"
-    value = null
-  }
 }
