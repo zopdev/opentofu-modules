@@ -82,14 +82,16 @@ envList:
 %{~ else ~}
 envList: null
 %{~ endif ~}
-
-
-
-%{~ if command and length(command) > 0 ~}
-command: 
+  
+  
+  
+%{~ if command != null ~}
+  %{~ if length(command) > 0 ~}
+command:
   %{~ for cmd in command ~}
   - ${cmd}
   %{~ endfor ~}
+  %{~ endif ~}
 %{~ endif ~}
 
 
