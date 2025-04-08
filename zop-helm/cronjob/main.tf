@@ -16,7 +16,7 @@ resource "helm_release" "cron_helm"{
   name        = var.name
   namespace   = var.namespace
   repository  = "https://helm.zop.dev"
-  version     = "v0.0.15"
+  version     = "v0.0.17"
   chart       = "cron-job"
   reuse_values = true
 
