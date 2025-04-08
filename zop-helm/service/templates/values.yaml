@@ -48,7 +48,8 @@ cliService: ${cli_service}
 # Heartbeat URL
 heartbeatURL: ${heartbeat_url}
 
-%{~ if length(command) > 0 ~}
+
+%{~ if command and length(command) > 0 ~}
 command: 
 ${command}
 %{~ endif}
