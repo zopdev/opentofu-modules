@@ -39,7 +39,7 @@ resource "helm_release" "service_helm"{
     hpa_max_replicas                = var.hpa_max_replicas
     hpa_cpu_limit                   = var.hpa_cpu_limit
     hpa_memory_limit                = var.hpa_memory_limit
-    command                         = yamlencode(var.command)
+    command                         = var.command
     heartbeat_url                   = var.heartbeat_url
     env                             = jsonencode(var.env)
     envList                         = jsonencode(local.updated_env_list)

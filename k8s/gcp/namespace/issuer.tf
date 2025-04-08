@@ -8,7 +8,6 @@ data "template_file" "issuer" {
 }
 
 resource "kubectl_manifest" "namespace_issuer" {
-  count     = length(local.service_custom_domain_list) != 0 ? 1 : 0
   yaml_body = data.template_file.issuer.rendered
 }
 

@@ -16,7 +16,7 @@ resource "helm_release" "cron_helm"{
   name        = var.name
   namespace   = var.namespace
   repository  = "https://helm.zop.dev"
-  version     = "v0.0.15"
+  version     = "v0.0.17"
   chart       = "cron-job"
   reuse_values = true
 
@@ -33,7 +33,7 @@ resource "helm_release" "cron_helm"{
     min_memory                      = var.min_memory
     max_cpu                         = var.max_cpu
     max_memory                      = var.max_memory
-    command                        = yamlencode(var.command)
+    command                         = var.command 
     env                             = jsonencode(var.env)
     envList                         = jsonencode(local.updated_env_list)
     configmaps_list                 = jsonencode(var.configmaps_list)

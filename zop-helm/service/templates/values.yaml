@@ -48,11 +48,6 @@ cliService: ${cli_service}
 # Heartbeat URL
 heartbeatURL: ${heartbeat_url}
 
-%{~ if length(command) > 0 ~}
-command: 
-${command}
-%{~ endif}
-
 readinessProbe:
   enable: ${enable_readiness_probe}
   initialDelaySeconds: ${readiness_initial_delay_seconds}
@@ -87,6 +82,18 @@ envList:
 %{~ else ~}
 envList: null
 %{~ endif ~}
+  
+  
+  
+%{~ if command != null ~}
+  %{~ if length(command) > 0 ~}
+command:
+  %{~ for cmd in command ~}
+  - ${cmd}
+  %{~ endfor ~}
+  %{~ endif ~}
+%{~ endif ~}
+
 
 envFrom:
   secrets:
