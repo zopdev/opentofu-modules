@@ -51,7 +51,7 @@ resource "grafana_user" "admins" {
   password = random_password.admin_passwords[each.key].result
   is_admin = true
 
-  depends_on = [helm_release.grafana]
+  depends_on = [helm_release.grafana, kubectl_manifest.cluster_wildcard_certificate]
 }
 
 resource "grafana_user" "editors" {
@@ -62,7 +62,7 @@ resource "grafana_user" "editors" {
   password = random_password.editor_passwords[each.key].result
   is_admin = false
 
-  depends_on = [helm_release.grafana]
+  depends_on = [helm_release.grafana, kubectl_manifest.cluster_wildcard_certificate]
 }
 
 resource "grafana_user" "viewers" {
@@ -73,7 +73,7 @@ resource "grafana_user" "viewers" {
   password = random_password.viewer_passwords[each.key].result
   is_admin = false
 
-  depends_on = [helm_release.grafana]
+  depends_on = [helm_release.grafana, kubectl_manifest.cluster_wildcard_certificate]
 }
 
 resource "grafana_folder" "dashboard_folder" {
