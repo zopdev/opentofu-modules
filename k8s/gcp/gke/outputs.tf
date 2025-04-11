@@ -94,19 +94,19 @@ output "gchat" {
 }
 
 output "grafana_user_credentials" {
-  value = {
-    admin = { for key, pwd in random_password.admin_passwords : key => {
+  value = merge(
+    { for key, pwd in random_password.admin_passwords : key => {
+      email    = key
+      password = pwd.result
+    }},
+    { for key, pwd in random_password.editor_passwords : key => {
+      email    = key
+      password = pwd.result
+    }},
+    { for key, pwd in random_password.viewer_passwords : key => {
       email    = key
       password = pwd.result
     }}
-    editor = { for key, pwd in random_password.editor_passwords : key => {
-      email    = key
-      password = pwd.result
-    }}
-    viewer = { for key, pwd in random_password.viewer_passwords : key => {
-      email    = key
-      password = pwd.result
-    }}
-  }
+  )
   sensitive = true
 }
