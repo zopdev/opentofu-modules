@@ -32,9 +32,20 @@ resource "null_resource" "wait_for_grafana" {
         echo "Checking Grafana readiness..."
         RESPONSE=$(curl -sk https://grafana.${local.domain_name}/login || true)
         if echo "$RESPONSE" | grep -q '<title>Grafana</title>'; then
-          echo "Grafana is ready!"
-          exit 0
+          echo "Grafana page is reachable."
+
+          # Check if the cert is valid for the domain
+          CERT_HOSTNAME=$(echo | openssl s_client -connect grafana.${local.domain_name}:443 -servername grafana.${local.domain_name} 2>/dev/null | openssl x509 -noout -subject | grep -o 'CN=.*' | cut -d= -f2)
+          if echo "$CERT_HOSTNAME" | grep -q "${local.domain_name}"; then
+            echo "TLS certificate is valid for domain: ${local.domain_name}"
+            exit 0
+          else
+            echo "TLS certificate not yet valid for ${local.domain_name}, current CN: $CERT_HOSTNAME"
+          fi
+        else
+          echo "Grafana UI not ready yet."
         fi
+
         echo "Waiting for Grafana to be ready..."
         sleep 10
       done
