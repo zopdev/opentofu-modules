@@ -28,19 +28,22 @@ locals {
 resource "null_resource" "wait_for_grafana" {
   provisioner "local-exec" {
     command = <<EOT
+      DOMAIN_NAME="${local.domain_name}"
       for i in {1..30}; do
         echo "Checking Grafana readiness..."
-        RESPONSE=$(curl -sk https://grafana.${local.domain_name}/login || true)
+        RESPONSE=$(curl -sk https://grafana.$DOMAIN_NAME/login || true)
         if echo "$RESPONSE" | grep -q '<title>Grafana</title>'; then
           echo "Grafana page is reachable."
 
-          # Check if the cert is valid for the domain
-          CERT_HOSTNAME=$(echo | openssl s_client -connect grafana.${local.domain_name}:443 -servername grafana.${local.domain_name} 2>/dev/null | openssl x509 -noout -subject | grep -o 'CN=.*' | cut -d= -f2)
-          if echo "$CERT_HOSTNAME" | grep -q "${local.domain_name}"; then
-            echo "TLS certificate is valid for domain: ${local.domain_name}"
+          # Check if the cert is valid for the domain or wildcard domain
+          CERT_HOSTNAME=$(echo | openssl s_client -connect grafana.$DOMAIN_NAME:443 -servername grafana.$DOMAIN_NAME 2>/dev/null \
+            | openssl x509 -noout -subject | grep -o 'CN=.*' | cut -d= -f2)
+
+          if echo "$CERT_HOSTNAME" | grep -q "\\*.$DOMAIN_NAME\\|$DOMAIN_NAME"; then
+            echo "TLS certificate is valid for domain: grafana.$DOMAIN_NAME (CN: $CERT_HOSTNAME)"
             exit 0
           else
-            echo "TLS certificate not yet valid for ${local.domain_name}, current CN: $CERT_HOSTNAME"
+            echo "TLS certificate not yet valid for grafana.$DOMAIN_NAME, current CN: $CERT_HOSTNAME"
             continue
           fi
         else
@@ -53,6 +56,7 @@ resource "null_resource" "wait_for_grafana" {
       echo "Grafana is not ready after waiting." >&2
       exit 1
     EOT
+    interpreter = ["/bin/bash", "-c"]
   }
 
   depends_on = [
