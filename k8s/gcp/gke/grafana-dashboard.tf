@@ -25,64 +25,62 @@ locals {
   ]...)
 }
 
-# resource "null_resource" "wait_for_grafana" {
-#   provisioner "local-exec" {
-#     command = <<-EOT
-#       #!/bin/bash
+resource "null_resource" "wait_for_grafana" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      #!/bin/bash
       
-#       DOMAIN_NAME="${local.domain_name}"
+      DOMAIN_NAME="${local.domain_name}"
       
-#       echo "Checking Grafana readiness for domain: $DOMAIN_NAME"
+      echo "Checking Grafana readiness for domain: $DOMAIN_NAME"
       
-#       for i in {1..30}; do
-#         echo "Checking Grafana login page..."
-#         RESPONSE=$(curl -sk https://grafana.$DOMAIN_NAME/login || true)
+      for i in {1..30}; do
+        echo "Checking Grafana login page..."
+        RESPONSE=$(curl -sk https://grafana.$DOMAIN_NAME/login || true)
         
-#         if echo "$RESPONSE" | grep -q '<title>Grafana</title>'; then
-#           echo "Grafana login page is reachable."
-#           break
-#         else
-#           echo "Grafana UI not ready yet."
-#         fi
+        if echo "$RESPONSE" | grep -q '<title>Grafana</title>'; then
+          echo "Grafana login page is reachable."
+          break
+        else
+          echo "Grafana UI not ready yet."
+        fi
         
-#         if [ $i -eq 30 ]; then
-#           echo "Grafana UI was not ready after 30 attempts."
-#           exit 1
-#         fi
+        if [ $i -eq 30 ]; then
+          echo "Grafana UI was not ready after 30 attempts."
+          exit 1
+        fi
         
-#         echo "Waiting 10s before retrying..."
-#         sleep 10
-#       done
+        echo "Waiting 10s before retrying..."
+        sleep 10
+      done
       
-#       echo "Now waiting for TLS certificate to become valid..."
-      
-#       for j in {1..60}; do
-#         echo "Certificate check attempt..."
-#         CERT_HOSTNAME=$(echo | openssl s_client -connect grafana.$DOMAIN_NAME:443 -servername grafana.$DOMAIN_NAME 2>/dev/null \
-#           | openssl x509 -noout -subject | grep -o 'CN=.*' | cut -d= -f2)
+      echo "Validating TLS certificate..."
+      for j in {1..60}; do
+        echo "Certificate check attempt $j..."
         
-#         if echo "$CERT_HOSTNAME" | grep -q "$DOMAIN_NAME"; then
-#           echo "TLS certificate is valid for grafana.$DOMAIN_NAME (CN: $CERT_HOSTNAME)"
-#           exit 0
-#         else
-#           echo "Certificate not yet valid. Current CN: $CERT_HOSTNAME"
-#         fi
+        # Try to connect with full certificate verification
+        if curl -s --head -o /dev/null -w "%{http_code}" https://grafana.$DOMAIN_NAME --connect-timeout 5 | grep -q "200\|302"; then
+          echo "TLS certificate verified successfully!"
+          exit 0
+        else
+          echo "Valid certificate not detected yet, retrying..."
+        fi
         
-#         echo "Waiting 10s before retrying certificate check..."
-#         sleep 10
-#       done
+        echo "Waiting 10s before retrying certificate check..."
+        sleep 10
+      done
       
-#       echo "TLS certificate did not become valid in the allowed time."
-#       exit 1
-#     EOT
-#   }
+      echo "TLS certificate validation failed after waiting."
+      exit 1
+    EOT
+  }
 
-#   depends_on = [
-#     helm_release.grafana,
-#     module.nginx,
-#     kubectl_manifest.cluster_wildcard_certificate
-#   ]
-# }
+  depends_on = [
+    helm_release.grafana,
+    module.nginx,
+    kubectl_manifest.cluster_wildcard_certificate
+  ]
+}
 
 resource "random_password" "admin_passwords" {
   for_each = coalesce(toset(var.user_access.app_admins), toset([]))
@@ -110,11 +108,7 @@ resource "grafana_user" "admins" {
   password = random_password.admin_passwords[each.key].result
   is_admin = true
 
-  depends_on = [
-    helm_release.grafana,
-    module.nginx,
-    kubectl_manifest.cluster_wildcard_certificate
-  ]
+  depends_on = [ null_resource.wait_for_grafana ]
 }
 
 resource "grafana_user" "editors" {
@@ -125,11 +119,7 @@ resource "grafana_user" "editors" {
   password = random_password.editor_passwords[each.key].result
   is_admin = false
 
-  depends_on = [
-    helm_release.grafana,
-    module.nginx,
-    kubectl_manifest.cluster_wildcard_certificate
-  ]
+  depends_on = [ null_resource.wait_for_grafana ]
 }
 
 resource "grafana_user" "viewers" {
@@ -140,11 +130,7 @@ resource "grafana_user" "viewers" {
   password = random_password.viewer_passwords[each.key].result
   is_admin = false
 
-  depends_on = [
-    helm_release.grafana,
-    module.nginx,
-    kubectl_manifest.cluster_wildcard_certificate
-  ]
+  depends_on = [ null_resource.wait_for_grafana ]
 }
 
 resource "grafana_folder" "dashboard_folder" {
