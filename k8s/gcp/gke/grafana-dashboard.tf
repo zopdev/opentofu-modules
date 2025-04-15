@@ -47,7 +47,7 @@ resource "null_resource" "wait_for_grafana" {
           echo "Grafana UI not ready yet."
         fi
 
-        echo "Waiting for Grafana to be ready... (${i}/30)"
+        echo "Waiting for Grafana to be ready..."
         sleep 10
       done
       echo "Grafana is not ready after waiting." >&2
