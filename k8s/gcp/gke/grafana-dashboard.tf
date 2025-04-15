@@ -28,8 +28,13 @@ locals {
 resource "null_resource" "wait_for_grafana" {
   provisioner "local-exec" {
     command = <<EOT
-      for i in {1..20}; do
-        curl -s --insecure https://grafana.${local.domain_name}/login && exit 0
+      for i in {1..30}; do
+        echo "Checking Grafana readiness..."
+        RESPONSE=$(curl -sk https://grafana.${local.domain_name}/login || true)
+        if echo "$RESPONSE" | grep -q '<title>Grafana</title>'; then
+          echo "Grafana is ready!"
+          exit 0
+        fi
         echo "Waiting for Grafana to be ready..."
         sleep 10
       done
