@@ -58,8 +58,7 @@ resource "null_resource" "wait_for_grafana" {
       for j in {1..60}; do
         echo "Certificate check attempt $j..."
         
-        # Try to connect with full certificate verification
-        if curl -s --head -o /dev/null -w "%{http_code}" https://grafana.$DOMAIN_NAME --connect-timeout 5 | grep -q "200\|302"; then
+        if curl -s --head -o /dev/null -w "%%{http_code}" https://grafana.$DOMAIN_NAME --connect-timeout 5 | grep -q "200\|302"; then
           echo "TLS certificate verified successfully!"
           exit 0
         else
