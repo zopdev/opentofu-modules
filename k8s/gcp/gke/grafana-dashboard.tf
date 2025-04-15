@@ -72,6 +72,7 @@ resource "null_resource" "wait_for_grafana" {
       echo "TLS certificate validation failed after waiting."
       exit 1
     EOT
+    interpreter = ["/bin/bash", "-c"]
   }
 
   depends_on = [
