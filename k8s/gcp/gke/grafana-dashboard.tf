@@ -25,6 +25,26 @@ locals {
   ]...)
 }
 
+resource "null_resource" "wait_for_grafana" {
+  provisioner "local-exec" {
+    command = <<EOT
+      for i in {1..20}; do
+        curl -s --insecure https://grafana.${local.domain_name}/login && exit 0
+        echo "Waiting for Grafana to be ready..."
+        sleep 10
+      done
+      echo "Grafana is not ready after waiting." >&2
+      exit 1
+    EOT
+  }
+
+  depends_on = [
+    helm_release.grafana,
+    module.nginx,
+    kubectl_manifest.cluster_wildcard_certificate
+  ]
+}
+
 resource "random_password" "admin_passwords" {
   for_each = coalesce(toset(var.user_access.app_admins), toset([]))
   length   = 16
@@ -51,8 +71,8 @@ resource "grafana_user" "admins" {
   password = random_password.admin_passwords[each.key].result
   is_admin = true
 
-  depends_on = [helm_release.grafana, kubectl_manifest.cluster_wildcard_certificate, module.nginx]
-}
+  depends_on = [null_resource.wait_for_grafana]
+  }
 
 resource "grafana_user" "editors" {
   for_each = coalesce(toset(var.user_access.app_editors), toset([]))
@@ -62,7 +82,7 @@ resource "grafana_user" "editors" {
   password = random_password.editor_passwords[each.key].result
   is_admin = false
 
-  depends_on = [helm_release.grafana, kubectl_manifest.cluster_wildcard_certificate, module.nginx]
+  depends_on = [null_resource.wait_for_grafana]
 }
 
 resource "grafana_user" "viewers" {
@@ -73,7 +93,7 @@ resource "grafana_user" "viewers" {
   password = random_password.viewer_passwords[each.key].result
   is_admin = false
 
-  depends_on = [helm_release.grafana, kubectl_manifest.cluster_wildcard_certificate, module.nginx]
+  depends_on = [null_resource.wait_for_grafana]
 }
 
 resource "grafana_folder" "dashboard_folder" {
