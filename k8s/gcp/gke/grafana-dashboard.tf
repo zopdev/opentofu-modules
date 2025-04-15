@@ -41,12 +41,13 @@ resource "null_resource" "wait_for_grafana" {
             exit 0
           else
             echo "TLS certificate not yet valid for ${local.domain_name}, current CN: $CERT_HOSTNAME"
+            continue
           fi
         else
           echo "Grafana UI not ready yet."
         fi
 
-        echo "Waiting for Grafana to be ready..."
+        echo "Waiting for Grafana to be ready... (${i}/30)"
         sleep 10
       done
       echo "Grafana is not ready after waiting." >&2
