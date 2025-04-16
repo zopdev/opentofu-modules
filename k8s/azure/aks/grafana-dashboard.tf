@@ -30,7 +30,7 @@ resource "null_resource" "wait_for_grafana" {
     command = <<-EOT
       #!/bin/bash
       
-      DOMAIN_NAME="${local.cluster_name}.${var.accessibility.domain_name}"
+      DOMAIN_NAME="${var.accessibility.domain_name}"
       
       echo "Checking Grafana readiness for domain: $DOMAIN_NAME"
       
