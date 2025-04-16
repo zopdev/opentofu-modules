@@ -147,6 +147,6 @@ resource "grafana_dashboard" "dashboard" {
 }
 
 provider "grafana" {
-  url   = "https://grafana.${local.cluster_name}.${var.accessibility.domain_name}"
+  url   = "https://grafana.${var.accessibility.domain_name}"
   auth  = local.grafana_auth
 }
