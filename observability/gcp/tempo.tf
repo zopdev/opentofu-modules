@@ -114,7 +114,7 @@ resource "helm_release" "tempo" {
   repository = "https://grafana.github.io/helm-charts"
   chart      = "tempo-distributed"
   namespace  = kubernetes_namespace.app_environments["tempo"].metadata[0].name
-  version    = "1.10.0"
+  version    = "1.38.0"
 
   values     =  [
     data.template_file.tempo_template[0].rendered
