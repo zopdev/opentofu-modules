@@ -178,21 +178,24 @@ resource "null_resource" "update_user_roles" {
     command = <<EOT
       email="${each.value.email}"
       role="${each.value.role}"
+      domain="${local.domain_name}"
+      token="${grafana_api_key.admin_token.key}"
 
-      user_id=$(curl -s -H "Authorization: Bearer $TOKEN" \
-        "https://grafana.${local.domain_name}/api/orgs/1/users" | grep -A5 "\"email\":\"$email\"" | grep userId | sed -E 's/[^0-9]*([0-9]+).*/\1/')
+      user_id=$(curl -s -H "Authorization: Bearer $token" \
+        "https://grafana.$domain/api/users/lookup?loginOrEmail=$email" \
+        | jq -r '.id')
 
-      if [ -z "$user_id" ]; then
-        echo "User $email not found in org. You may want to add them first."
+      if [ -z "$user_id" ] || [ "$user_id" == "null" ]; then
+        echo "User $email not found. You may want to add them first."
         exit 1
       fi
 
-      curl -s -X PATCH "https://grafana.${local.domain_name}/api/org/users/$user_id" \
-        -H "Authorization: Bearer ${grafana_api_key.admin_token.key}" \
+      # Update user role in the org
+      curl -s -X PATCH "https://grafana.$domain/api/org/users/$user_id" \
+        -H "Authorization: Bearer $token" \
         -H "Content-Type: application/json" \
         -d "{\"role\": \"$role\"}" || exit 1
-
-      EOT
+    EOT
     interpreter = ["/bin/bash", "-c"]
   }
 
