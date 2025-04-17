@@ -168,7 +168,6 @@ resource "grafana_dashboard" "dashboard" {
 resource "grafana_api_key" "admin_token" {
   name = "terraform-admin-token"
   role = "Admin"
-  seconds_to_live = 3600  
 }
 
 resource "null_resource" "update_user_roles" {
@@ -182,10 +181,12 @@ resource "null_resource" "update_user_roles" {
       token="${grafana_api_key.admin_token.key}"
 
       response=$(curl -s -H "Authorization: Bearer $token" \
-        "https://grafana.$domain/api/users/lookup?loginOrEmail=$email")
+              "https://grafana.$domain/api/org/users")
 
-      user_id=$(echo "$response" | grep -o '"id":[0-9]*' | grep -o '[0-9]*')
+      email_escaped=$(echo "$email" | sed 's/\./\\./g')
 
+      user_id=$(echo "$response" | grep -o "{[^}]*\"email\":\"$email_escaped\"[^}]*}" | grep -o "\"userId\":[0-9]*" | grep -o "[0-9]*")
+          
       if [ -z "$user_id" ]; then
         echo "User $email not found. You may want to add them first."
         exit 1
