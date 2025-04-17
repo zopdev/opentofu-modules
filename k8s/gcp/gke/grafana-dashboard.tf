@@ -179,8 +179,8 @@ resource "null_resource" "update_user_roles" {
       email="${each.value.email}"
       role="${each.value.role}"
 
-      user_id=$(curl -s -H "Authorization: Bearer ${grafana_api_key.admin_token.key}" \
-        "https://grafana.${local.domain_name}/api/orgs/1/users" | jq ".[] | select(.email==\"$email\") | .userId")
+      user_id=$(curl -s -H "Authorization: Bearer $TOKEN" \
+        "https://grafana.${local.domain_name}/api/orgs/1/users" | grep -A5 "\"email\":\"$email\"" | grep userId | sed -E 's/[^0-9]*([0-9]+).*/\1/')
 
       if [ -z "$user_id" ]; then
         echo "User $email not found in org. You may want to add them first."
