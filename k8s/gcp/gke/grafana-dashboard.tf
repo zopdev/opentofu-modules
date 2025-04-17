@@ -181,11 +181,12 @@ resource "null_resource" "update_user_roles" {
       domain="${local.domain_name}"
       token="${grafana_api_key.admin_token.key}"
 
-      user_id=$(curl -s -H "Authorization: Bearer $token" \
-        "https://grafana.$domain/api/users/lookup?loginOrEmail=$email" \
-        | jq -r '.id')
+      response=$(curl -s -H "Authorization: Bearer $token" \
+        "https://grafana.$domain/api/users/lookup?loginOrEmail=$email")
 
-      if [ -z "$user_id" ] || [ "$user_id" == "null" ]; then
+      user_id=$(echo "$response" | grep -o '"id":[0-9]*' | grep -o '[0-9]*')
+
+      if [ -z "$user_id" ]; then
         echo "User $email not found. You may want to add them first."
         exit 1
       fi
