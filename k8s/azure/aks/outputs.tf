@@ -107,3 +107,21 @@ output "tempo_host_url" {
 output "cortex_host_url" {
   value = try(module.observability[0].cortex_host_url,"")
 }
+
+output "grafana_user_credentials" {
+  value = merge(
+    { for key, pwd in random_password.admin_passwords : key => {
+      email    = key
+      password = pwd.result
+    }},
+    { for key, pwd in random_password.editor_passwords : key => {
+      email    = key
+      password = pwd.result
+    }},
+    { for key, pwd in random_password.viewer_passwords : key => {
+      email    = key
+      password = pwd.result
+    }}
+  )
+  sensitive = true
+}

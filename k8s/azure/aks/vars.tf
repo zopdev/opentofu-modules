@@ -55,6 +55,20 @@ variable "user_access" {
   }
 }
 
+variable "grafana_access" {
+  description = "List of users who will have access to grafana"
+  type = object({
+    grafana_admins = optional(list(string))
+    grafana_viewers = optional(list(string))
+    grafana_editors = optional(list(string))
+  })
+  default = {
+    grafana_admins =  []
+    grafana_viewers = []
+    grafana_editors = []
+  }
+}
+
 variable "enable_auto_scaling" {
   type        = bool
   description = "Enable node pool autoscaling"
