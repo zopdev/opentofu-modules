@@ -23,6 +23,25 @@ locals {
       }
     }
   ]...)
+
+  role_map = {
+    grafana_admins =  "Admin"
+    grafana_viewers = "Editor"
+    grafana_editors = "Viewer"
+  }
+
+  users_with_roles = flatten([
+    for role, emails in var.grafana_access: [
+      for email in emails : {
+        email = email
+        role  = local.role_map[role]
+      }
+    ]
+  ])
+
+  users_with_roles_map = {
+    for user in local.users_with_roles : user.email => user
+  }
 }
 
 resource "null_resource" "wait_for_grafana" {
@@ -78,7 +97,9 @@ resource "null_resource" "wait_for_grafana" {
   depends_on = [
     helm_release.grafana,
     module.nginx,
-    kubectl_manifest.cluster_wildcard_certificate
+    kubectl_manifest.cluster_wildcard_certificate,
+    kubernetes_secret_v1.certificate_replicator,
+    helm_release.k8s_replicator,
   ]
 }
 
@@ -144,6 +165,47 @@ resource "grafana_dashboard" "dashboard" {
   config_json = file("./templates/${each.value.dashboard}.json")
   folder      = grafana_folder.dashboard_folder[each.value.folder].id
   depends_on  = [grafana_folder.dashboard_folder]
+}
+
+resource "grafana_api_key" "admin_token" {
+  name = "terraform-admin-token"
+  role = "Admin"
+
+  depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers ]
+}
+
+resource "null_resource" "update_user_roles" {
+  for_each = local.users_with_roles_map
+
+  provisioner "local-exec" {
+    command = <<EOT
+      email="${each.value.email}"
+      role="${each.value.role}"
+      domain="${var.accessibility.domain_name}"
+      token="${grafana_api_key.admin_token.key}"
+
+      response=$(curl -s -H "Authorization: Bearer $token" \
+              "https://grafana.$domain/api/org/users")
+
+      email_escaped=$(echo "$email" | sed 's/\./\\./g')
+
+      user_id=$(echo "$response" | grep -o "{[^}]*\"email\":\"$email_escaped\"[^}]*}" | grep -o "\"userId\":[0-9]*" | grep -o "[0-9]*")
+          
+      if [ -z "$user_id" ]; then
+        echo "User $email not found. You may want to add them first."
+        exit 1
+      fi
+
+      # Update user role in the org
+      curl -s -X PATCH "https://grafana.$domain/api/org/users/$user_id" \
+        -H "Authorization: Bearer $token" \
+        -H "Content-Type: application/json" \
+        -d "{\"role\": \"$role\"}" || exit 1
+    EOT
+    interpreter = ["/bin/bash", "-c"]
+  }
+
+  depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers ]
 }
 
 provider "grafana" {
