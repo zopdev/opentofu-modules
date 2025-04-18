@@ -100,7 +100,8 @@ resource "null_resource" "wait_for_grafana" {
     google_certificate_manager_certificate_map_entry.cluster_entry,
     google_certificate_manager_certificate_map_entry.wildcard_entry,
     helm_release.k8s_replicator,
-    kubernetes_secret_v1.certificate_replicator
+    kubernetes_secret_v1.certificate_replicator,
+    google_service_account.wildcard_dns_solver
   ]
 }
 
