@@ -101,7 +101,12 @@ resource "null_resource" "wait_for_grafana" {
     google_certificate_manager_certificate_map_entry.wildcard_entry,
     helm_release.k8s_replicator,
     kubernetes_secret_v1.certificate_replicator,
-    google_service_account.wildcard_dns_solver
+    google_dns_record_set.global_load_balancer_sub_domain,
+    google_dns_record_set.global_load_balancer_top_level_domain,
+    google_project_iam_member.wildcard_dns_solver,
+    google_project_iam_member.wildcard_dns01_solver_dns_admin,
+    google_project_iam_member.wildcard_dns_solver_workloadIdentity,
+    google_project_iam_member.wildcard_dns_solver_iam
   ]
 }
 
