@@ -98,7 +98,7 @@ resource "null_resource" "wait_for_grafana" {
     helm_release.grafana,
     module.nginx,
     google_certificate_manager_certificate_map_entry.cluster_entry,
-    google_certificate_manager_certificate_map_entry.wildcard_entry,
+    google_certificate_manager_certificate_map_entry.wildcard_entry
   ]
 }
 
