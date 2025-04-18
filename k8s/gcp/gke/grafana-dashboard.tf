@@ -97,7 +97,8 @@ resource "null_resource" "wait_for_grafana" {
   depends_on = [
     helm_release.grafana,
     module.nginx,
-    kubectl_manifest.cluster_wildcard_certificate
+    google_certificate_manager_certificate_map_entry.cluster_entry,
+    google_certificate_manager_certificate_map_entry.wildcard_entry
   ]
 }
 
