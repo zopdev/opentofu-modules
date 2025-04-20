@@ -105,20 +105,23 @@ resource "null_resource" "wait_for_grafana" {
 
 resource "random_password" "admin_passwords" {
   for_each = coalesce(toset(var.grafana_access.grafana_admins), toset([]))
-  length   = 16
+  length   = 12
   special  = true
+  override_special = "$"
 }
 
 resource "random_password" "editor_passwords" {
   for_each = coalesce(toset(var.grafana_access.grafana_editors), toset([]))
-  length   = 16
+  length   = 12
   special  = true
+  override_special = "$"
 }
 
 resource "random_password" "viewer_passwords" {
   for_each = coalesce(toset(var.grafana_access.grafana_viewers), toset([]))
-  length   = 16
+  length   = 12
   special  = true
+  override_special = "$"
 }
 
 resource "grafana_user" "admins" {
