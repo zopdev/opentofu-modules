@@ -174,48 +174,48 @@ resource "grafana_dashboard" "dashboard" {
   depends_on  = [grafana_folder.dashboard_folder]
 }
 
-# resource "grafana_api_key" "admin_token" {
-#   name = "terraform-admin-token"
-#   role = "Admin"
+resource "grafana_api_key" "admin_token" {
+  name = "terraform-admin-token"
+  role = "Admin"
 
-#   depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers ]
-# }
+  depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers ]
+}
 
-# resource "null_resource" "update_user_roles" {
-#   for_each = {
-#     for user in local.users_with_roles : "${user.email}-${user.role}" => user
-#   }
+resource "null_resource" "update_user_roles" {
+  for_each = {
+    for user in local.users_with_roles : "${user.email}-${user.role}" => user
+  }
 
-#   provisioner "local-exec" {
-#     command = <<EOT
-#       email="${each.value.email}"
-#       role="${each.value.role}"
-#       domain="${local.domain_name}"
-#       token="${grafana_api_key.admin_token.key}"
+  provisioner "local-exec" {
+    command = <<EOT
+      email="${each.value.email}"
+      role="${each.value.role}"
+      domain="${local.domain_name}"
+      token="${grafana_api_key.admin_token.key}"
 
-#       response=$(curl -s -H "Authorization: Bearer $token" \
-#               "https://grafana.$domain/api/org/users")
+      response=$(curl -s -H "Authorization: Bearer $token" \
+              "https://grafana.$domain/api/org/users")
 
-#       email_escaped=$(echo "$email" | sed 's/\./\\./g')
+      email_escaped=$(echo "$email" | sed 's/\./\\./g')
 
-#       user_id=$(echo "$response" | grep -o "{[^}]*\"email\":\"$email_escaped\"[^}]*}" | grep -o "\"userId\":[0-9]*" | grep -o "[0-9]*")
+      user_id=$(echo "$response" | grep -o "{[^}]*\"email\":\"$email_escaped\"[^}]*}" | grep -o "\"userId\":[0-9]*" | grep -o "[0-9]*")
           
-#       if [ -z "$user_id" ]; then
-#         echo "User $email not found. You may want to add them first."
-#         exit 1
-#       fi
+      if [ -z "$user_id" ]; then
+        echo "User $email not found. You may want to add them first."
+        exit 1
+      fi
 
-#       # Update user role in the org
-#       curl -s -X PATCH "https://grafana.$domain/api/org/users/$user_id" \
-#         -H "Authorization: Bearer $token" \
-#         -H "Content-Type: application/json" \
-#         -d "{\"role\": \"$role\"}" || exit 1
-#     EOT
-#     interpreter = ["/bin/bash", "-c"]
-#   }
+      # Update user role in the org
+      curl -s -X PATCH "https://grafana.$domain/api/org/users/$user_id" \
+        -H "Authorization: Bearer $token" \
+        -H "Content-Type: application/json" \
+        -d "{\"role\": \"$role\"}" || exit 1
+    EOT
+    interpreter = ["/bin/bash", "-c"]
+  }
 
-#   depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers ]
-# }
+  depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers ]
+}
 
 provider "grafana" {
   url   = "https://grafana.${local.domain_name}"

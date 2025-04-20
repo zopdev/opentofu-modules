@@ -175,7 +175,9 @@ resource "grafana_api_key" "admin_token" {
 }
 
 resource "null_resource" "update_user_roles" {
-  for_each = local.users_with_roles_map
+  for_each = {
+    for user in local.users_with_roles : "${user.email}-${user.role}" => user
+  }
 
   provisioner "local-exec" {
     command = <<EOT
