@@ -100,26 +100,35 @@ resource "null_resource" "wait_for_grafana" {
     google_certificate_manager_certificate_map_entry.cluster_entry,
     google_certificate_manager_certificate_map_entry.wildcard_entry,
     helm_release.k8s_replicator,
-    kubernetes_secret_v1.certificate_replicator
+    kubernetes_secret_v1.certificate_replicator,
+    google_dns_record_set.global_load_balancer_sub_domain,
+    google_dns_record_set.global_load_balancer_top_level_domain,
+    google_project_iam_member.wildcard_dns_solver,
+    google_project_iam_member.wildcard_dns01_solver_dns_admin,
+    google_project_iam_member.wildcard_dns_solver_workloadIdentity,
+    google_project_iam_member.wildcard_dns_solver_iam
   ]
 }
 
 resource "random_password" "admin_passwords" {
   for_each = coalesce(toset(var.user_access.app_admins), toset([]))
-  length   = 16
+  length   = 12
   special  = true
+  override_special = "$"
 }
 
 resource "random_password" "editor_passwords" {
   for_each = coalesce(toset(var.user_access.app_editors), toset([]))
-  length   = 16
+  length   = 12
   special  = true
+  override_special = "$"
 }
 
 resource "random_password" "viewer_passwords" {
   for_each = coalesce(toset(var.user_access.app_viewers), toset([]))
-  length   = 16
+  length   = 12
   special  = true
+  override_special = "$"
 }
 
 resource "grafana_user" "admins" {
@@ -176,7 +185,9 @@ resource "grafana_api_key" "admin_token" {
 }
 
 resource "null_resource" "update_user_roles" {
-  for_each = local.users_with_roles_map
+  for_each = {
+    for user in local.users_with_roles : "${user.email}-${user.role}" => user
+  }
 
   provisioner "local-exec" {
     command = <<EOT
