@@ -8,8 +8,8 @@ mimir:
       ingestion_rate: ${limits_ingestion_rate}
       ingestion_burst_size: ${limits_ingestion_burst_size}
       max_fetched_chunks_per_query: ${limits_max_fetched_chunks_per_query}
-      max_global_series_per_user: 1000000
-      max_cache_freshness: ${limits_max_cache_freshness}
+      max_global_series_per_user: 500000
+      max_cache_freshness: 12h
     memberlist:
       join_members:
       - dns+{{ include "mimir.fullname" . }}-gossip-ring.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ include "mimir.memberlistBindPort" . }}
@@ -21,10 +21,14 @@ mimir:
         sync_dir: "/data"
       tsdb:
         dir: "/data"
+        retention_period: 6h
+        block_ranges_period: ["2h", "12h", "24h"]
     compactor:
       compaction_interval: 5m
       data_dir: "/data"
-      block_ranges: [2h]
+      compaction_interval: 1h
+      retention_enabled: true
+      retention_delete_delay: 2h
     frontend:
       scheduler_address: mimir-query-scheduler.mimir.svc:9095
       split_queries_by_interval: 15m
