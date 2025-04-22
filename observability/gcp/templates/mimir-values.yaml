@@ -22,11 +22,9 @@ mimir:
       tsdb:
         dir: "/data"
     compactor:
-      sharding_enabled: true
       compaction_interval: 5m
       data_dir: "/data"
       block_ranges: [2h]
-      retention_period: 24h
     frontend:
       scheduler_address: mimir-query-scheduler.mimir.svc:9095
       split_queries_by_interval: 15m
