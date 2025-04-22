@@ -22,9 +22,12 @@ mimir:
       tsdb:
         dir: "/data"
     compactor:
+      compaction_interval: 5m
       data_dir: "/data"
+      block_ranges: [2h]
     frontend:
       scheduler_address: mimir-query-scheduler.mimir.svc:9095
+      split_queries_by_interval: 15m
     frontend_worker:
       scheduler_address: mimir-query-scheduler.mimir.svc:9095
     alertmanager:
@@ -54,7 +57,6 @@ compactor:
     size: ${compactor_persistence_volume_size}
   resources:
     requests:
-
       %{~ if  compactor_min_cpu != "null"  ~}
       cpu: ${compactor_min_cpu}
       %{~ endif ~}
@@ -64,7 +66,6 @@ compactor:
       %{~ endif ~}
 
     limits:
-
       %{~ if  compactor_max_cpu != "null"  ~}
       cpu: ${compactor_max_cpu}
       %{~ endif ~}
@@ -87,15 +88,22 @@ compactor:
 
 ingester:
   replicas: ${ingester_replicas}
+  lifecycler:
+    ring:
+      replication_factor: 2
   statefulSet:
     enabled: true
   zoneAwareReplication:
     enabled: false
   persistentVolume:
     size: ${ingester_persistence_volume_size}
+  wal:
+    enabled: true
+    flush_on_shutdown: true
+    flush_idle_period: 1m
+    replay_memory_ceiling: 512MB
   resources:
     requests:
-
       %{~ if  ingester_min_cpu != "null"  ~}
       cpu: ${ingester_min_cpu}
       %{~ endif ~}
@@ -105,7 +113,6 @@ ingester:
       %{~ endif ~}
 
     limits:
-
       %{~ if  ingester_max_cpu != "null"  ~}
       cpu: ${ingester_max_cpu}
       %{~ endif ~}
@@ -127,9 +134,9 @@ ingester:
 
 querier:
   replicas: ${querier_replicas}
+  concurrency: 8
   resources:
     requests:
-
       %{~ if  querier_min_cpu != "null"  ~}
       cpu: ${querier_min_cpu}
       %{~ endif ~}
@@ -139,7 +146,6 @@ querier:
       %{~ endif ~}
 
     limits:
-
       %{~ if  querier_max_cpu != "null"  ~}
       cpu: ${querier_max_cpu}
       %{~ endif ~}
@@ -179,7 +185,6 @@ store_gateway:
   replicas: ${store_gateway_replicas}
   resources:
     requests:
-
       %{~ if  store_gateway_min_cpu != "null"  ~}
       cpu: ${store_gateway_min_cpu}
       %{~ endif ~}
@@ -188,7 +193,6 @@ store_gateway:
       memory: ${store_gateway_min_memory}
       %{~ endif ~}
     limits:
-
       %{~ if  store_gateway_max_cpu != "null"  ~}
       cpu: ${store_gateway_max_cpu}
       %{~ endif ~}
@@ -212,7 +216,6 @@ distributor:
   replicas: ${distributor_replicas}
   resources:
     requests:
-
       %{~ if  distributor_min_cpu != "null"  ~}
       cpu: ${distributor_min_cpu}
       %{~ endif ~}
@@ -222,7 +225,6 @@ distributor:
       %{~ endif ~}
 
     limits:
-
       %{~ if  distributor_max_cpu != "null"  ~}
       cpu: ${distributor_max_cpu}
       %{~ endif ~}
@@ -240,7 +242,6 @@ distributor:
   env:
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: "/etc/mimir/google/gcs.json"
-
 
 ruler:
   extraVolumes:
