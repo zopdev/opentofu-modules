@@ -24,11 +24,8 @@ mimir:
         retention_period: 6h
         block_ranges_period: ["2h", "12h", "24h"]
     compactor:
-      compaction_interval: 5m
       data_dir: "/data"
-      compaction_interval: 1h
-      retention_enabled: true
-      retention_delete_delay: 2h
+      compaction_interval: 5m
     frontend:
       scheduler_address: mimir-query-scheduler.mimir.svc:9095
       split_queries_by_interval: 15m
