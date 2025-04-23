@@ -1,0 +1,40 @@
+controller:
+  opentelemetry:
+    enabled: true
+  config:
+    enable-opentelemetry: "true"
+    otlp-collector-host: "tempo-distributor.tempo:4317"
+    use-gzip: true
+    %{ if prometheus_enabled }
+    proxy-body-size: "4m"
+    proxy_buffer_size: "16k"
+    proxy_buffers: "32 16k"
+    %{ endif }
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Local
+    annotations:
+      service.beta.kubernetes.io/oci-load-balancer-shape: ${load_balancer_shape}
+      service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
+      service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "100"
+      service.beta.kubernetes.io/oci-load-balancer-subnet: ${subnet_id}
+      service.beta.kubernetes.io/oci-load-balancer-internal: "false"
+    loadBalancerIP: ${IPV4_ADDRESS}
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 11
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+  %{ if prometheus_enabled }
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
+  %{ endif }
