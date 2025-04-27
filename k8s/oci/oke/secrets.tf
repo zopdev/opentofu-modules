@@ -1,3 +1,24 @@
+resource "oci_kms_vault" "oci_vault" {
+  compartment_id = var.provider_id
+  display_name   = "${local.cluster_name}-vault"
+  vault_type     = "DEFAULT"  
+  
+  defined_tags   = var.common_tags
+}
+
+resource "oci_kms_key" "oci_key" {
+  compartment_id      = var.provider_id
+  display_name        = "${local.cluster_name}-key"
+  management_endpoint = oci_kms_vault.oci_vault.management_endpoint
+  
+  key_shape {
+    algorithm = "AES"
+    length    = 32  
+  }
+
+  defined_tags  = var.common_tags
+}
+
 # CSI Driver for secret stores, Helm Chart
 resource "helm_release" "csi_driver" {
   chart      = "secrets-store-csi-driver"
