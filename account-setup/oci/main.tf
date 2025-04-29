@@ -114,6 +114,8 @@ resource "oci_core_subnet" "db_subnets" {
   route_table_id = oci_core_route_table.db_route_table[each.key].id
   
   prohibit_public_ip_on_vnic = true
+
+  security_list_ids = [oci_core_security_list.db_subnet_security[each.key].id]
   
   freeform_tags = {
     Environment = each.key
@@ -388,5 +390,41 @@ resource "oci_core_security_list" "private_subnet_security" {
     destination = "0.0.0.0/0"
     destination_type = "CIDR_BLOCK"
     description = "Allow all outbound traffic"
+  }
+}
+
+resource "oci_core_security_list" "db_subnet_security" {
+  for_each       = local.db_subnet_map
+  compartment_id = var.provider_id
+  vcn_id         = each.value.vcn_id
+  display_name   = "${each.key}-db-security"
+
+  ingress_security_rules {
+    protocol    = "6" 
+    source      = [for s in local.private_subnet_map : s.subnet if s.vcn_id == each.value.vcn_id][0]
+    source_type = "CIDR_BLOCK"
+    tcp_options {
+      min = 3306
+      max = 3306
+    }
+    description = "Allow MySQL traffic from Kubernetes nodes"
+  }
+
+  ingress_security_rules {
+    protocol    = "6" 
+    source      = [for s in local.private_subnet_map : s.subnet if s.vcn_id == each.value.vcn_id][0]
+    source_type = "CIDR_BLOCK"
+    tcp_options {
+      min = 5432
+      max = 5432
+    }
+    description = "Allow PSQL traffic from Kubernetes nodes"
+  }
+
+  egress_security_rules {
+    protocol         = "all"
+    destination      = "0.0.0.0/0"
+    destination_type = "CIDR_BLOCK"
+    description      = "Allow all outbound traffic"
   }
 }
