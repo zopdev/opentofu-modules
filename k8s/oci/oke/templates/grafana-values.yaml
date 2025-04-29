@@ -1,0 +1,101 @@
+adminUser: grafana-admin
+adminPassword: ${GRAFANA_OBS_ADMIN_PASSWORD}
+sidecar:
+  datasources:
+    enabled: true
+    labelValue: "1"
+    searchNamespace: ${NAMESPACE}
+  dashboards:
+    enabled: true
+    labelValue: "1"
+    searchNamespace: ${NAMESPACE}
+grafana.ini:
+  feature_toggles:
+    enable: "ngalert"
+  %{~ if PERSISTENCE_TYPE_DB ~}
+  database:
+    name: ${GRAFANA_DB_NAME}
+    type: ${GRAFANA_DB_TYPE}
+    host: ${GRAFANA_DB_HOST}
+    user: ${GRAFANA_DB_USER}
+    password: ${GRAFANA_DB_PASSWORD}
+  %{~ endif ~}
+  server:
+    root_url: https://${GRAFANA_HOST}
+  %{~ if  ENABLE_SSO  ~}
+  auth.google:
+    enabled: true
+    allow_sign_up: true
+    client_id: ${OAUTH_ID}
+    client_secret: ${OAUTH_SECRET}
+    auth_url: https://accounts.google.com/o/oauth2/auth
+    token_url: https://accounts.google.com/o/oauth2/token
+    allowed_domains: ${ALLOWED_DOMAINS}
+    hosted_domain: https://${GRAFANA_HOST}
+    use_pkce: true
+  %{~ endif ~}
+autoscaling:
+  enabled: true
+  minReplicas: ${GRAFANA_MIN_REPLICA}
+  maxReplicas: ${GRAFANA_MAX_REPLICA}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: 80
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: 80
+image:
+  repository: grafana/grafana
+  tag: 10.2.1
+ingress:
+  %{~ if GRAFANA_HOST != "" ~}
+    annotations:
+      kubernetes.io/ingress.class: "nginx"
+    tls:
+      - hosts:
+          - "${GRAFANA_TLS_HOST}"
+        secretName: "tls-secret-replica"
+    enabled: ${GRAFANA_ENABLED}
+    hosts:
+      - ${GRAFANA_HOST}
+  %{~ else ~}
+    enabled: false
+  %{~ endif ~}
+  %{~ if PERSISTENCE_TYPE_PVC ~}
+persistence:
+  type: pvc
+  enabled: ${PERSISTENCE_TYPE_PVC}
+  accessModes:
+    - ReadWriteOnce
+  size: ${PERSISTENCE_DISK_SIZE}
+  %{~ endif ~}
+resources:
+  limits:
+    memory: ${GRAFANA_LIMIT_MEMORY}
+    cpu: ${GRAFANA_LIMIT_CPU}
+  requests:
+    memory: ${GRAFANA_REQUEST_MEMORY}
+    cpu: ${GRAFANA_REQUEST_CPU}
+grafana-sc-dashboard:
+  enabled: ${GRAFANA_ENABLED}
+  resources:
+    limits:
+      cpu: ${GRAFANA_DASHBOARD_LIMIT_CPU}
+      memory: ${GRAFANA_DASHBOARD_LIMIT_MEMORY}
+    requests:
+      cpu: ${GRAFANA_DASHBOARD_REQUEST_CPU}
+      memory: ${GRAFANA_DASHBOARD_REQUEST_MEMORY}
+grafana-sc-datasources:
+  enabled: ${GRAFANA_ENABLED}
+  resources:
+    limits:
+      cpu: ${GRAFANA_DATASOURCE_LIMIT_CPU}
+      memory: ${GRAFANA_DATASOURCE_LIMIT_MEMORY}
+    requests:
+      cpu: ${GRAFANA_DATASOURCE_REQUEST_CPU}
+      memory: ${GRAFANA_DATASOURCE_REQUEST_MEMORY}
+deploymentStrategy:
+  type: Recreate
