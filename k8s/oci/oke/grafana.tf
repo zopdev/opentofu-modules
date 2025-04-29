@@ -67,7 +67,7 @@ resource "helm_release" "grafana" {
     data.template_file.grafana_template[count.index].rendered
   ]
 
-  depends_on = [ kubernetes_namespace.monitoring ]
+  depends_on = [ helm_release.prometheus ]
 }
 
 resource "kubernetes_config_map" "grafana_custom_datasource" {
