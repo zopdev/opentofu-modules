@@ -73,6 +73,7 @@ variable "services" {
     }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
+      image              = optional(string)
       replica_count    = optional(number)
       cli_service      = optional(bool)
       http_port        = optional(string)
@@ -85,6 +86,11 @@ variable "services" {
       heartbeat_url    = optional(string)
       ports            = optional(map(any))
       env              = optional(map(any))
+      env_list         = optional(list(object({
+        name  = string
+        value = string
+      })))
+      command = optional(list(string))
       configmaps_list  = optional(list(string))
       secrets_list     = optional(list(string))
       hpa              = optional(object({
@@ -165,6 +171,7 @@ variable "cron_jobs" {
     }))
     helm_configs       = optional(object({
       image_pull_secrets = optional(list(string))
+      image              = optional(string)
       schedule           = string
       suspend            = optional(bool)
       concurrency_policy = optional(string)
@@ -175,6 +182,11 @@ variable "cron_jobs" {
       max_cpu          = optional(string)
       max_memory       = optional(string)
       env              = optional(map(any))
+      env_list         = optional(list(object({
+        name  = string
+        value = string
+      })))
+      command = optional(list(string))
       configmaps_list  = optional(list(string))
       secrets_list     = optional(list(string))
       volume_mounts  = optional(object({

@@ -43,8 +43,8 @@ data "template_file" "prom_template" {
   template = file("./templates/prometheus-values.yaml")
   vars     = {
     PROMETHEUS_DISK_SIZE              = try(var.observability_config.prometheus.persistence.disk_size != null ? var.observability_config.prometheus.persistence.disk_size : "50Gi", "50Gi")
-    PROMETHEUS_RETENTION_SIZE         = try(var.observability_config.prometheus.persistence.retention_size != null ? var.observability_config.prometheus.persistence.retention_size : "45GB", "45GB")
-    PROMETHEUS_RETENTION_DURATION     = try(var.observability_config.prometheus.persistence.retention_duration != null ? var.observability_config.prometheus.persistence.retention_duration : "10d", "10d")
+    PROMETHEUS_RETENTION_SIZE         = try(var.observability_config.prometheus.persistence.retention_size != null ? var.observability_config.prometheus.persistence.retention_size : "20GB", "20GB")
+    PROMETHEUS_RETENTION_DURATION     = try(var.observability_config.prometheus.persistence.retention_duration != null ? var.observability_config.prometheus.persistence.retention_duration : "7d", "7d")
     CLUSTER_NAME                      = local.cluster_name
     REMOTE_WRITE_CONFIGS              = jsonencode(local.remote_write_config)
     ALERTS_ENABLED                    = jsonencode(local.cluster_moogsoft_alerts) != "" || jsonencode(local.namespace_teams_webhook) != "" || jsonencode(local.cluster_teams_alerts) != "" || jsonencode(local.google_chat_alerts) != ""  ? true : false

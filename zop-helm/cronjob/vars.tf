@@ -23,6 +23,12 @@ variable "http_port" {
   type        = number
 }
 
+variable "command" {
+  description = "command for docker run"
+  type        = list(string)
+  default = [ ]
+}
+
 variable "metrics_port" {
   description = "Port number to be used for metrics"
   type        = number
@@ -49,8 +55,18 @@ variable "max_memory" {
 }
 
 variable "env" {
-  description = "Environment variables to be defined for a container"
+  description = "Environment variables to be defined for a container (legacy map format)"
   type        = map(any)
+  default     = {}
+}
+
+variable "env_list" {
+  description = "Environment variables to be defined for a container (new list format)"
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  default = []
 }
 
 variable "schedule" {

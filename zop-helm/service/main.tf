@@ -1,19 +1,22 @@
 locals {
-  # Check if APP_NAME exists in the env map
-  app_name_exists = contains(keys(var.env), "APP_NAME")
+  # Check if env_list is null or empty
+  env_list = var.env_list != null ? var.env_list : []
 
-  # Merge the original env map with the APP_NAME key-value pair if it does not exist
-  updated_env = merge(
-    var.env,
-      local.app_name_exists ? {} : { "APP_NAME" = var.name }
-  )
+  # Check if APP_NAME exists in the env_list
+  app_name_exists_list = length([for item in local.env_list : item if item.name == "APP_NAME"]) > 0
+
+  # Add APP_NAME to the env_list if it doesn't exist
+  updated_env_list = local.app_name_exists_list ? local.env_list : concat(local.env_list, [{
+    name  = "APP_NAME"
+    value = var.name
+  }])
 }
 
 resource "helm_release" "service_helm"{
   name        = var.name
   namespace   = var.namespace
   repository  = "https://helm.zop.dev"
-  version     = "v0.0.18"
+  version     = "v0.0.22"
   chart       = "service"
   reuse_values = true
 
@@ -36,8 +39,10 @@ resource "helm_release" "service_helm"{
     hpa_max_replicas                = var.hpa_max_replicas
     hpa_cpu_limit                   = var.hpa_cpu_limit
     hpa_memory_limit                = var.hpa_memory_limit
+    command                         = var.command
     heartbeat_url                   = var.heartbeat_url
-    env                             = jsonencode(local.updated_env)
+    env                             = jsonencode(var.env)
+    envList                         = jsonencode(local.updated_env_list)
     enable_readiness_probe          = var.enable_readiness_probe
     enable_liveness_probe           = var.enable_liveness_probe
     readiness_initial_delay_seconds = var.readiness_initial_delay_seconds
@@ -59,5 +64,4 @@ resource "helm_release" "service_helm"{
     pub_sub                         = var.pub_sub
     service_random_string           = var.service_random_string
   })]
-
 }

@@ -11,9 +11,13 @@ locals {
   })
 
   deployment_new_images = tomap({
-    for k,v in var.services : k => "zopdev/sample-go-api:latest" if (! contains(keys(local.deployment_api_image_map), k ))
+    for k, v in var.services : k => (
+      (v.helm_configs != null && v.helm_configs.image != null && v.helm_configs.image != "")
+      ? v.helm_configs.image
+      : "zopdev/sample-go-api:latest"
+    ) if (!contains(keys(local.deployment_api_image_map), k))
   })
-
+  
   deployment_all_images = merge(local.deployment_existing_images, local.deployment_new_images)
 
 }
@@ -69,7 +73,8 @@ module "service_deployment" {
   hpa_cpu_limit     = each.value.helm_configs != null ? (each.value.helm_configs.hpa!= null ? (each.value.helm_configs.hpa.cpu_limit != null ? each.value.helm_configs.hpa.cpu_limit : "null") : "null"): "null"
   hpa_memory_limit  = each.value.helm_configs != null ? (each.value.helm_configs.hpa!= null ? (each.value.helm_configs.hpa.memory_limit != null ? each.value.helm_configs.hpa.memory_limit : "null") : "null") : "null"
   heartbeat_url  = each.value.helm_configs != null ? (each.value.helm_configs.heartbeat_url != null ? each.value.helm_configs.heartbeat_url : "") : ""
-  env            = merge((each.value.helm_configs != null ? (each.value.helm_configs.env != null ? each.value.helm_configs.env : {}) : {}), (local.ssl ? {DB_ENABLE_SSL = true} : {DB_ENABLE_SSL = false}))
+  env            = (each.value.helm_configs != null ? (each.value.helm_configs.env != null ? each.value.helm_configs.env : {}) : {})
+  env_list       = each.value.helm_configs != null ? each.value.helm_configs.env_list != null ? each.value.helm_configs.env_list : null : null
   enable_readiness_probe = each.value.helm_configs != null ? (each.value.helm_configs.readiness_probes != null ? (each.value.helm_configs.readiness_probes.enable != null ? each.value.helm_configs.readiness_probes.enable : false) : false) : false
   enable_liveness_probe  = each.value.helm_configs != null ? (each.value.helm_configs.liveness_probes != null ? (each.value.helm_configs.liveness_probes.enable != null ? each.value.helm_configs.liveness_probes.enable : false) : false) : false
   readiness_initial_delay_seconds = each.value.helm_configs != null ? (each.value.helm_configs.readiness_probes != null ? (each.value.helm_configs.readiness_probes.initial_delay_seconds != null ? each.value.helm_configs.readiness_probes.initial_delay_seconds : 3) : 3) : 3
@@ -91,6 +96,7 @@ module "service_deployment" {
   pub_sub = each.value.pub_sub != null ? each.value.pub_sub : false
   infra_alerts     = each.value.helm_configs != null ? (each.value.helm_configs.infra_alerts != null ? each.value.helm_configs.infra_alerts : null ) : null
   service_random_string = random_string.service_account_name[each.key].result
+  command = each.value.helm_configs != null ? (each.value.helm_configs.command != null ? each.value.helm_configs.command : null ) : null
 
   depends_on = [module.sql_db, module.sql_db_v2 , module.local_redis]
 }

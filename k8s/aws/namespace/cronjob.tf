@@ -10,8 +10,12 @@ locals {
     for k,v in var.cron_jobs : k => local.cron_api_image_map[k] if contains(keys(local.cron_api_image_map), k )
   })
 
-  cron_new_images = tomap({
-    for k,v in var.cron_jobs : k => "zopdev/sample-go-api:latest" if (! contains(keys(local.cron_api_image_map), k ))
+  cron_new_images = ({
+    for k,v in var.cron_jobs : k =>(
+      (v.helm_configs != null && v.helm_configs.image != null && v.helm_configs.image != "")
+      ? v.helm_configs.image
+      : "zopdev/sample-go-api:latest"
+    ) if (!contains(keys(local.cron_api_image_map), k))
   })
 
   cron_all_images = merge(local.cron_existing_images, local.cron_new_images)
@@ -59,7 +63,8 @@ module "cronjob" {
   min_memory    = each.value.helm_configs != null ? (each.value.helm_configs.min_memory != null ? each.value.helm_configs.min_memory : "128M") : "128M"
   max_cpu       = each.value.helm_configs != null ? (each.value.helm_configs.max_cpu != null ? each.value.helm_configs.max_cpu : "500m") : "500m"
   max_memory    = each.value.helm_configs != null ? (each.value.helm_configs.max_memory != null ? each.value.helm_configs.max_memory : "512M") : "512M"
-  env           = merge((each.value.helm_configs != null ? (each.value.helm_configs.env != null ? each.value.helm_configs.env : {}) : {}), (local.ssl ? {DB_ENABLE_SSL = true} : {DB_ENABLE_SSL = false}))
+  env           = (each.value.helm_configs != null ? (each.value.helm_configs.env != null ? each.value.helm_configs.env : {}) : {})
+  env_list       = each.value.helm_configs != null ? each.value.helm_configs.env_list != null ? each.value.helm_configs.env_list : null : null
   app_secrets   = each.value.db_name != null || each.value.custom_secrets != null || each.value.datastore_configs != null ? ["${each.key}-application-secrets"] : []
   db_ssl_enabled   = local.ssl
   schedule      = each.value.helm_configs != null ? each.value.helm_configs.schedule : ""
@@ -71,6 +76,7 @@ module "cronjob" {
   volume_mount_secrets     = each.value.helm_configs != null ? ( each.value.helm_configs.volume_mounts != null ? (each.value.helm_configs.volume_mounts.secrets != null ? each.value.helm_configs.volume_mounts.secrets : {}) : {} ) : {}
   volume_mount_pvc      = coalesce(each.value.badger_db, false) ? local.badger_db_volume_mounts_crons[each.key] : {}
   infra_alerts     = each.value.helm_configs != null ? (each.value.helm_configs.infra_alerts != null ? each.value.helm_configs.infra_alerts : null ) : null
+  command = each.value.helm_configs != null ? (each.value.helm_configs.command != null ? each.value.helm_configs.command : null ) : null
 
   depends_on = [module.rds, module.rds_v2, module.local_redis]
 }

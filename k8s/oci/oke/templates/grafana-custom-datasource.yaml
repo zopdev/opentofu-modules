@@ -1,0 +1,41 @@
+apiVersion: 1
+datasources:
+  %{~ if mimir_datasource ~}
+  - name: ${datasource_name}-metrics
+    uid: ${datasource_name}-${datasource_header_value}-metrics
+    type: prometheus
+    access: proxy
+    url: http://mimir-query-frontend.mimir:8080/prometheus
+    basicAuth: false
+    editable: false
+    isDefault: false
+    jsonData:
+      httpMethod: GET
+      httpHeaderName1: 'X-Scope-OrgID'
+    secureJsonData:
+      httpHeaderValue1: '${datasource_header_value}'
+  %{~ endif ~}
+  %{~ if loki_datasource ~}
+  - name: ${datasource_name}-logs
+    type: loki
+    uid: ${datasource_name}-${datasource_header_value}-logs
+    url: http://loki-query-frontend.loki:3100
+    basicAuth: false
+    editable: false
+    isDefault: false
+    jsonData:
+      %{~ if tempo_datasource ~}
+      derivedFields:
+        - datasourceUid: Tempo
+          name: X-Correlation-Id
+          matcherRegex: "\"X-Correlation-Id\":\"([a-zA-Z0-9-]+)\""
+          url: '$${__value.raw}'
+        - datasourceUid: Tempo
+          name: correlationId
+          matcherRegex: "\"correlationId\":\"([a-zA-Z0-9-]+)\""
+          url: '$${__value.raw}'
+      %{~ endif ~}
+      httpHeaderName1: "X-Scope-OrgID"
+    secureJsonData:
+      httpHeaderValue1: '${datasource_header_value}'
+  %{~ endif ~}
