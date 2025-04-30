@@ -420,6 +420,17 @@ resource "oci_core_security_list" "db_subnet_security" {
     }
     description = "Allow PSQL traffic from Kubernetes nodes"
   }
+  
+  ingress_security_rules {
+    protocol    = "6"  
+    source      = [for s in local.private_subnet_map : s.subnet if s.vcn_id == each.value.vcn_id][0]
+    source_type = "CIDR_BLOCK"
+    tcp_options {
+      min = 6379
+      max = 6379
+    }
+    description = "Allow Redis traffic from Kubernetes nodes"
+  }
 
   egress_security_rules {
     protocol         = "all"
