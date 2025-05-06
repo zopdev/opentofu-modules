@@ -42,6 +42,7 @@ locals {
 
 module "aks" {
   source = "Azure/aks/azurerm"
+  version = "9.4.1"
 
   prefix                             = local.cluster_name
   resource_group_name                = var.resource_group_name
