@@ -1,0 +1,26 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: "${cert_issuer_url}"
+    email: "${email}"
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - dns01:
+        webhook:
+          groupName: acme.oracle.com
+          solverName: ocidns
+          config:
+            compartmentId: "${compartment_id}"
+            dnsZoneName: "${dns_zone_name}"
+            tenancyId: "${tenancy_id}"
+            userId: "${user_id}"
+            fingerprint: "${fingerprint}"
+            region: "${region}"
+            privateKeySecretRef:
+              name: oci-api-key
+              key: apiKey
+          

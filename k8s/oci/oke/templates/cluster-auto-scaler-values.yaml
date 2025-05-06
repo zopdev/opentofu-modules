@@ -1,0 +1,29 @@
+autoDiscovery:
+  clusterName: ${CLUSTER_NAME}
+  enabled: true
+
+cloudProvider: oci-oke
+
+extraArgs:
+  logtostderr: "true"
+  v: "4"
+  stderrthreshold: info
+  max-node-provision-time: 25m
+  scale-down-unneeded-time: 2m
+  unremovable-node-recheck-timeout: 5m
+  balance-similar-node-groups: "true"
+  balancing-ignore-label:
+    - displayName
+    - hostname
+    - internal_addr
+    - oci.oraclecloud.com/fault-domain
+
+extraEnv:
+  OCI_REGION: ${REGION}
+  OCI_USE_INSTANCE_PRINCIPAL: "true"
+  OKE_USE_INSTANCE_PRINCIPAL: "true"
+  OCI_SDK_APPEND_USER_AGENT: oci-oke-cluster-autoscaler
+
+image:
+  repository: iad.ocir.io/oracle/oci-cluster-autoscaler
+  tag: 1.26.2-7
