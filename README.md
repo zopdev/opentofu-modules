@@ -199,4 +199,4 @@ This project is licensed under the [Apache 2.0 License](./LICENSE).
 
 ## 📣 **Stay Connected**
 
-For updates and support, visit the [zop.dev website](https://helm.zop.dev), join our [Discord community](https://discord.com/invite/jtKqDNBJNt), or participate in community discussions.
+For updates and support, visit the [zop.dev website](https://helm.zop.dev), join our [Discord community](https://discord.com/invite/jtKqDNBJNt) and participate in community discussions.
