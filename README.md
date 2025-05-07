@@ -180,4 +180,5 @@ Deploy Zop.dev-based log management agents.
 | AWS    | [`kops-kube/aws/`](./kops-kube/aws/)  | 
 | Azure  | [`kops-kube/azure/`](./kops-kube/azure/)|
 | GCP    | [`kops-kube/gcp/`](./kops-kube/gcp)  |
+| OCI    | [`kops-kube/oci/`](./kops-kube/oci)  |
 ---
