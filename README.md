@@ -1,14 +1,7 @@
 <p align="center">
   <img src="https://zop.dev/resources/cdn/newsletter/zopdev-transparent-logo.png" alt="zop.dev Logo" width="200">
 </p>
-
 <h2 align="center">OPENTOFU MODULES</h2>
-
-<p align="center">
-  <a href="./LICENSE">
-    <img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=for-the-badge" alt="Apache 2.0 License">
-  </a>
-</p>
 
 A Terraform-based open-source framework to **provision, manage, and operate Kubernetes clusters, cloud services, and observability systems** across **AWS, GCP, Azure, and OCI** — with production-ready modules.
 
@@ -30,6 +23,12 @@ To simplify and standardize **Kubernetes cluster creation**, **datastore managem
 - 📁 Terraform remote state handling
 - 🚀 Helm-based service and cronjob deployment via [zopdev/helm-charts](https://github.com/zopdev/helm-charts)
 
+---
+## 🛠️ Prerequisites
+
+- Terraform v1.3+
+- Cloud CLI (aws / gcloud / az / oci)
+- Helm (for local deployments)
 ---
 
 ## 📦 Module Overview
@@ -181,22 +180,8 @@ Deploy Zop.dev-based log management agents.
 | AWS    | [`kops-kube/aws/`](./kops-kube/aws/)  | 
 | Azure  | [`kops-kube/azure/`](./kops-kube/azure/)|
 | GCP    | [`kops-kube/gcp/`](./kops-kube/gcp)  |
-
----
-
-## 🛠️ Prerequisites
-
-- Terraform v1.3+
-- Cloud CLI (aws / gcloud / az / oci)
-- Helm (for local deployments)
----
-
-## 🔒 **License**
-
-This project is licensed under the [Apache 2.0 License](./LICENSE).
-
 ---
 
 ## 📣 **Stay Connected**
 
-For updates and support, visit the [zop.dev website](https://helm.zop.dev), join our [Discord community](https://discord.com/invite/jtKqDNBJNt) and participate in community discussions.
+For updates and support, visit the [zop.dev](https://helm.zop.dev) website.
