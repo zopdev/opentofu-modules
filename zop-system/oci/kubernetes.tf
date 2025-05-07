@@ -1,6 +1,6 @@
 
 locals {
-  cluster_prefix = var.shared_services.cluster_prefix != null ? var.shared_services.cluster_prefix : var.app_name
+  cluster_prefix = var.shared_services.cluster_prefix
 }
 
 data "oci_containerengine_clusters" "oke" {

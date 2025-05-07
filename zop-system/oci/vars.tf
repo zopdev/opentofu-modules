@@ -1,8 +1,3 @@
-variable "app_name" {
-    description = "This is the name of the cluster. This name is also used to namespace all the other resources created by this module."
-    type        = string
-}
-
 variable "app_region" {
   description = "App region of the cluster"
   type        = string
