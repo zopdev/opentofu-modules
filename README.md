@@ -181,7 +181,3 @@ Deploy Zop.dev-based log management agents.
 | Azure  | [`kops-kube/azure/`](./kops-kube/azure/)|
 | GCP    | [`kops-kube/gcp/`](./kops-kube/gcp)  |
 ---
-
-## 📣 **Stay Connected**
-
-For updates and support, visit the [zop.dev](https://helm.zop.dev) website.
