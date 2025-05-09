@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: postgres-init-${rds_name}
+  namespace: ${namespace}
+spec:
+  containers:
+    - name: postgres-init-role
+      image: postgres:14
+      command: [ "psql" ]
+      args: ["postgresql://${db_user}@${db_host}:${db_port}/${db_name}", "-f", "/etc/config/db-init.sql"]
+      env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ${master_secret_name}
+              key: password
+      volumeMounts:
+        - name: secret-volume
+          mountPath: /etc/config
+  initContainers:
+    - name: postgres-init-db
+      image: postgres:13
+      command: [ "psql" ]
+      args: ["postgresql://${db_user}@${db_host}:${db_port}/postgres", "-f", "/etc/config/db-init.sql"]
+      env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ${master_secret_name}
+              key: password
+      volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+  volumes:
+    - name: secret-volume
+      secret:
+        secretName: postgres-db-secret-${rds_name}
+    - name: config-volume
+      configMap:
+        name: postgres-db-config-${rds_name}-create-db
+  restartPolicy: Never
