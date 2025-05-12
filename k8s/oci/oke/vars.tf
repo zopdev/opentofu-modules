@@ -38,7 +38,7 @@ variable "node_config" {
   description = "List of values for the node configuration of kubernetes cluster"
   type        = object({
     node_type               = string
-    opus                    = number
+    ocpus                   = number
     size                    = number
     memory                  = number
     boot_volume_size        = number
