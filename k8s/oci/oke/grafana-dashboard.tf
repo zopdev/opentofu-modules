@@ -47,7 +47,49 @@ locals {
 resource "null_resource" "wait_for_grafana" {
   provisioner "local-exec" {
     command = <<-EOT
-    sleep 10
+      #!/bin/bash
+      
+      DOMAIN_NAME="${local.domain_name}"
+      
+      echo "Checking Grafana readiness for domain: $DOMAIN_NAME"
+      
+      for i in {1..30}; do
+        echo "Checking Grafana login page..."
+        RESPONSE=$(curl -sk https://grafana.$DOMAIN_NAME/login || true)
+        
+        if echo "$RESPONSE" | grep -q '<title>Grafana</title>'; then
+          echo "Grafana login page is reachable."
+          break
+        else
+          echo "Grafana UI not ready yet."
+        fi
+        
+        if [ $i -eq 30 ]; then
+          echo "Grafana UI was not ready after 30 attempts."
+          exit 1
+        fi
+        
+        echo "Waiting 10s before retrying..."
+        sleep 10
+      done
+      
+      echo "Validating TLS certificate..."
+      for j in {1..60}; do
+        echo "Certificate check attempt $j..."
+        
+        if curl -s --head -o /dev/null -w "%%{http_code}" https://grafana.$DOMAIN_NAME --connect-timeout 5 | grep -q "200\|302"; then
+          echo "TLS certificate verified successfully!"
+          exit 0
+        else
+          echo "Valid certificate not detected yet, retrying..."
+        fi
+        
+        echo "Waiting 10s before retrying certificate check..."
+        sleep 10
+      done
+      
+      echo "TLS certificate validation failed after waiting."
+      exit 1
     EOT
     interpreter = ["/bin/bash", "-c"]
   }
@@ -139,15 +181,15 @@ resource "null_resource" "update_user_roles" {
     for user in local.users_with_roles : "${user.email}-${user.role}" => user
   }
 
-  provisioner "local-exec" {  ## change this while testing in stage for the domain
+  provisioner "local-exec" {  
     command = <<EOT
       email="${each.value.email}"
       role="${each.value.role}"
-      domain="http://localhost:60025"  ## change this 
+      domain="${local.domain_name}"
       token="${grafana_api_key.admin_token.key}"
 
       response=$(curl -s -H "Authorization: Bearer $token" \
-              "http://localhost:60025/api/org/users")
+              "https://grafana.$domain/api/org/users")
 
       email_escaped=$(echo "$email" | sed 's/\./\\./g')
 
@@ -159,7 +201,7 @@ resource "null_resource" "update_user_roles" {
       fi
 
       # Update user role in the org
-      curl -s -X PATCH "http://localhost:60025/api/org/users/$user_id" \
+      curl -s -X PATCH "https://grafana.$domain/api/org/users/$user_id" \
         -H "Authorization: Bearer $token" \
         -H "Content-Type: application/json" \
         -d "{\"role\": \"$role\"}" || exit 1
@@ -171,6 +213,6 @@ resource "null_resource" "update_user_roles" {
 }
 
 provider "grafana" {
-  url   = "http://localhost:60025/"
+  url   = "https://grafana.${local.domain_name}"
   auth  = local.grafana_auth
 }

@@ -82,3 +82,21 @@ resource "oci_identity_policy" "oke_viewer_policy" {
   ]
 }
 
+resource "oci_identity_dynamic_group" "oke_secrets_dynamic_group" {
+  compartment_id = var.provider_id
+  name           = "${local.cluster_name}-secrets-dynamic-group"
+  description    = "Dynamic group for Vault and Secrets access for ${local.cluster_name}"
+
+  matching_rule = "ALL {instance.compartment.id = '${var.provider_id}'}"
+}
+
+resource "oci_identity_policy" "oke_secrets_policy" {
+  name           = "${local.cluster_name}-secrets-policy"
+  description    = "Policy for Vault and Secrets access for OKE nodes"
+  compartment_id = var.provider_id
+  statements = [
+    "Allow dynamic-group ${oci_identity_dynamic_group.oke_secrets_dynamic_group.name} to read secret-bundles in compartment id ${var.provider_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.oke_secrets_dynamic_group.name} to use secret-family in compartment id ${var.provider_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.oke_secrets_dynamic_group.name} to manage vaults in compartment id ${var.provider_id}" 
+  ]
+}

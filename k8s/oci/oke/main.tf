@@ -48,7 +48,7 @@ module "oke" {
   worker_pools = {
     np1 = {
       shape              = var.node_config.node_type,
-      ocpus              = var.node_config.opus, 
+      ocpus              = var.node_config.ocpus, 
       memory             = var.node_config.memory, 
       size               = var.node_config.size,
       boot_volume_size   = var.node_config.boot_volume_size,
