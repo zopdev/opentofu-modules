@@ -68,9 +68,10 @@ variable "cert_issuer_config"{
   })
 }
 
-variable "private_key_path" {
-  description = "Path for the private key"
+variable "private_key_content" {
+  description = "Content in the private key"
   type = string
+  sensitive = true
 }
 
 variable "public_ingress" {
