@@ -41,7 +41,7 @@ provider "kubernetes" {
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "oci"
-    args        = ["ce", "cluster", "generate-token", "--cluster-id", data.oci_containerengine_clusters.oke.id, "--region", var.app_region]
+    args        = ["ce", "cluster", "generate-token", "--cluster-id", data.oci_containerengine_clusters.oke.clusters[0].id, "--region", var.app_region]
   }
 }
 
@@ -53,7 +53,7 @@ provider "helm" {
     exec {
       api_version = "client.authentication.k8s.io/v1beta1"
       command     = "oci"
-      args        = ["ce", "cluster", "generate-token", "--cluster-id", data.oci_containerengine_clusters.oke.id, "--region", var.app_region]
+      args        = ["ce", "cluster", "generate-token", "--cluster-id", data.oci_containerengine_clusters.oke.clusters[0].id, "--region", var.app_region]
     }
   }
 }
