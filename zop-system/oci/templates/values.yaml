@@ -3,4 +3,6 @@ env:
   APP_REGION      : ${app_region}
   CLOUD_PLATFORM  : ${cloud_platform}
   PROVIDER_ID     : ${provider_id}
+  PROVIDER_NAME   : ${provider_name}
   OPENCOST_HOST   : ${opencost_host}
+  CLUSTER_OCID    : ${cluster_ocid}

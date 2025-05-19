@@ -26,7 +26,7 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "image"
-    value = "alpine:latest"
+    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kube-management-api-oci:feef57b776c0b916f8f72be03bccc11c854f3cf9"
   }
 
   set_list {
@@ -94,7 +94,9 @@ resource "helm_release" "service_helm"{
     app_region      = var.app_region
     cloud_platform  = "OCI"
     provider_id     = var.provider_id
+    cluster_ocid    = data.oci_containerengine_clusters.oke.clusters[0].id
     opencost_host   = "opencost.monitoring:9003"
+    provider_name   = "DEFAULT"
   })]
 
   depends_on = [kubernetes_namespace.app_environments]
