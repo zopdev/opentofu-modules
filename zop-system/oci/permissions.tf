@@ -58,7 +58,7 @@ resource "kubernetes_secret" "zop_system_secrets" {
       user_ocid       = oci_identity_user.zop_user.id,
       tenancy_ocid    = var.provider_id,
       fingerprint     = oci_identity_api_key.zop_user_api_key.fingerprint,
-      private_key_pem = tls_private_key.zop_user_api_key.private_key_pem,
+      private_key     = tls_private_key.zop_user_api_key.private_key_pem,
       region          = var.app_region
     })
     X_API_KEY = random_password.zop_system_api_key.result
