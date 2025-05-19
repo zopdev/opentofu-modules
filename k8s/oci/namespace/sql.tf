@@ -32,11 +32,11 @@ module "sql_db" {
   
   namespace             = var.namespace
   provider_id           = var.provider_id
-  subnet_id             = module.remote_state_oci_cluster.0.db_subnets
+  subnet_id             = local.db_subnets
   availability_domain   = data.oci_identity_availability_domains.availability_domains.availability_domains[0].name
   cluster_name          = local.cluster_name
-  vault_id              = module.remote_state_oci_cluster.0.kms_vault_id
-  key_id                = module.remote_state_oci_cluster.0.kms_key_id
+  vault_id              = local.kms_vault_id
+  key_id                = local.kms_key_id
 
   mysql_db_system_name  = each.key
   databases             = try(local.database_map[each.key], [])
@@ -103,11 +103,11 @@ module "psql_db" {
   
   namespace               = var.namespace
   provider_id             = var.provider_id
-  subnet_id               = module.remote_state_oci_cluster.0.db_subnets
+  subnet_id               = local.db_subnets
   availability_domain     = data.oci_identity_availability_domains.availability_domains.availability_domains[0].name
   cluster_name            = local.cluster_name
-  vault_id                = module.remote_state_oci_cluster.0.kms_vault_id
-  key_id                  = module.remote_state_oci_cluster.0.kms_key_id
+  vault_id                = local.kms_vault_id
+  key_id                  = local.kms_key_id
 
   postgres_db_system_name = each.key
   databases               = try(local.database_map[each.key], [])

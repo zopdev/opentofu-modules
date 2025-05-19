@@ -10,7 +10,7 @@ output "cluster_name" {
   value = local.cluster_name
 }
 
-output "cluster_id" {
+output "cluster_uid" {
   description = "Kubernetes Cluster Name"
   value = module.oke.cluster_id
 }

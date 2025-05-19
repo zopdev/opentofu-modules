@@ -1,9 +1,3 @@
-locals {
-  cluster_name = module.remote_state_oci_cluster.0.cluster_name
-  cluster_id  = module.remote_state_oci_cluster.0.cluster_id
-
-  k8s_endpoint = module.remote_state_oci_cluster.0.kubernetes_endpoint.public_endpoint
-}
 resource "oci_identity_group" "oke_namespace_admins" {
   compartment_id = var.provider_id
   description    = "Admin group for ${local.cluster_name}-${var.namespace} namespace"
