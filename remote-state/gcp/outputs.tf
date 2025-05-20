@@ -45,3 +45,23 @@ output "all_outputs" {
 output "azurerm_key_vault_name" {
   value = try(data.terraform_remote_state.infra_output.outputs.azurerm_key_vault_name, "")
 }
+
+output "vcn_id" {
+  value = try(data.terraform_remote_state.infra_output.outputs.vcn_id,"")
+}
+
+output "worker_subnet_id" {
+  value =  try(data.terraform_remote_state.infra_output.outputs.worker_subnets_id,"")
+}
+
+output "publb_subnet_id" {
+  value = try(data.terraform_remote_state.infra_output.outputs.publb_subnets_id,"")
+}
+
+output "kms_vault_id" {
+  value = try(data.terraform_remote_state.infra_output.outputs.kms_vault_id, "")
+}
+
+output "kms_key_id" {
+  value = try(data.terraform_remote_state.infra_output.outputs.kms_key_id, "")
+}

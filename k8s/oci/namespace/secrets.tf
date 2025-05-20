@@ -42,7 +42,7 @@ resource "kubectl_manifest" "secrets_provider" {
       ))
       namespace    = kubernetes_namespace.app_environments.metadata[0].name
       service_name = each.key
-      vault_ocid   = module.remote_state_oci_cluster.0.kms_vault_id
+      vault_ocid   = local.kms_vault_id
     }
   )
 }
@@ -61,7 +61,7 @@ resource "kubectl_manifest" "secrets_provider_cron_jobs" {
       ))
       namespace    = kubernetes_namespace.app_environments.metadata[0].name
       service_name = each.key
-      vault_ocid   = module.remote_state_oci_cluster.0.kms_vault_id
+      vault_ocid   = local.kms_vault_id
     }
   )
 }

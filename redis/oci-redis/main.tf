@@ -5,7 +5,7 @@ resource "oci_redis_redis_cluster" "redis_cluster" {
     node_memory_in_gbs        = var.redis.memory_size
     software_version          = var.redis.redis_version
     
-    subnet_id                 = module.remote_state_oci_cluster.0.db_subnets
+    subnet_id                 = local.db_subnets
 }
 
 resource "kubernetes_service" "redis_external" {
