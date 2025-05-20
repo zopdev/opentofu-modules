@@ -7,4 +7,6 @@ module "nginx" {
   app_name                 = local.cluster_name
   lb_ip                    = oci_core_public_ip.lb_public_ip.ip_address
   prometheus_enabled       = false
+
+  depends_on = [ helm_release.prometheus ]
 }

@@ -67,7 +67,7 @@ resource "helm_release" "grafana" {
     data.template_file.grafana_template[count.index].rendered
   ]
 
-  depends_on = [ kubernetes_namespace.monitoring ]
+  depends_on = [ helm_release.prometheus ]
 }
 
 resource "kubernetes_config_map" "grafana_custom_datasource" {
@@ -139,38 +139,13 @@ resource "kubernetes_config_map" "grafana_service_dashboard" {
   }
 }
 
-resource "oci_kms_vault" "grafana_vault" {
-  count = local.grafana_enable ? 1 : 0
-
-  compartment_id = var.provider_id
-  display_name   = "${local.cluster_name}-vault"
-  vault_type     = "DEFAULT"  
-  
-  defined_tags   = var.common_tags
-}
-
-resource "oci_kms_key" "grafana_key" {
-  count = local.grafana_enable ? 1 : 0
-  
-  compartment_id      = var.provider_id
-  display_name        = "${local.cluster_name}-key"
-  management_endpoint = oci_kms_vault.grafana_vault[0].management_endpoint
-  
-  key_shape {
-    algorithm = "AES"
-    length    = 32  
-  }
-
-  defined_tags  = var.common_tags
-}
-
 resource "oci_vault_secret" "observability_admin" {
   count = local.grafana_enable ? 1 : 0
   
   compartment_id = var.provider_id
   secret_name    = "${local.cluster_name}-grafana-admin-password"
-  vault_id       = oci_kms_vault.grafana_vault[0].id
-  key_id         = oci_kms_key.grafana_key[0].id
+  vault_id       = oci_kms_vault.oci_vault.id
+  key_id         = oci_kms_key.oci_key.id
   
   secret_content {
     content_type = "BASE64"

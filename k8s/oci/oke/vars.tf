@@ -38,7 +38,7 @@ variable "node_config" {
   description = "List of values for the node configuration of kubernetes cluster"
   type        = object({
     node_type               = string
-    opus                    = number
+    ocpus                   = number
     size                    = number
     memory                  = number
     boot_volume_size        = number
@@ -68,9 +68,10 @@ variable "cert_issuer_config"{
   })
 }
 
-variable "private_key_path" {
-  description = "Path for the private key"
+variable "private_key_content" {
+  description = "Content in the private key"
   type = string
+  sensitive = true
 }
 
 variable "public_ingress" {

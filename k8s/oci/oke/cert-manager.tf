@@ -1,5 +1,7 @@
 locals {
-  private_key_content = file(var.private_key_path)
+  private_key_content = <<EOF
+  ${var.private_key_content}
+  EOF
 }
 
 resource "oci_identity_dynamic_group" "cert_manager_group" {
