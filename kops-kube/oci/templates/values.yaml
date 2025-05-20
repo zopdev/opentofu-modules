@@ -1,0 +1,7 @@
+env:
+  CLUSTER_NAME    : ${cluster_name}
+  APP_REGION      : ${app_region}
+  CLOUD_PLATFORM  : ${cloud_platform}
+  PROVIDER_ID     : ${provider_id}
+  PROVIDER_NAME   : ${provider_name}
+  CLUSTER_OCID    : ${cluster_ocid}
