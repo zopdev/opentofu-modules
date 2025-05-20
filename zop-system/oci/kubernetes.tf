@@ -1,7 +1,7 @@
 
 locals {
   cluster_prefix = var.shared_services.cluster_prefix
-  cluster_ca_certificate    = var.shared_services.type == "aws" ? module.remote_state_aws_cluster[0].ca_certificate : var.shared_services.type == "gcp" ? module.remote_state_gcp_cluster[0].ca_certificate : module.remote_state_azure_cluster[0].ca_certificate
+  cluster_ca_certificate = var.cluster_ca_cert != null && var.cluster_ca_cert != "" ? var.cluster_ca_cert : var.shared_services.type == "aws" ? module.remote_state_aws_cluster[0].ca_certificate : var.shared_services.type == "gcp" ? module.remote_state_gcp_cluster[0].ca_certificate : module.remote_state_azure_cluster[0].ca_certificate
 }
 
 data "oci_containerengine_clusters" "oke" {
@@ -36,7 +36,7 @@ module "remote_state_azure_cluster" {
 
 provider "kubernetes" {
   host                   = "https://${data.oci_containerengine_clusters.oke.clusters[0].endpoints[0].public_endpoint}"
-  cluster_ca_certificate = base64decode(var.cluster_ca_cert != null && var.cluster_ca_cert != "" ? var.cluster_ca_cert : local.cluster_ca_certificate)
+  cluster_ca_certificate = base64decode(local.cluster_ca_certificate)
 
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
@@ -48,8 +48,8 @@ provider "kubernetes" {
 provider "helm" {
   kubernetes {
      host                   = "https://${data.oci_containerengine_clusters.oke.clusters[0].endpoints[0].public_endpoint}"
-     cluster_ca_certificate = base64decode(var.cluster_ca_cert != null && var.cluster_ca_cert != "" ? var.cluster_ca_cert : local.cluster_ca_certificate)
-    
+     cluster_ca_certificate = base64decode(local.cluster_ca_certificate)
+
     exec {
       api_version = "client.authentication.k8s.io/v1beta1"
       command     = "oci"
