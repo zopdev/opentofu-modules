@@ -58,7 +58,7 @@ resource "kubernetes_secret" "kops_kube_system_secrets" {
       user_ocid       = oci_identity_user.kops_kube.id,
       tenancy_ocid    = var.provider_id,
       fingerprint     = oci_identity_api_key.kops_kube_user_api_key.fingerprint,
-      private_key_pem = tls_private_key.kops_kube_user_api_key.private_key_pem,
+      private_key     = tls_private_key.kops_kube_user_api_key.private_key_pem,
       region          = var.app_region
     })
     X_API_KEY = random_password.kops_kube_api_key.result

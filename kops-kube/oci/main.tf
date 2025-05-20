@@ -12,7 +12,7 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "image"
-    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kops-kube-azure:v0.0.11"
+    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kops-kube-oci:5290f0fd14828507e2d3e5c82e37cd636dc6961d"
   }
 
   set_list {
@@ -90,6 +90,8 @@ resource "helm_release" "service_helm"{
     app_region      = var.app_region
     cloud_platform  = "OCI"
     provider_id     = var.provider_id
+    cluster_ocid    = data.oci_containerengine_clusters.oke.clusters[0].id
+    provider_name   = "DEFAULT"
   })]
 }
 
