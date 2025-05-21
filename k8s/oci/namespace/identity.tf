@@ -64,7 +64,7 @@ resource "oci_identity_user_group_membership" "viewers" {
 resource "oci_identity_policy" "oke_cluster_access_policy" {
   compartment_id = var.provider_id
   description    = "Policy allowing access to ${local.cluster_name} OKE cluster"
-  name           = "${local.cluster_name}-access-policy"
+  name           = "${local.cluster_name}-${var.namespace}-access-policy"
 
   statements = [
     "Allow group ${oci_identity_group.oke_namespace_admins.name} to manage clusters in compartment id ${var.provider_id}",
