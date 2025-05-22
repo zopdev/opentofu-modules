@@ -68,13 +68,13 @@ resource "azurerm_role_assignment" "aks_aad_namespace_viewers" {
 resource "azurerm_role_assignment" "service_principal_user" {
   for_each             = var.services
   scope                = data.azurerm_kubernetes_cluster.cluster.id
-  role_definition_name = "Azure Kubernetes Service Cluster User Role"
+  role_definition_name = "Azure Kubernetes Service Cluster Admin Role"
   principal_id         = azuread_service_principal.acr_sp[each.key].id
 }
 
 resource "azurerm_role_assignment" "cronjob_principal_user" {
   for_each             = var.cron_jobs
   scope                = data.azurerm_kubernetes_cluster.cluster.id
-  role_definition_name = "Azure Kubernetes Service Cluster User Role"
+  role_definition_name = "Azure Kubernetes Service Cluster Admin Role"
   principal_id         = azuread_service_principal.cron_acr_sp[each.key].id
 }
