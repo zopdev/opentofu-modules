@@ -110,3 +110,15 @@ resource "kubernetes_secret" "oci_api_key" {
 
   depends_on = [ helm_release.cert_manager ]
 }
+
+data "template_file" "cert_manager_rbac" {
+  template = file("${path.module}/templates/cluster-certificate-rbac.yaml")
+  vars = {
+    cluster_name = local.cluster_name
+  }
+}
+
+resource "kubectl_manifest" "cert_manager_rbac" {
+  yaml_body   = data.template_file.cert_manager_rbac.rendered
+  depends_on  = [helm_release.cert_manager]
+}
