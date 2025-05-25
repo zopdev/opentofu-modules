@@ -14,16 +14,10 @@ locals {
     user.email => true
   }
 
-  tf_managed_users = try(keys(oci_identity_user.oke_users), [])
-
-  managed_users = distinct(concat(
-    [for email in local.input_user_emails :
-      email if !contains(keys(local.existing_oci_users_map), email)
-    ],
-    [for email in local.tf_managed_users :
-      email if contains(local.input_user_emails, email)
-    ]
-  ))
+  managed_users = {
+    for email in local.input_user_emails :
+    email => email if !contains(keys(local.existing_oci_users_map), email)
+  }
 
   all_users_map = merge(
     { for email, user in oci_identity_user.oke_users : email => user.id },
