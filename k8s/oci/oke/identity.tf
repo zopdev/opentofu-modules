@@ -1,12 +1,32 @@
-resource "oci_identity_user" "oke_users" {
-  for_each       = {
-    for email in concat(
-      var.user_access.app_admins != null ? var.user_access.app_admins : [],
-      var.user_access.app_editors != null ? var.user_access.app_editors : [],
-      var.user_access.app_viewers != null ? var.user_access.app_viewers : []
-    ) : email => email
+data "oci_identity_users" "existing_users" {
+  compartment_id = var.provider_id
+}
+
+locals {
+  existing_users_map = {
+    for user in data.oci_identity_users.existing_users.users : user.email => user.id
   }
-  
+
+  all_requested_emails = distinct(concat(
+    var.user_access.app_admins != null ? var.user_access.app_admins : [],
+    var.user_access.app_editors != null ? var.user_access.app_editors : [],
+    var.user_access.app_viewers != null ? var.user_access.app_viewers : []
+  ))
+
+  new_user_emails = [
+    for email in local.all_requested_emails : email
+    if !(contains(keys(local.existing_users_map), email))
+  ]
+
+  all_users = merge(
+    { for email, user in oci_identity_user.oke_users : email => user.id },
+    local.existing_users_map
+  )
+}
+
+resource "oci_identity_user" "oke_users" {
+  for_each = { for email in local.new_user_emails : email => email }
+
   compartment_id = var.provider_id
   name           = each.value 
   description    = "User for Kubernetes cluster access"
@@ -34,21 +54,21 @@ resource "oci_identity_group" "oke_cluster_viewers" {
 resource "oci_identity_user_group_membership" "cluster_admins" {
   for_each = var.user_access.app_admins != null ? toset(var.user_access.app_admins) : []
   
-  user_id  = oci_identity_user.oke_users[each.value].id
+  user_id  = local.all_users[each.value]
   group_id = oci_identity_group.oke_cluster_admins.id
 }
 
 resource "oci_identity_user_group_membership" "cluster_editors" {
   for_each = var.user_access.app_editors != null ? toset(var.user_access.app_editors) : []
   
-  user_id  = oci_identity_user.oke_users[each.value].id
+  user_id  = local.all_users[each.value]
   group_id = oci_identity_group.oke_cluster_editors.id
 }
 
 resource "oci_identity_user_group_membership" "cluster_viewers" {
   for_each = var.user_access.app_viewers != null ? toset(var.user_access.app_viewers) : []
   
-  user_id  = oci_identity_user.oke_users[each.value].id
+  user_id  = local.all_users[each.value]
   group_id = oci_identity_group.oke_cluster_viewers.id
 }
 
