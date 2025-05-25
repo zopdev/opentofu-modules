@@ -24,7 +24,7 @@ locals {
     {
       for user in data.oci_identity_users.existing_users.users :
       user.email => user.id
-      if !contains(local.input_user_emails, user.email)
+      if contains(local.input_user_emails, user.email)
     }
   )
 }
