@@ -17,8 +17,8 @@ locals {
   managed_users = {
     for email in local.input_user_emails : email => email
     if (
-      !contains(keys(local.existing_oci_users_map), email)
-      || endswith(lookup(local.existing_oci_users_map[email], "name", ""), "-zop")
+      !contains(keys(local.existing_oci_users_map), email) ||
+      endswith(lookup(lookup(local.existing_oci_users_map, email, {}), "name", ""))
     )
   }
 
