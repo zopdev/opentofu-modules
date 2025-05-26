@@ -9,18 +9,10 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
-    - dns01:
-        webhook:
-          groupName: acme.oracle.com
-          solverName: ocidns
-          config:
-            compartmentId: "${compartment_id}"
-            dnsZoneName: "${dns_zone_name}"
-            tenancyId: "${tenancy_id}"
-            userId: "${user_id}"
-            fingerprint: "${fingerprint}"
-            region: "${region}"
-            privateKeySecretRef:
-              name: oci-api-key
-              key: apiKey
-          
+      - dns01:
+          webhook:
+            groupName: zop.dev
+            solverName: oci
+            config:
+              ociProfileSecretName: oci-profile
+              compartmentOCID: "${compartment_id}"
