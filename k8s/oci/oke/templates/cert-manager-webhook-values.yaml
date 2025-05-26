@@ -1,0 +1,5 @@
+groupName: zop.dev
+
+certManager:
+  namespace: cert-manager
+  serviceAccountName: "${CLUSTER_NAME}-cert-manager"
