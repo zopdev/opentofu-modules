@@ -18,7 +18,7 @@ locals {
     for email in local.input_user_emails : email => email
     if (
       !contains(keys(local.existing_oci_users_map), email)
-      || endswith(local.existing_oci_users_map[email].name, "-zop")
+      || endswith(lookup(local.existing_oci_users_map[email], "name", ""), "-zop")
     )
   }
 
