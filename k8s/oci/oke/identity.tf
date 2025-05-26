@@ -11,12 +11,15 @@ locals {
 
   existing_oci_users_map = {
     for user in data.oci_identity_users.existing_users.users :
-    user.email => true
+    user.email => user
   }
 
   managed_users = {
-    for email in local.input_user_emails :
-    email => email if !contains(keys(local.existing_oci_users_map), email)
+    for email in local.input_user_emails : email => email
+    if (
+      !contains(keys(local.existing_oci_users_map), email)
+      || endswith(local.existing_oci_users_map[email].name, "-zop")
+    )
   }
 
   all_users_map = merge(
@@ -30,10 +33,10 @@ locals {
 }
 
 resource "oci_identity_user" "oke_users" {
-  for_each = { for email in local.managed_users : email => email }
+  for_each = local.managed_users
 
   compartment_id = var.provider_id
-  name           = each.value 
+  name           = "${split("@", each.value)[0]}-zop"
   description    = "User for Kubernetes cluster access"
   email          = each.value
 }

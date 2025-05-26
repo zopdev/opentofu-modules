@@ -46,6 +46,26 @@ resource "helm_release" "cert_manager" {
   values = [data.template_file.cert_manager_template.rendered]
 }
 
+data "template_file" "cert_manager_webhook_template" {
+  template = file("./templates/cert-manager-webhook-values.yaml")
+  vars = {
+    CLUSTER_NAME = local.cluster_name
+  }
+}
+
+resource "helm_release" "cert_manager_webhook_oci" {
+  name             = "cert-manager-webhook-oci"
+  repository       = "https://dn13.gitlab.io/cert-manager-webhook-oci"
+  chart            = "cert-manager-webhook-oci"
+  namespace        = "cert-manager"
+  create_namespace = false 
+
+  values = [data.template_file.cert_manager_webhook_template.rendered]
+
+  depends_on = [ helm_release.cert_manager, kubectl_manifest.oci_profile_secret]
+}
+
+
 data "template_file" "cluster_wildcard_issuer" {
   template = file("./templates/cluster-issuer.yaml")
   vars = {
@@ -58,11 +78,29 @@ data "template_file" "cluster_wildcard_issuer" {
     user_id         = var.accessibility.user_id
     region          = var.app_region
   }
-  depends_on = [helm_release.cert_manager, kubernetes_namespace.monitoring]
+  depends_on = [helm_release.cert_manager, helm_release.cert_manager_webhook_oci, kubernetes_namespace.monitoring]
 }
 
 resource "kubectl_manifest" "cluster_wildcard_issuer" {
   yaml_body = data.template_file.cluster_wildcard_issuer.rendered
+}
+
+data "template_file" "oci_profile_secret" {
+  template = file("${path.module}/templates/oci-profile-secret.yaml")
+
+  vars = {
+    tenancy               = var.provider_id
+    user                  = var.accessibility.user_id
+    region                = var.app_region
+    fingerprint           = var.accessibility.fingerprint
+    private_key           = local.private_key_content
+  }
+}
+
+resource "kubectl_manifest" "oci_profile_secret" {
+  yaml_body = data.template_file.oci_profile_secret.rendered
+
+  depends_on = [helm_release.cert_manager]
 }
 
 data "template_file" "cluster_wildcard_certificate" {
@@ -94,21 +132,6 @@ resource "kubernetes_secret_v1" "certificate_replicator" {
     ignore_changes = all
   }
   depends_on = [helm_release.k8s_replicator]
-}
-
-resource "kubernetes_secret" "oci_api_key" {
-  metadata {
-    name      = "oci-api-key"
-    namespace = "cert-manager"
-  }
-
-  data = {
-    apiKey = local.private_key_content
-  }
-
-  type = "Opaque"
-
-  depends_on = [ helm_release.cert_manager ]
 }
 
 data "template_file" "cert_manager_rbac" {
