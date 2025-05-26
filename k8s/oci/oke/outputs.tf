@@ -81,20 +81,24 @@ output "grafana_host" {
   value = try(local.grafana_host,"")
 }
 
-# output "grafana_user_credentials" {
-#   value = merge(
-#     { for key, pwd in random_password.admin_passwords : key => {
-#       email    = key
-#       password = pwd.result
-#     }},
-#     { for key, pwd in random_password.editor_passwords : key => {
-#       email    = key
-#       password = pwd.result
-#     }},
-#     { for key, pwd in random_password.viewer_passwords : key => {
-#       email    = key
-#       password = pwd.result
-#     }}
-#   )
-#   sensitive = true
-# }
+output "managed_users" {
+  value = local.managed_users
+}
+
+output "grafana_user_credentials" {
+  value = merge(
+    { for key, pwd in random_password.admin_passwords : key => {
+      email    = key
+      password = pwd.result
+    }},
+    { for key, pwd in random_password.editor_passwords : key => {
+      email    = key
+      password = pwd.result
+    }},
+    { for key, pwd in random_password.viewer_passwords : key => {
+      email    = key
+      password = pwd.result
+    }}
+  )
+  sensitive = true
+}
