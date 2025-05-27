@@ -3,3 +3,8 @@ variable "users" {
   type        = list(string)
   default     = []
 }
+variable "service_secrets" {
+  description = "Map of secret key-value pairs for the service"
+  type        = map(string)
+  default     = {}
+}
