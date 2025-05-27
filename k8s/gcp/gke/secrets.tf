@@ -10,6 +10,10 @@ resource "helm_release" "csi_driver" {
     name  = "syncSecret.enabled"
     value = "true"
   }
+  set {
+    name  = "enableSecretRotation"
+    value = "true"       # enable auto-rotation feature
+  }
 }
 
 locals {
