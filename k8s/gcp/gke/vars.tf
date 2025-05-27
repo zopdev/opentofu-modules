@@ -3,6 +3,12 @@ variable "app_name" {
     type        = string
 }
 
+variable "service_secrets" {
+  description = "Map of secret key-value pairs for the service"
+  type        = map(string)
+  default     = {}
+}
+
 variable "app_env" {
     description = "Application deployment environment."
     type        = string
