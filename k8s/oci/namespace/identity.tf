@@ -122,6 +122,7 @@ resource "kubernetes_secret" "ocir_image_pull" {
         "${var.app_region}.ocir.io" = {
           username = "${data.oci_objectstorage_namespace.tenancy_namespace.namespace}/${oci_identity_user.artifact_user.name}"
           password = oci_identity_auth_token.artifact_user_token.token
+          auth     = base64encode("${data.oci_objectstorage_namespace.tenancy_namespace.namespace}/${oci_identity_user.artifact_user.name}:${oci_identity_auth_token.artifact_user_token.token}")
         }
       }
     })
