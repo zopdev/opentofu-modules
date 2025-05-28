@@ -75,6 +75,7 @@ resource "oci_identity_policy" "oke_cluster_access_policy" {
 resource "oci_identity_user" "artifact_user" {
   compartment_id = var.provider_id
   name           = "${var.namespace}-artifact-user"
+  email          = "${var.namespace}-artifact@${local.domain_name}"
   description    = "User for managing Oracle Artifact Registry"
 }
 
