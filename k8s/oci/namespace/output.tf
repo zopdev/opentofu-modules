@@ -38,8 +38,8 @@ output "service_configs" {
       db_secret_name                        = v.datastore_configs != null && v.datastore_configs.database != null ? "${k}-${v.datastore_configs.database}-mysql-db-user" : ""
       db_read_only_secret_name              = v.datastore_configs != null && v.datastore_configs.database != null ? "${k}-${v.datastore_configs.database}-mysql-readonly" : ""
       db_user                               = v.datastore_configs != null && v.datastore_configs.database != null ? (
-                                                var.sql_db.type == "mysql" ? module.sql_db[0].db_user["${var.namespace}-${v.datastore_configs.database}"] :
-                                                (var.sql_db.type == "postgres" ? module.psql_db[0].db_user["${var.namespace}-${v.datastore_configs.database}"] : "")
+                                                v.datastore_configs.type == "mysql" ? module.sql_db[0].db_user["${var.namespace}-${v.datastore_configs.database}"] :
+                                                (v.datastore_configs.type == "postgres" ? module.psql_db[0].db_user["${var.namespace}-${v.datastore_configs.database}"] : "")
                                               ) : ""
       custom_host_url                       = v.ingress_list != null ? (length(v.ingress_list) != 0 ? v.ingress_list : []) : []
       default_host_url                      = v.enable_default_ingress != null ? (
@@ -64,8 +64,8 @@ output "cron_jobs_configs" {
       db_secret_name                        = v.datastore_configs != null && v.datastore_configs.database != null ? "${k}-${v.datastore_configs.database}-mysql-db-user" : ""
       db_read_only_secret_name              = v.datastore_configs != null && v.datastore_configs.database != null ? "${k}-${v.datastore_configs.database}-mysql-readonly" : ""
       db_user                               = v.datastore_configs != null && v.datastore_configs.database != null ? (
-                                                var.sql_db.type == "mysql" ? module.sql_db[0].db_user["${var.namespace}-${v.datastore_configs.database}"] :
-                                                (var.sql_db.type == "postgres" ? module.psql_db[0].db_user["${var.namespace}-${v.datastore_configs.database}"] : "")
+                                                v.datastore_configs.type == "mysql" ? module.sql_db[0].db_user["${var.namespace}-${v.datastore_configs.database}"] :
+                                                (v.datastore_configs.type == "postgres" ? module.psql_db[0].db_user["${var.namespace}-${v.datastore_configs.database}"] : "")
                                               ) : ""
       oar_username                          = "${data.oci_objectstorage_namespace.tenancy_namespace.namespace}/${var.namespace}-artifact-user"
       oar_password                          = oci_identity_auth_token.artifact_user_token.token

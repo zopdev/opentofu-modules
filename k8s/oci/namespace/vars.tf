@@ -21,6 +21,13 @@ variable "namespace" {
   default     = ""
 }
 
+variable "accessibility" {
+  description = "The list of user access for the account setup"
+  type = object({
+    domain_name = string
+  })
+}
+
 variable "shared_services" {
   type = object({
     type     = string
