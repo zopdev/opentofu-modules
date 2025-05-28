@@ -72,3 +72,57 @@ resource "oci_identity_policy" "oke_cluster_access_policy" {
     "Allow group ${oci_identity_group.oke_namespace_viewers.name} to read clusters in compartment id ${var.provider_id}"
   ]
 }
+resource "oci_identity_user" "artifact_user" {
+  compartment_id = var.provider_id
+  name           = "${var.namespace}-artifact-user"
+  description    = "User for managing Oracle Artifact Registry"
+}
+
+resource "oci_identity_auth_token" "artifact_user_token" {
+  user_id = oci_identity_user.artifact_user.id
+  description = "Auth token for artifact-user"
+}
+
+resource "oci_identity_group" "artifact_group" {
+  compartment_id = var.provider_id
+  name           = "${var.namespace}-artifact-group"
+  description    = "Group with manage access to OCIR"
+}
+
+resource "oci_identity_user_group_membership" "artifact_user_membership" {
+  user_id  = oci_identity_user.artifact_user.id
+  group_id = oci_identity_group.artifact_group.id
+}
+
+resource "oci_identity_policy" "artifact_registry_policy" {
+  compartment_id = var.provider_id
+  name           = "${var.namespace}-artifact-registry-manage-policy"
+  description    = "Allows manage access to Oracle Artifact Registry"
+  statements     = [
+    "Allow group ${oci_identity_group.artifact_group.name} to manage repos in tenancy"
+  ]
+}
+
+data "oci_objectstorage_namespace" "tenancy_namespace" {
+  compartment_id = var.provider_id
+}
+
+resource "kubernetes_secret" "ocir_image_pull" {
+  metadata {
+    name      = "ocirsecret"
+    namespace = var.namespace
+  }
+
+  type = "kubernetes.io/dockerconfigjson"
+
+  data = {
+    ".dockerconfigjson" = base64encode(jsonencode({
+      auths = {
+        "${var.app_region}.ocir.io" = {
+          username = "${data.oci_objectstorage_namespace.tenancy_namespace.namespace}/${oci_identity_user.artifact_user.name}"
+          password = oci_identity_auth_token.artifact_user_token.token
+        }
+      }
+    }))
+  }
+}
