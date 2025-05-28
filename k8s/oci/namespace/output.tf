@@ -51,8 +51,15 @@ output "service_configs" {
                                               ) : ""
       basic_auth_user_name                  = (v.enable_basic_auth != null ? v.enable_basic_auth : false) ? "${k}-${random_string.basic_auth_user_name_suffix[k].result}" : ""
       basic_auth_password                   = (v.enable_basic_auth != null ? v.enable_basic_auth : false) ? random_password.basic_auth_password[k].result : ""
-      oar_username                          = "${data.oci_objectstorage_namespace.tenancy_namespace.namespace}/${var.namespace}-artifact-user"
-      oar_password                          = oci_identity_auth_token.artifact_user_token.token
+      deployment_service_account_key     = {
+        user_ocid       = oci_identity_user.artifact_user.id
+        tenancy_ocid    = var.provider_id
+        fingerprint     = oci_identity_api_key.artifact_user_api_key.fingerprint
+        private_key     = tls_private_key.artifact_user_api_key.private_key_pem
+        region          = var.app_region
+        oar_username    = "${data.oci_objectstorage_namespace.tenancy_namespace.namespace}/${var.namespace}-artifact-user"
+        oar_password    = oci_identity_auth_token.artifact_user_token.token
+      }
     }
   }
   sensitive = true
@@ -75,8 +82,15 @@ output "cron_jobs_configs" {
                                                 ""),
                                               ""
                                             )
-      oar_username                          = "${data.oci_objectstorage_namespace.tenancy_namespace.namespace}/${var.namespace}-artifact-user"
-      oar_password                          = oci_identity_auth_token.artifact_user_token.token
+      deployment_service_account_key     = {
+        user_ocid       = oci_identity_user.artifact_user.id
+        tenancy_ocid    = var.provider_id
+        fingerprint     = oci_identity_api_key.artifact_user_api_key.fingerprint
+        private_key     = tls_private_key.artifact_user_api_key.private_key_pem
+        region          = var.app_region
+        oar_username    = "${data.oci_objectstorage_namespace.tenancy_namespace.namespace}/${var.namespace}-artifact-user"
+        oar_password    = oci_identity_auth_token.artifact_user_token.token
+      }
     }
   }
   sensitive = true
