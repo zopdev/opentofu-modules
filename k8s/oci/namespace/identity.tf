@@ -72,11 +72,23 @@ resource "oci_identity_policy" "oke_cluster_access_policy" {
     "Allow group ${oci_identity_group.oke_namespace_viewers.name} to read clusters in compartment id ${var.provider_id}"
   ]
 }
+
+## Create user and credential for artifact user
 resource "oci_identity_user" "artifact_user" {
   compartment_id = var.provider_id
   name           = "${var.namespace}-artifact-user"
   email          = "${var.namespace}-artifact@${local.domain_name}"
   description    = "User for managing Oracle Artifact Registry"
+}
+
+resource "tls_private_key" "artifact_user_api_key" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+resource "oci_identity_api_key" "artifact_user_api_key" {
+  user_id   = oci_identity_user.artifact_user.id
+  key_value = tls_private_key.artifact_user_api_key.public_key_pem
 }
 
 resource "oci_identity_auth_token" "artifact_user_token" {
@@ -100,7 +112,8 @@ resource "oci_identity_policy" "artifact_registry_policy" {
   name           = "${var.namespace}-artifact-registry-manage-policy"
   description    = "Allows manage access to Oracle Artifact Registry"
   statements     = [
-    "Allow group ${oci_identity_group.artifact_group.name} to manage repos in tenancy"
+    "Allow group ${oci_identity_group.artifact_group.name} to manage repos in tenancy",
+    "Allow group ${oci_identity_group.artifact_group.name} to manage cluster-family in compartment id ${var.provider_id}"
   ]
 }
 
