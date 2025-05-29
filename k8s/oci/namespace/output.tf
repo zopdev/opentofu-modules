@@ -59,6 +59,7 @@ output "service_configs" {
         region          = var.app_region
         oar_username    = "${data.oci_objectstorage_namespace.tenancy_namespace.namespace}/${var.namespace}-artifact-user"
         oar_password    = oci_identity_auth_token.artifact_user_token.token
+        cluster_ocid    = local.cluster_id
       }
     }
   }
@@ -90,6 +91,7 @@ output "cron_jobs_configs" {
         region          = var.app_region
         oar_username    = "${data.oci_objectstorage_namespace.tenancy_namespace.namespace}/${var.namespace}-artifact-user"
         oar_password    = oci_identity_auth_token.artifact_user_token.token
+        cluster_ocid    = local.cluster_id
       }
     }
   }
