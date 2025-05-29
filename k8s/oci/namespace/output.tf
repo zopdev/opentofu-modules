@@ -16,7 +16,7 @@ output "sql_instance_configs" {
         admin_user        = module.sql_db[key].db_admin_user
         admin_secret_name = "${key}-mysql-db-secret"
       } : (
-      db.type == "postgres" ? {
+      db.type == "postgresql" ? {
         instance_name     = module.psql_db[key].server_name
         instance_url      = module.psql_db[key].db_url
         type              = "postgres"
@@ -40,7 +40,7 @@ output "service_configs" {
       db_user                              = try(
                                               v.datastore_configs.type == "mysql" ?
                                                 module.sql_db[0].db_user["${var.namespace}-${v.datastore_configs.database}"] :
-                                              (v.datastore_configs.type == "postgres" ?
+                                              (v.datastore_configs.type == "postgresql" ?
                                                 module.psql_db[0].db_user["${var.namespace}-${v.datastore_configs.database}"] :
                                                 ""),
                                               ""
@@ -78,7 +78,7 @@ output "cron_jobs_configs" {
       db_user                              = try(
                                               v.datastore_configs.type == "mysql" ?
                                                 module.sql_db[0].db_user["${var.namespace}-${v.datastore_configs.database}"] :
-                                              (v.datastore_configs.type == "postgres" ?
+                                              (v.datastore_configs.type == "postgresql" ?
                                                 module.psql_db[0].db_user["${var.namespace}-${v.datastore_configs.database}"] :
                                                 ""),
                                               ""
