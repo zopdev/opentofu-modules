@@ -1,5 +1,5 @@
 resource "random_string" "service_account_name" {
-  length   = 16
+  length   = 14
   numeric  = true
   lower    = true
   upper    = false
