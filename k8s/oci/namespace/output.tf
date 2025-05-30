@@ -3,7 +3,7 @@ output "namespace"{
 }
 
 ### DB Outputs
-output "sql_instance_configs" {
+output "sql_instance_configs_v2" {
   value = {
     for key, db in var.sql_list : key => (
       db.type == "mysql" ? {
