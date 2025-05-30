@@ -81,10 +81,6 @@ output "grafana_host" {
   value = try(local.grafana_host,"")
 }
 
-output "managed_users" {
-  value = local.managed_users
-}
-
 output "grafana_user_credentials" {
   value = merge(
     { for key, pwd in random_password.admin_passwords : key => {
