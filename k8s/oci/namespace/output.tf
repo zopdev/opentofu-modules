@@ -5,27 +5,19 @@ output "namespace"{
 ### DB Outputs
 output "sql_instance_configs_v2" {
   value = {
-    for key, db in var.sql_list : key => (
+    for key, db in var.sql_list : key => merge(
+      {
+        instance_name     = db.type == "mysql"     ? module.sql_db[key].server_name     : module.psql_db[key].server_name
+        instance_url      = db.type == "mysql"     ? module.sql_db[key].db_url          : module.psql_db[key].db_url
+        type              = db.type == "mysql"     ? "mysql"                            : "postgres"
+        version           = db.type == "mysql"     ? module.sql_db[key].db_version      : module.psql_db[key].db_version
+        port              = db.type == "mysql"     ? module.sql_db[key].db_port         : module.psql_db[key].db_port
+        admin_user        = db.type == "mysql"     ? module.sql_db[key].db_admin_user   : module.psql_db[key].db_admin_user
+        admin_secret_name = db.type == "mysql"     ? "${key}-mysql-db-secret"           : "${key}-postgres-db-secret"
+      },
       db.type == "mysql" ? {
-        instance_name     = module.sql_db[key].server_name
-        instance_url      = module.sql_db[key].db_url
-        type              = "mysql"
-        version           = module.sql_db[key].db_version
-        port              = module.sql_db[key].db_port
         storage           = module.sql_db[key].storage
-        admin_user        = module.sql_db[key].db_admin_user
-        admin_secret_name = "${key}-mysql-db-secret"
-      } : (
-      db.type == "postgresql" ? {
-        instance_name     = module.psql_db[key].server_name
-        instance_url      = module.psql_db[key].db_url
-        type              = "postgres"
-        version           = module.psql_db[key].db_version
-        port              = module.psql_db[key].db_port
-        admin_user        = module.psql_db[key].db_admin_user
-        admin_secret_name = "${key}-postgres-db-secret"
       } : {}
-      )
     )
   }
 }
