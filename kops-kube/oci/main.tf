@@ -12,7 +12,7 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "image"
-    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kops-kube-oci:5290f0fd14828507e2d3e5c82e37cd636dc6961d"
+    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kops-kube-oci:v0.0.12"
   }
 
   set_list {
