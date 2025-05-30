@@ -98,7 +98,7 @@ module "psql_db" {
   source         = "../../../sql/oci-postgres"
   
   for_each = var.sql_list != null ? {
-    for key, value in var.sql_list : key => value if value.type == "postgres"
+    for key, value in var.sql_list : key => value if value.type == "postgresql"
   } : {}
   
   namespace               = var.namespace
@@ -124,7 +124,7 @@ module "psql_db" {
 
 resource "kubernetes_service" "psql_db_service" {
   for_each = var.sql_list != null ? {
-    for key, value in var.sql_list : key => value if value.type == "postgres"
+    for key, value in var.sql_list : key => value if value.type == "postgresql"
   } : {}
   
   metadata {
@@ -147,7 +147,7 @@ resource "kubernetes_service" "psql_db_service" {
 
 resource "kubernetes_endpoints" "psql_db_endpoint" {
   for_each = var.sql_list != null ? {
-    for key, value in var.sql_list : key => value if value.type == "postgres"
+    for key, value in var.sql_list : key => value if value.type == "postgresql"
   } : {}
   
   metadata {

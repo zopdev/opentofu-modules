@@ -1,14 +1,42 @@
-resource "oci_identity_user" "oke_users" {
-  for_each       = {
-    for email in concat(
-      var.user_access.app_admins != null ? var.user_access.app_admins : [],
-      var.user_access.app_editors != null ? var.user_access.app_editors : [],
-      var.user_access.app_viewers != null ? var.user_access.app_viewers : []
-    ) : email => email
-  }
-  
+data "oci_identity_users" "existing_users" {
   compartment_id = var.provider_id
-  name           = each.value 
+}
+
+locals {
+  input_user_emails = distinct(concat(
+    var.user_access.app_admins   != null ? var.user_access.app_admins   : [],
+    var.user_access.app_editors  != null ? var.user_access.app_editors  : [],
+    var.user_access.app_viewers  != null ? var.user_access.app_viewers  : []
+  ))
+
+  existing_oci_users_map = {
+    for user in data.oci_identity_users.existing_users.users :
+    user.email => user
+  }
+
+  managed_users = {
+    for email in local.input_user_emails : email => email
+    if (
+      !contains(keys(local.existing_oci_users_map), email) ||
+      endswith(lookup(lookup(local.existing_oci_users_map, email, {}), "name", ""), "-zop")
+    )
+  }
+
+  all_users_map = merge(
+    { for email, user in oci_identity_user.oke_users : email => user.id },
+    {
+      for user in data.oci_identity_users.existing_users.users :
+      user.email => user.id
+      if contains(local.input_user_emails, user.email)
+    }
+  )
+}
+
+resource "oci_identity_user" "oke_users" {
+  for_each = local.managed_users
+
+  compartment_id = var.provider_id
+  name           = "${split("@", each.value)[0]}-zop"
   description    = "User for Kubernetes cluster access"
   email          = each.value
 }
@@ -32,24 +60,36 @@ resource "oci_identity_group" "oke_cluster_viewers" {
 }
 
 resource "oci_identity_user_group_membership" "cluster_admins" {
-  for_each = var.user_access.app_admins != null ? toset(var.user_access.app_admins) : []
-  
-  user_id  = oci_identity_user.oke_users[each.value].id
+  for_each = var.user_access.app_admins != null ? {
+    for email in var.user_access.app_admins : email => email
+  } : {}
+
+  user_id  = local.all_users_map[each.key]
   group_id = oci_identity_group.oke_cluster_admins.id
+
+  depends_on = [ oci_identity_user.oke_users ]
 }
 
 resource "oci_identity_user_group_membership" "cluster_editors" {
-  for_each = var.user_access.app_editors != null ? toset(var.user_access.app_editors) : []
-  
-  user_id  = oci_identity_user.oke_users[each.value].id
+  for_each = var.user_access.app_editors != null ? {
+    for email in var.user_access.app_editors : email => email
+  } : {}
+
+  user_id  = local.all_users_map[each.key]
   group_id = oci_identity_group.oke_cluster_editors.id
+
+  depends_on = [ oci_identity_user.oke_users ]
 }
 
 resource "oci_identity_user_group_membership" "cluster_viewers" {
-  for_each = var.user_access.app_viewers != null ? toset(var.user_access.app_viewers) : []
-  
-  user_id  = oci_identity_user.oke_users[each.value].id
+  for_each = var.user_access.app_viewers != null ? {
+    for email in var.user_access.app_viewers : email => email
+  } : {}
+
+  user_id  = local.all_users_map[each.key]
   group_id = oci_identity_group.oke_cluster_viewers.id
+  
+  depends_on = [ oci_identity_user.oke_users ]
 }
 
 resource "oci_identity_policy" "oke_admin_policy" {

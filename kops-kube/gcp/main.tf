@@ -12,7 +12,7 @@ resource "helm_release" "service_helm"{
 
   set {
     name  = "image"
-    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kops-kube-gcp:v0.0.11"
+    value = "us-central1-docker.pkg.dev/raramuri-tech/kops-dev/kops-kube-gcp:v0.0.12"
   }
 
   set_list {
