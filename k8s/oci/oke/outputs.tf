@@ -6,6 +6,10 @@ output "ca_certificate" {
   value = module.oke.cluster_ca_cert
 }
 
+output "lbip" {
+  value = oci_core_public_ip.lb_public_ip.ip_address
+}
+
 output "cluster_name" {
   value = local.cluster_name
 }
