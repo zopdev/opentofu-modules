@@ -4,7 +4,7 @@ locals {
   common_tags        = merge(var.common_tags,
     tomap({
       Project     = local.cluster_name,
-      Provisioner = "Zopdev",
+      provisioner = "zop-dev",
     }))
 }
 
@@ -56,8 +56,11 @@ module "oke" {
     }
   }
 
-  freeform_tags = merge(
+  cluster_freeform_tags = merge(
     { for k, v in local.common_tags : k => tostring(v) }, 
     { "Name" = local.cluster_name }
   )
+    freeform_tags = {
+    cluster             = { provisioner = "zop-dev" }
+    }
 }

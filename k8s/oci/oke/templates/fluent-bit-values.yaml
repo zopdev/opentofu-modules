@@ -1,0 +1,176 @@
+kind: DaemonSet
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: fluent-bit
+
+rbac:
+  create: true
+  nodeAccess: false
+
+config:
+  service: |
+    [SERVICE]
+        Flush                     5
+        Log_Level                 info
+        Daemon                    off
+        Parsers_File              /fluent-bit/etc/conf/custom_parsers.conf
+        HTTP_Server               ${HTTP_SERVER}
+        HTTP_Listen               0.0.0.0
+        HTTP_Port                 ${HTTP_PORT}
+        storage.path              /var/fluent-bit/state/flb-storage/
+        storage.sync              normal
+        storage.checksum          off
+        storage.backlog.mem_limit 5M
+
+  ## https://docs.fluentbit.io/manual/pipeline/inputs
+  inputs: |
+    [INPUT]
+        Name                tail
+        Tag                 kube.*
+        Path                /var/log/containers/*.log
+        Docker_Mode         On
+        DB                  /var/log/flb_kube.db
+        Docker_Mode_Flush   5
+        Docker_Mode_Parser  container_firstline
+        Parser              cri
+        Mem_Buf_Limit       50MB
+        Skip_Long_Lines     On
+        Refresh_Interval    10
+        Rotate_Wait         30
+        Storage.type        filesystem
+        Read_from_Head      ${READ_FROM_HEAD}
+
+  ## https://docs.fluentbit.io/manual/pipeline/filters
+  filters: |
+    [FILTER]
+        Name                kubernetes
+        Match               kube.*
+        Kube_URL            https://kubernetes.default.svc:443
+        Kube_Tag_Prefix     kube.var.log.containers.
+        Kube_CA_File        /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File     /var/run/secrets/kubernetes.io/serviceaccount/token
+        Merge_Log           On
+        Merge_Log_key       log_processed
+        K8S-Logging.Parser  On
+        K8S-Logging.Exclude Off
+        Labels              Off	
+        Annotations         Off
+    [FILTER]
+        Name    grep
+        Match   *
+        Exclude $kubernetes['namespace_name'] monitoring
+
+  ## https://docs.fluentbit.io/manual/pipeline/outputs
+  outputs: |
+    %{~ for k in jsondecode(fluent_bit_loki_outputs) ~}
+    [OUTPUT]
+        name                      loki
+        match                     kube.*
+        labels                    ${k.labels}
+        host                      ${k.host}
+        %{~ if k.tenant_id != "" ~}
+        tenant_id                 ${k.tenant_id}
+        %{~ endif ~}
+        %{~ if k.port != -1 ~}
+        port                      ${k.port}
+        %{~ endif ~}         
+        %{~ if k.tls != "" ~} 
+        tls                       ${k.tls}
+        %{~ endif ~}      
+      %{~ endfor ~}      
+    %{~ for k in jsondecode(fluent_bit_http_outputs) ~}
+    [OUTPUT]
+        Name                      http
+        Match                     kube.*
+        host                      ${k.host}               
+        %{~ if k.port != -1 ~}
+        port                      ${k.port}
+        %{~ endif ~}         
+        %{~ if k.uri != "" ~} 
+        URI                       ${k.uri} 
+        %{~ endif ~}         
+        %{~ if k.headers != [] ~}
+        %{~ for key, header_value in k.headers ~}
+        HEADER                    ${header_value.key}  ${header_value.value}
+        %{~ endfor ~} 
+        %{~ endif ~}               
+        %{~ if k.tls != "" ~} 
+        tls                       ${k.tls}
+        %{~ endif ~} 
+        %{~ if k.tls_verify != "" ~} 
+        tls.verify                ${k.tls_verify}
+        %{~ endif ~}             
+        Format                    json
+        Json_Date_Key             time
+        Json_Date_Format          iso8601
+        Retry_Limit               False
+    %{~ endfor ~}    
+    %{~ for k in jsondecode(fluent_bit_splunk_outputs) ~}
+    [OUTPUT]
+        Name                      splunk
+        Match                     *
+        host                      ${k.host}
+        splunk_token              ${k.token}
+        Retry_Limit               3    
+        %{~ if k.port != "" ~}
+        port                      ${k.port}
+        %{~ endif ~}              
+        %{~ if k.tls != "" ~} 
+        tls                       ${k.tls}
+        %{~ endif ~}       
+        %{~ if k.tls_verify != "" ~} 
+        tls.verify                ${k.tls_verify}
+        %{~ endif ~}    
+    %{~ endfor ~}
+    %{~ for k in jsondecode(fluent_bit_datadog_outputs) ~}
+    [OUTPUT]
+        Name             datadog
+        Match            kube.*
+        Host             ${k.host}
+        apikey           ${k.api_key}
+        dd_message_key   log
+        %{~ if k.tls != "" ~} 
+        TLS              ${k.tls}
+        %{~ endif ~} 
+        %{~ if k.compress != "" ~} 
+        compress         ${k.compress}
+        %{~ endif ~} 
+    %{~ endfor ~}
+    %{~ for k in jsondecode(fluent_bit_newrelic_outputs) ~}
+    [OUTPUT]
+        Name             nrlogs
+        Match            kube.*
+        Host             ${k.host}
+        api_key          ${k.api_key}
+        compress         ${k.compress}
+    %{~ endfor ~}
+    %{~ for k in jsondecode(fluent_bit_slack_outputs) ~}
+    [OUTPUT]
+        Name             slack
+        Match            kube.*
+        webhook          ${k.webhook}
+    %{~ endfor ~}
+
+  ## https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/classic-mode/upstream-servers
+  ## This configuration is deprecated, please use `extraFiles` instead.
+  upstream: { }
+
+  ## https://docs.fluentbit.io/manual/pipeline/parsers
+  customParsers: |
+    [PARSER]
+        Name                cri
+        Format              regex
+        Regex               ^(?<time>[^ ]+) (?<stream>stdout|stderr) (?<logtag>[^ ]*) (?<log>.*)$
+        Time_Key            time
+        Time_Format         %Y-%m-%dT%H:%M:%S.%LZ
+        Decode_Field_As json log
+
+    [PARSER]
+        Name                syslog
+        Format              regex
+        Regex               ^(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$
+        Time_Key            time
+        Time_Format         %b %d %H:%M:%S
+

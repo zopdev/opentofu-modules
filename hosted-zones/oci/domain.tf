@@ -23,17 +23,19 @@ resource "google_dns_record_set" "oci_ns" {
 }
 
 resource "oci_identity_group" "dns_admin_group" {
-  name           = "dns-zone-group"
-  description    = "Group with permissions to manage DNS zones"
+  for_each       = var.zones
+  name           = "${each.key}-group"
+  description    = "Group with permissions to manage DNS zone: ${each.value.domain}"
   compartment_id = var.provider_id
 }
 
 resource "oci_identity_policy" "dns_management_policy" {
-  name           = "dns-management-policy"
-  description    = "Allows group to manage DNS resources in the specified compartment"
+  for_each       = var.zones
+  name           = "${each.key}-policy"
+  description    = "Allows group to manage DNS resources for zone: ${each.value.domain}"
   compartment_id = var.provider_id
 
   statements = [
-    "Allow group ${oci_identity_group.dns_admin_group.name} to manage dns-family in compartment id ${var.provider_id}"
+    "Allow group ${oci_identity_group.dns_admin_group[each.key].name} to manage dns-family in compartment id ${var.provider_id}"
   ]
 }

@@ -561,3 +561,50 @@ variable "slack_alerts_configs" {
     }))
     default = []
 }
+
+variable "fluent_bit" {
+  description = "Inputs for Fluent Bit configurations"
+  type        = object({
+    enable   = bool
+    loki     = optional(list(object({
+      host      = string
+      tenant_id = optional(string)
+      labels    = string
+      port      = optional(number)
+      tls       = optional(string)
+    })))
+    http     = optional(list(object({
+      host       = string
+      port       = optional(number)
+      uri        = optional(string)
+      headers     = optional(list(object({
+        key   = string
+        value = string
+      })))
+      tls        = optional(string)
+      tls_verify = optional(string)
+    })))
+    splunk  = optional(list(object({
+      host       = string
+      token      = string
+      port       = optional(number)
+      tls        = optional(string)
+      tls_verify = optional(string)
+    })))
+    datadog = optional(list(object({
+      host       = string
+      api_key    = string
+      tls        = optional(string)
+      compress   = optional(string)
+    })))
+    new_relic = optional(list(object({
+      host       = optional(string)
+      api_key    = string
+      compress   = optional(string)
+    })))
+    slack  = optional(list(object({
+      webhook    = string
+    })))
+  })
+  default = null
+}
