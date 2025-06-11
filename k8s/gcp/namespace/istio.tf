@@ -22,16 +22,6 @@ resource "helm_release" "istiod" {
   depends_on = [helm_release.istio_base]
 }
 
-# Enable Istio injection for the namespace
-resource "kubernetes_namespace" "app_environments" {
-  metadata {
-    name = var.namespace
-    labels = {
-      "istio-injection" = "enabled"
-    }
-  }
-}
-
 # Create a default DestinationRule for services
 resource "kubernetes_manifest" "default_destination_rule" {
   manifest = {
