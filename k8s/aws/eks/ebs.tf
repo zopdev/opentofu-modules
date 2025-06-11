@@ -15,7 +15,7 @@ resource "aws_eks_addon" "aws_ebs_csi_driver" {
   tags = merge(local.common_tags,
     tomap({
       "ebs.csi.aws.com/cluster" = "true"
-      "CSIVolumeName" =  "gp2"
+      "CSIVolumeName" =  "gp3"
     }))
 
   depends_on = [module.ebs_csi_irsa_role]
