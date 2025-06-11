@@ -71,7 +71,7 @@ persistence:
   accessModes:
     - ReadWriteOnce
   size: ${PERSISTENCE_DISK_SIZE}
-  storageClassName: default
+  storageClassName: gp3
   %{~ endif ~}
 resources:
   limits:
