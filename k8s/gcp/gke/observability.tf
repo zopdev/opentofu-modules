@@ -32,4 +32,49 @@ module "observability" {
   depends_on = [helm_release.prometheus, helm_release.k8s_replicator]
 }
 
+# Install Kiali for Istio monitoring
+resource "helm_release" "kiali" {
+  name       = "kiali"
+  repository = "https://kiali.org/helm-charts"
+  chart      = "kiali-server"
+  namespace  = "istio-system"
+  
+  set {
+    name  = "auth.strategy"
+    value = "anonymous"
+  }
+  
+  set {
+    name  = "external_services.istio.root_namespace"
+    value = "istio-system"
+  }
+  
+  set {
+    name  = "external_services.istio.istiod_url"
+    value = "http://istiod.istio-system:15012"
+  }
+  
+  depends_on = [helm_release.istiod]
+}
+
+# Install Jaeger for Istio tracing
+resource "helm_release" "jaeger" {
+  name       = "jaeger"
+  repository = "https://jaegertracing.github.io/helm-charts"
+  chart      = "jaeger"
+  namespace  = "istio-system"
+  
+  set {
+    name  = "query.service.type"
+    value = "ClusterIP"
+  }
+  
+  set {
+    name  = "collector.service.type"
+    value = "ClusterIP"
+  }
+  
+  depends_on = [helm_release.istiod]
+}
+
 
