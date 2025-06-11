@@ -125,6 +125,7 @@ resource "google_container_cluster" "primary" {
         }
       }
     }
+
   }
 
   master_auth {
@@ -368,6 +369,11 @@ resource "google_container_cluster" "primary" {
       enabled = var.notification_config_topic != "" ? true : false
       topic   = var.notification_config_topic
     }
+  }
+  lifecycle {
+    ignore_changes = [
+      user_managed_keys_config,
+    ]
   }
 }
 /******************************************
