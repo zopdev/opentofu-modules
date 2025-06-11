@@ -67,7 +67,7 @@ resource "helm_release" "grafana" {
   values = [
     data.template_file.grafana_template[count.index].rendered
   ]
-  depends_on = [helm_release.prometheus]
+  depends_on = [helm_release.prometheus, kubernetes_storage_class.gp3_default]
 }
 
 resource "kubernetes_config_map" "grafana_custom_datasource" {
