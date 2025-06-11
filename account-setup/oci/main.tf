@@ -266,7 +266,10 @@ resource "oci_core_security_list" "k8sapi_subnet_security" {
   vcn_id         = each.value.vcn_id
   display_name   = "${each.key}-security"
 
-
+  lifecycle {
+    ignore_changes = [ ingress_security_rules, egress_security_rules ]
+  }
+  
   ingress_security_rules {
     protocol    = "6" 
     source      = "0.0.0.0/0"
@@ -337,6 +340,10 @@ resource "oci_core_security_list" "svclb_subnet_security" {
   compartment_id = var.provider_id
   vcn_id         = each.value.vcn_id
   display_name   = "${each.key}-security"
+
+  lifecycle {
+    ignore_changes = [ ingress_security_rules, egress_security_rules ]
+  }
 }
 
 resource "oci_core_security_list" "private_subnet_security" {
@@ -344,6 +351,10 @@ resource "oci_core_security_list" "private_subnet_security" {
   compartment_id = var.provider_id
   vcn_id         = each.value.vcn_id
   display_name   = "${each.key}-security"
+
+  lifecycle {
+    ignore_changes = [ ingress_security_rules, egress_security_rules ]
+  }
 
   ingress_security_rules {
     protocol    = "all" 
@@ -398,6 +409,10 @@ resource "oci_core_security_list" "db_subnet_security" {
   compartment_id = var.provider_id
   vcn_id         = each.value.vcn_id
   display_name   = "${each.key}-db-security"
+
+  lifecycle {
+    ignore_changes = [ ingress_security_rules, egress_security_rules ]
+  }
 
   ingress_security_rules {
     protocol    = "6" 
