@@ -237,6 +237,7 @@ variable "sql_db" {
     provisioned_iops           = optional(number)
     engine_version             = optional(string)
     enable_ssl                 = optional(bool)
+    storage_tier               = optional(string)
   })
   default     = null
 }
@@ -430,6 +431,7 @@ variable "sql_list" {
     provisioned_iops           = optional(number)
     engine_version             = optional(string)
     enable_ssl                 = optional(bool)
+    storage_tier               = optional(string)
   }))
   default = {}
 }

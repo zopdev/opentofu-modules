@@ -138,6 +138,7 @@ resource "aws_db_instance" "db_instance" {
   enabled_cloudwatch_logs_exports = local.db_type[var.rds_type].enabled_cloudwatch_logs_exports
   max_allocated_storage           = var.max_allocated_storage
   apply_immediately               = var.apply_immediately
+  storage_type                    = var.storage_tier
   iops                            = var.iops
   auto_minor_version_upgrade      = var.auto_minor_version_upgrade
   tags = merge(var.tags,
@@ -165,6 +166,7 @@ resource "aws_db_instance" "rds_read_replica" {
   enabled_cloudwatch_logs_exports = local.db_type[var.rds_type].enabled_cloudwatch_logs_exports
   max_allocated_storage           = var.max_allocated_storage
   apply_immediately               = var.apply_immediately
+  storage_type                    = var.storage_tier
   auto_minor_version_upgrade      = var.auto_minor_version_upgrade
   tags = merge(var.tags,
   tomap({

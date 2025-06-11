@@ -131,6 +131,12 @@ variable "iops" {
   default     = 0
 }
 
+variable "storage_tier" {
+  description = "The storage type of the rds instance"
+  type        = string
+  default     = "gp3"
+}
+
 variable "auto_minor_version_upgrade" {
   description = "Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window"
   type        = bool
