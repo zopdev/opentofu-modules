@@ -20,7 +20,11 @@ resource "kubernetes_namespace" "app_environments" {
 
   metadata {
     name = var.namespace
+    labels = {
+      "istio-injection" = "enabled"
+    }
   }
+  
 
   lifecycle {
     ignore_changes = [
