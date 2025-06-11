@@ -59,7 +59,7 @@ resource "helm_release" "grafana" {
   chart = "grafana"
   name  = "grafana"
   namespace = kubernetes_namespace.monitoring.metadata.0.name
-  version = try(var.observability_config.grafana.version != null ? var.observability_config.grafana.version : "9.2.0", "9.2.0")
+  version = try(var.observability_config.grafana.version != null ? var.observability_config.grafana.version : "8.3.0", "8.3.0")
   timeout = 1200
 
   repository = "https://grafana.github.io/helm-charts"
