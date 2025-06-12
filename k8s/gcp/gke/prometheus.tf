@@ -89,7 +89,34 @@ resource "helm_release" "prometheus" {
     data.template_file.prom_template[count.index].rendered
   ]
 
-  depends_on = [helm_release.istio_cni]
+  set {
+    name  = "prometheusOperator.admissionWebhooks.failurePolicy"
+    value = "Ignore"
+  }
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.patch.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.createSecretJob.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.certManager.enabled"
+    value = "false"
+  }
+
+  depends_on = [
+    kubernetes_namespace.monitoring
+  ]
 }
 
 resource "helm_release" "alerts_teams" {
