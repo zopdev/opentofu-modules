@@ -29,6 +29,76 @@ resource "helm_release" "istio_cni" {
   chart      = "cni"
   namespace  = "kube-system"
   
+  set {
+    name  = "cni.cniBinDir"
+    value = "/home/kubernetes/bin"
+  }
+
+  set {
+    name  = "cni.cniConfDir"
+    value = "/etc/cni/net.d"
+  }
+
+  set {
+    name  = "cni.cniConfFileName"
+    value = "10-calico.conflist"
+  }
+
+  set {
+    name  = "cni.chained"
+    value = "true"
+  }
+
+  set {
+    name  = "cni.logLevel"
+    value = "info"
+  }
+
+  set {
+    name  = "cni.excludeNamespaces"
+    value = "[\"kube-system\"]"
+  }
+
+  set {
+    name  = "cni.repair.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "cni.repair.deletePods"
+    value = "true"
+  }
+
+  set {
+    name  = "cni.repair.labelPods"
+    value = "true"
+  }
+
+  set {
+    name  = "cni.repair.nodeName"
+    value = "true"
+  }
+
+  set {
+    name  = "cni.repair.sidecarAnnotation"
+    value = "sidecar.istio.io/status"
+  }
+
+  set {
+    name  = "cni.repair.initContainerName"
+    value = "istio-validation"
+  }
+
+  set {
+    name  = "cni.repair.brokenPodLabelKey"
+    value = "cni.istio.io/uninitialized"
+  }
+
+  set {
+    name  = "cni.repair.brokenPodLabelValue"
+    value = "true"
+  }
+
   depends_on = [helm_release.istio_base]
 }
 
