@@ -138,7 +138,7 @@ resource "kubernetes_manifest" "default_virtual_service" {
       namespace = helm_release.prometheus[0].namespace
     }
     spec = {
-      hosts = ["*.${var.namespace}.svc.cluster.local"]
+      hosts = ["*.${helm_release.prometheus[0].namespace}.svc.cluster.local"]
       http = [
         {
           match = [
@@ -151,7 +151,7 @@ resource "kubernetes_manifest" "default_virtual_service" {
           route = [
             {
               destination = {
-                host = "*.${var.namespace}.svc.cluster.local"
+                host = "*.${helm_release.prometheus[0].namespace}.svc.cluster.local"
               }
             }
           ]
