@@ -67,7 +67,7 @@ resource "helm_release" "grafana" {
   values = [
     data.template_file.grafana_template[count.index].rendered
   ]
-  depends_on = [helm_release.prometheus]
+  depends_on = [helm_release.prometheus, kubernetes_storage_class.gp3_default]
 }
 
 resource "kubernetes_config_map" "grafana_custom_datasource" {
@@ -199,7 +199,6 @@ module "rds" {
   max_allocated_storage      = 200
   monitoring_interval        = 0
   log_min_duration_statement = -1
-  iops                       = 0
   postgresql_engine_version  = "13.7"
 
   tags                  = local.common_tags

@@ -15,7 +15,7 @@ resource "aws_eks_addon" "aws_ebs_csi_driver" {
   tags = merge(local.common_tags,
     tomap({
       "ebs.csi.aws.com/cluster" = "true"
-      "CSIVolumeName" =  "gp2"
+      "CSIVolumeName" =  "gp3"
     }))
 
   depends_on = [module.ebs_csi_irsa_role]
@@ -33,4 +33,24 @@ module "ebs_csi_irsa_role" {
       namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
     }
   }
+}
+resource "kubernetes_storage_class" "gp3_default" {
+  metadata {
+    name = "gp3"
+    annotations = {
+      "storageclass.kubernetes.io/is-default-class" = "true"
+    }
+  }
+
+  storage_provisioner    = "kubernetes.io/aws-ebs"
+  reclaim_policy         = "Delete"
+  volume_binding_mode    = "WaitForFirstConsumer"
+  allow_volume_expansion = true
+
+  parameters = {
+    type       = "gp3"
+    fsType     = "ext4"  
+  }
+
+  depends_on = [aws_eks_addon.aws_ebs_csi_driver]
 }
