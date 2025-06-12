@@ -2,6 +2,9 @@ resource "kubernetes_namespace" "monitoring" {
   metadata {
     name = "monitoring"
   }
+  labels = {
+    "istio-injection" = "enabled"
+  }
 }
 
 locals{

@@ -2,6 +2,9 @@ resource "kubernetes_namespace" "db_namespace" {
   metadata {
     name = "db"
   }
+  labels = {
+    "istio-injection" = "enabled"
+  }
   lifecycle {
     ignore_changes = [
       metadata[0].annotations,
