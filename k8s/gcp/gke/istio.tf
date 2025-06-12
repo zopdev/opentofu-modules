@@ -64,5 +64,17 @@ resource "helm_release" "istio_cni" {
     value = ""
   }
 
+  # Set lower priority for CNI daemon set
+  set {
+    name  = "cni.daemonSet.priorityClassName"
+    value = ""
+  }
+
+  # Disable system critical priority
+  set {
+    name  = "cni.daemonSet.priority"
+    value = "0"
+  }
+
   depends_on = [helm_release.istio_base]
 }
