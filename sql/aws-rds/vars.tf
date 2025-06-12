@@ -124,6 +124,7 @@ variable "apply_immediately" {
   type        = bool
   default     = false
 }
+
 variable "storage_tier" {
   description = "The storage type of the rds instance"
   type        = string
