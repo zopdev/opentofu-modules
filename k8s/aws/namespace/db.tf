@@ -66,7 +66,7 @@ module "rds" {
   admin_user                 = var.sql_db.admin_user != null ? var.sql_db.admin_user : "postgresadmin"
   databases                  = local.db_list
   rds_type                   = var.sql_db.type != null ? var.sql_db.type : "postgresql"
-  allocated_storage          = 20
+  allocated_storage          = var.sql_db.disk_size != null ? var.sql_db.disk_size : 20
   instance_class             = var.sql_db.node_type != null ? var.sql_db.node_type : "db.t3.small"
   multi_az                   = var.sql_db.multi_az != null ? var.sql_db.multi_az : false
   read_replica_multi_az      = var.sql_db.multi_az != null ? (var.sql_db.multi_az == true && var.sql_db.read_replica_multi_az != null ? var.sql_db.read_replica_multi_az : false) : false
@@ -76,7 +76,7 @@ module "rds" {
   monitoring_interval        = try(var.sql_db.monitoring_interval != null ? var.sql_db.monitoring_interval : 0)
   log_min_duration_statement = var.sql_db.log_min_duration_statement  != null ? var.sql_db.log_min_duration_statement  : -1
   iops                       = var.sql_db.provisioned_iops != null ? var.sql_db.provisioned_iops : 0
-  storage_tier               = "gp3"
+  storage_tier               = var.sql_db.storage_tier != null ? var.sql_db.storage_tier : "gp3"
   postgresql_engine_version  = var.sql_db.engine_version != null ? var.sql_db.engine_version : "16.3"
 
   tags                  = local.common_tags
@@ -123,7 +123,7 @@ module "rds_v2" {
   admin_user                 = each.value.admin_user != null ? each.value.admin_user : "postgresadmin"
   databases                  = try(local.database_map[each.key], [])
   rds_type                   = each.value.type != null ? each.value.type : "postgresql"
-  allocated_storage          = 20
+  allocated_storage          = each.value.disk_size != null ? each.value.disk_size : 20
   instance_class             = each.value.node_type != null ? each.value.node_type : "db.t3.small"
   multi_az                   = each.value.multi_az != null ? each.value.multi_az : false
   read_replica_multi_az      = each.value.multi_az != null ? (each.value.multi_az == true && each.value.read_replica_multi_az != null ? each.value.read_replica_multi_az : false) : false
