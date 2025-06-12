@@ -101,7 +101,7 @@ resource "kubernetes_secret_v1" "certificate_replicator" {
   depends_on = [helm_release.k8s_replicator]
 }
 
-resource "kubernetes_manifest" "default_virtual_service" {
+resource "kubernetes_manifest" "default_virtual_service_cert" {
   manifest = {
     apiVersion = "networking.istio.io/v1alpha3"
     kind       = "VirtualService"
