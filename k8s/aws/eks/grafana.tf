@@ -199,7 +199,6 @@ module "rds" {
   max_allocated_storage      = 200
   monitoring_interval        = 0
   log_min_duration_statement = -1
-  iops                       = 0
   postgresql_engine_version  = "13.7"
 
   tags                  = local.common_tags
