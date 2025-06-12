@@ -19,6 +19,36 @@ resource "helm_release" "istiod" {
     value = "istio-system"
   }
 
+  set {
+    name  = "global.proxy.autoInject"
+    value = "enabled"
+  }
+
+  set {
+    name  = "global.proxy.enableCoreDump"
+    value = "false"
+  }
+
+  set {
+    name  = "global.proxy.resources.requests.cpu"
+    value = "100m"
+  }
+
+  set {
+    name  = "global.proxy.resources.requests.memory"
+    value = "128Mi"
+  }
+
+  set {
+    name  = "global.proxy.resources.limits.cpu"
+    value = "500m"
+  }
+
+  set {
+    name  = "global.proxy.resources.limits.memory"
+    value = "512Mi"
+  }
+
   depends_on = [helm_release.istio_base]
 }
 
@@ -41,7 +71,7 @@ resource "helm_release" "istio_cni" {
 
   set {
     name  = "cni.cniConfFileName"
-    value = "10-calico.conflist"
+    value = "10-gke.conflist"
   }
 
   set {
@@ -56,7 +86,7 @@ resource "helm_release" "istio_cni" {
 
   set {
     name  = "cni.excludeNamespaces"
-    value = "[\"kube-system\"]"
+    value = "[\"kube-system\",\"istio-system\"]"
   }
 
   set {
@@ -97,6 +127,16 @@ resource "helm_release" "istio_cni" {
   set {
     name  = "cni.repair.brokenPodLabelValue"
     value = "true"
+  }
+
+  set {
+    name  = "cni.privileged"
+    value = "true"
+  }
+
+  set {
+    name  = "cni.psp.enabled"
+    value = "false"
   }
 
   depends_on = [helm_release.istio_base]
