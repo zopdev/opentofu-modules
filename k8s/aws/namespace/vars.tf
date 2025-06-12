@@ -237,7 +237,6 @@ variable "sql_db" {
     storage_tier               = optional(number)
     engine_version             = optional(string)
     enable_ssl                 = optional(bool)
-    storage_tier               = optional(string)
   })
   default     = null
 }
@@ -431,7 +430,6 @@ variable "sql_list" {
     storage_tier               = optional(number)
     engine_version             = optional(string)
     enable_ssl                 = optional(bool)
-    storage_tier               = optional(string)
   }))
   default = {}
 }
