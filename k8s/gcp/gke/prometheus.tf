@@ -159,4 +159,5 @@ resource "kubernetes_manifest" "default_virtual_service" {
       ]
     }
   }
+  depends_on = [helm_release.istio_base,helm_release.istiod, helm_release.istio_cni]
 }
