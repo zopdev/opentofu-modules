@@ -36,7 +36,7 @@ resource "helm_release" "istio_cni" {
   name       = "istio-cni"
   repository = "https://istio-release.storage.googleapis.com/charts"
   chart      = "cni"
-  namespace  = "istio-system"
+  namespace  = "kube-system"
 
   set {
     name  = "cni.enabled"
@@ -74,6 +74,32 @@ resource "helm_release" "istio_cni" {
   set {
     name  = "cni.daemonSet.priority"
     value = "0"
+  }
+
+  # Ensure CNI is properly configured for Istiod
+  set {
+    name  = "cni.excludeNamespaces"
+    value = "[]"
+  }
+
+  set {
+    name  = "cni.repair.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "cni.repair.deletePods"
+    value = "true"
+  }
+
+  set {
+    name  = "cni.repair.labelPods"
+    value = "true"
+  }
+
+  set {
+    name  = "cni.repair.nodeSelector"
+    value = "{}"
   }
 
   depends_on = [helm_release.istio_base]

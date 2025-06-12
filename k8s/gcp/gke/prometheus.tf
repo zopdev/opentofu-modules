@@ -88,6 +88,8 @@ resource "helm_release" "prometheus" {
   values = [
     data.template_file.prom_template[count.index].rendered
   ]
+
+  depends_on = [helm_release.istio_cni]
 }
 
 resource "helm_release" "alerts_teams" {
