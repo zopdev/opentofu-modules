@@ -58,5 +58,11 @@ resource "helm_release" "istio_cni" {
     value = "enabled"
   }
 
+  # Disable priority class to avoid quota issues
+  set {
+    name  = "cni.priorityClassName"
+    value = ""
+  }
+
   depends_on = [helm_release.istio_base]
 }
