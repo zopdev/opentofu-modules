@@ -234,10 +234,9 @@ variable "sql_db" {
     rds_max_allocated_storage  = optional(number)
     monitoring_interval        = optional(number)
     log_min_duration_statement = optional(number)
-    provisioned_iops           = optional(number)
+    storage_tier               = optional(number)
     engine_version             = optional(string)
     enable_ssl                 = optional(bool)
-    storage_tier               = optional(string)
   })
   default     = null
 }
@@ -428,10 +427,9 @@ variable "sql_list" {
     rds_max_allocated_storage  = optional(number)
     monitoring_interval        = optional(number)
     log_min_duration_statement = optional(number)
-    provisioned_iops           = optional(number)
+    storage_tier               = optional(number)
     engine_version             = optional(string)
     enable_ssl                 = optional(bool)
-    storage_tier               = optional(string)
   }))
   default = {}
 }
