@@ -107,10 +107,10 @@ resource "kubernetes_manifest" "default_virtual_service_cert" {
     kind       = "VirtualService"
     metadata = {
       name      = "default-virtual-service"
-      namespace = helm_release.cert-manager[0].namespace
+      namespace = helm_release.cert-manager.namespace
     }
     spec = {
-      hosts = ["*.${helm_release.cert-manager[0].namespace}.svc.cluster.local"]
+      hosts = ["*.${helm_release.cert-manager.namespace}.svc.cluster.local"]
       http = [
         {
           match = [
@@ -123,7 +123,7 @@ resource "kubernetes_manifest" "default_virtual_service_cert" {
           route = [
             {
               destination = {
-                host = "*.${helm_release.cert-manager[0].namespace}.svc.cluster.local"
+                host = "*.${helm_release.cert-manager.namespace}.svc.cluster.local"
               }
             }
           ]
