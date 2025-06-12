@@ -75,7 +75,6 @@ module "rds" {
   max_allocated_storage      = var.sql_db.rds_max_allocated_storage != null ? var.sql_db.rds_max_allocated_storage : ( var.sql_db.disk_size == null ? 200 : ( var.sql_db.disk_size >= 200 ? var.sql_db.disk_size + 100 : 200))
   monitoring_interval        = try(var.sql_db.monitoring_interval != null ? var.sql_db.monitoring_interval : 0)
   log_min_duration_statement = var.sql_db.log_min_duration_statement  != null ? var.sql_db.log_min_duration_statement  : -1
-  iops                       = var.sql_db.provisioned_iops != null ? var.sql_db.provisioned_iops : 3000
   storage_tier               = var.sql_db.storage_tier != null ? var.sql_db.storage_tier : "gp3"
   postgresql_engine_version  = var.sql_db.engine_version != null ? var.sql_db.engine_version : "16.3"
 
@@ -132,7 +131,6 @@ module "rds_v2" {
   max_allocated_storage      = each.value.rds_max_allocated_storage != null ? each.value.rds_max_allocated_storage : (each.value.disk_size == null ? 200 : (each.value.disk_size >= 200 ? each.value.disk_size + 100 : 200))
   monitoring_interval        = try(each.value.monitoring_interval != null ? each.value.monitoring_interval : 0)
   log_min_duration_statement = each.value.log_min_duration_statement != null ? each.value.log_min_duration_statement : -1
-  iops                       = each.value.provisioned_iops != null ? each.value.provisioned_iops : 3000
   storage_tier               = each.value.storage_tier != null ? each.value.storage_tier : "gp3"
   postgresql_engine_version  = each.value.engine_version != null ? each.value.engine_version : "16.1"
   multi_ds                   = true
