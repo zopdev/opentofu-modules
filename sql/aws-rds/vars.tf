@@ -125,10 +125,10 @@ variable "apply_immediately" {
   default     = false
 }
 
-variable "iops" {
-  description = "The amount of provisioned IOPS. Setting this implies a storage_type of 'io1'"
-  type        = number
-  default     = 0
+variable "storage_tier" {
+  description = "The storage type of the rds instance"
+  type        = string
+  default     = "gp3"
 }
 
 variable "auto_minor_version_upgrade" {
