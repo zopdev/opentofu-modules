@@ -19,36 +19,6 @@ resource "helm_release" "istiod" {
     value = "istio-system"
   }
 
-  set {
-    name  = "global.proxy.autoInject"
-    value = "enabled"
-  }
-
-  set {
-    name  = "global.proxy.enableCoreDump"
-    value = "false"
-  }
-
-  set {
-    name  = "global.proxy.resources.requests.cpu"
-    value = "100m"
-  }
-
-  set {
-    name  = "global.proxy.resources.requests.memory"
-    value = "128Mi"
-  }
-
-  set {
-    name  = "global.proxy.resources.limits.cpu"
-    value = "500m"
-  }
-
-  set {
-    name  = "global.proxy.resources.limits.memory"
-    value = "512Mi"
-  }
-
   depends_on = [helm_release.istio_base]
 }
 
@@ -60,4 +30,33 @@ resource "kubernetes_namespace" "istio_system" {
       "istio-injection" = "disabled"
     }
   }
-} 
+}
+
+resource "helm_release" "istio_cni" {
+  name       = "istio-cni"
+  repository = "https://istio-release.storage.googleapis.com/charts"
+  chart      = "cni"
+  namespace  = "istio-system"
+
+  set {
+    name  = "cni.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "global.cni.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "global.istioNamespace"
+    value = "istio-system"
+  }
+
+  set {
+    name  = "global.proxy.autoInject"
+    value = "enabled"
+  }
+
+  depends_on = [helm_release.istio_base]
+}
