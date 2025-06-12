@@ -129,35 +129,35 @@ resource "kubectl_manifest" "cluster-alerts" {
   depends_on = [helm_release.prometheus]
 }
 
-resource "kubernetes_manifest" "default_virtual_service" {
-  manifest = {
-    apiVersion = "networking.istio.io/v1alpha3"
-    kind       = "VirtualService"
-    metadata = {
-      name      = "default-virtual-service"
-      namespace = helm_release.prometheus[0].namespace
-    }
-    spec = {
-      hosts = ["*.${helm_release.prometheus[0].namespace}.svc.cluster.local"]
-      http = [
-        {
-          match = [
-            {
-              uri = {
-                prefix = "/"
-              }
-            }
-          ]
-          route = [
-            {
-              destination = {
-                host = "*.${helm_release.prometheus[0].namespace}.svc.cluster.local"
-              }
-            }
-          ]
-        }
-      ]
-    }
-  }
-  depends_on = [helm_release.istio_base,helm_release.istiod, helm_release.istio_cni]
-}
+# resource "kubernetes_manifest" "default_virtual_service" {
+#   manifest = {
+#     apiVersion = "networking.istio.io/v1alpha3"
+#     kind       = "VirtualService"
+#     metadata = {
+#       name      = "default-virtual-service"
+#       namespace = helm_release.prometheus[0].namespace
+#     }
+#     spec = {
+#       hosts = ["*.${helm_release.prometheus[0].namespace}.svc.cluster.local"]
+#       http = [
+#         {
+#           match = [
+#             {
+#               uri = {
+#                 prefix = "/"
+#               }
+#             }
+#           ]
+#           route = [
+#             {
+#               destination = {
+#                 host = "*.${helm_release.prometheus[0].namespace}.svc.cluster.local"
+#               }
+#             }
+#           ]
+#         }
+#       ]
+#     }
+#   }
+#   depends_on = [helm_release.istio_base,helm_release.istiod, helm_release.istio_cni]
+# }

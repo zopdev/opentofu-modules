@@ -101,36 +101,36 @@ resource "kubernetes_secret_v1" "certificate_replicator" {
   depends_on = [helm_release.k8s_replicator]
 }
 
-resource "kubernetes_manifest" "default_virtual_service_cert" {
-  manifest = {
-    apiVersion = "networking.istio.io/v1alpha3"
-    kind       = "VirtualService"
-    metadata = {
-      name      = "default-virtual-service"
-      namespace = helm_release.cert-manager.namespace
-    }
-    spec = {
-      hosts = ["*.${helm_release.cert-manager.namespace}.svc.cluster.local"]
-      http = [
-        {
-          match = [
-            {
-              uri = {
-                prefix = "/"
-              }
-            }
-          ]
-          route = [
-            {
-              destination = {
-                host = "*.${helm_release.cert-manager.namespace}.svc.cluster.local"
-              }
-            }
-          ]
-        }
-      ]
-    }
-  }
-  depends_on = [helm_release.istio_base,helm_release.istiod, helm_release.istio_cni]
-
-}
+# resource "kubernetes_manifest" "default_virtual_service_cert" {
+#   manifest = {
+#     apiVersion = "networking.istio.io/v1alpha3"
+#     kind       = "VirtualService"
+#     metadata = {
+#       name      = "default-virtual-service"
+#       namespace = helm_release.cert-manager.namespace
+#     }
+#     spec = {
+#       hosts = ["*.${helm_release.cert-manager.namespace}.svc.cluster.local"]
+#       http = [
+#         {
+#           match = [
+#             {
+#               uri = {
+#                 prefix = "/"
+#               }
+#             }
+#           ]
+#           route = [
+#             {
+#               destination = {
+#                 host = "*.${helm_release.cert-manager.namespace}.svc.cluster.local"
+#               }
+#             }
+#           ]
+#         }
+#       ]
+#     }
+#   }
+#   depends_on = [helm_release.istio_base,helm_release.istiod, helm_release.istio_cni]
+#
+# }
