@@ -66,8 +66,6 @@ module "gke" {
   logging_service             = "none"
   release_channel             = "UNSPECIFIED"
   deletion_protection         = var.cluster_deletion_protection
-  network_policy              = true
-  datapath_provider          = "ADVANCED_DATAPATH"
 
   cluster_autoscaling  = {
     enabled    = false
