@@ -57,7 +57,7 @@ resource "helm_release" "istio_cni" {
   }
   set {
     name  = "cni.excludeNamespaces"
-    value = "kube-system,istio-system,monitoring"
+    value = "kube-system,istio-system"
   }
   set {
     name  = "cni.repair.enabled"
