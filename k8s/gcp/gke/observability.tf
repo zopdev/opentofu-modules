@@ -32,61 +32,61 @@ module "observability" {
   depends_on = [helm_release.prometheus, helm_release.k8s_replicator]
 }
 
-# # Install Kiali for Istio monitoring
-# resource "helm_release" "kiali" {
-#   name       = "kiali"
-#   repository = "https://kiali.org/helm-charts"
-#   chart      = "kiali-server"
-#   namespace  = "istio-system"
-#
-#   set {
-#     name  = "auth.strategy"
-#     value = "anonymous"
-#   }
-#
-#   set {
-#     name  = "external_services.istio.root_namespace"
-#     value = "istio-system"
-#   }
-#
-#   set {
-#     name  = "external_services.istio.istiod_url"
-#     value = "http://istiod.istio-system:15012"
-#   }
-#
-#   set {
-#     name  = "deployment.resources.requests.memory"
-#     value = "128Mi"
-#   }
-#
-#   set {
-#     name  = "deployment.resources.requests.cpu"
-#     value = "100m"
-#   }
-#
-#   set {
-#     name  = "deployment.resources.limits.memory"
-#     value = "256Mi"
-#   }
-#
-#   set {
-#     name  = "deployment.resources.limits.cpu"
-#     value = "200m"
-#   }
-#
-#   set {
-#     name  = "deployment.pod_annotations.kubernetes\\.io/ingress-bandwidth"
-#     value = "10M"
-#   }
-#
-#   set {
-#     name  = "deployment.pod_annotations.kubernetes\\.io/egress-bandwidth"
-#     value = "10M"
-#   }
-#
-#   depends_on = [helm_release.istiod]
-# }
-#
+# Install Kiali for Istio monitoring
+resource "helm_release" "kiali" {
+  name       = "kiali"
+  repository = "https://kiali.org/helm-charts"
+  chart      = "kiali-server"
+  namespace  = "istio-system"
+
+  set {
+    name  = "auth.strategy"
+    value = "anonymous"
+  }
+
+  set {
+    name  = "external_services.istio.root_namespace"
+    value = "istio-system"
+  }
+
+  set {
+    name  = "external_services.istio.istiod_url"
+    value = "http://istiod.istio-system:15012"
+  }
+
+  set {
+    name  = "deployment.resources.requests.memory"
+    value = "128Mi"
+  }
+
+  set {
+    name  = "deployment.resources.requests.cpu"
+    value = "100m"
+  }
+
+  set {
+    name  = "deployment.resources.limits.memory"
+    value = "256Mi"
+  }
+
+  set {
+    name  = "deployment.resources.limits.cpu"
+    value = "200m"
+  }
+
+  set {
+    name  = "deployment.pod_annotations.kubernetes\\.io/ingress-bandwidth"
+    value = "10M"
+  }
+
+  set {
+    name  = "deployment.pod_annotations.kubernetes\\.io/egress-bandwidth"
+    value = "10M"
+  }
+
+  depends_on = [helm_release.istiod]
+}
+
 # # Install Jaeger for Istio tracing
 # resource "helm_release" "jaeger" {
 #   name       = "jaeger"
