@@ -7,7 +7,7 @@ resource "helm_release" "istio_base" {
   create_namespace = true
 }
 
-# Install Istiod with CNI awareness
+# Install Istiod without CNI
 resource "helm_release" "istiod" {
   name       = "istiod"
   repository = "https://istio-release.storage.googleapis.com/charts"
@@ -20,7 +20,7 @@ resource "helm_release" "istiod" {
   }
   set {
     name  = "pilot.cni.enabled"
-    value = "true"
+    value = "false"
   }
 
   depends_on = [helm_release.istio_base]
@@ -36,33 +36,33 @@ resource "kubernetes_namespace" "istio_system" {
   }
 }
 
-# Install Istio CNI as a separate Helm release
-resource "helm_release" "istio_cni" {
-  name       = "istio-cni"
-  repository = "https://istio-release.storage.googleapis.com/charts"
-  chart      = "cni"
-  namespace  = "kube-system"
+# # Install Istio CNI as a separate Helm release
+# resource "helm_release" "istio_cni" {
+#   name       = "istio-cni"
+#   repository = "https://istio-release.storage.googleapis.com/charts"
+#   chart      = "cni"
+#   namespace  = "kube-system"
 
-  set {
-    name  = "cni.enabled"
-    value = "true"
-  }
-  set {
-    name  = "global.cni.enabled"
-    value = "true"
-  }
-  set {
-    name  = "global.istioNamespace"
-    value = "istio-system"
-  }
-  set {
-    name  = "cni.excludeNamespaces"
-    value = "kube-system,istio-system"
-  }
-  set {
-    name  = "cni.repair.enabled"
-    value = "true"
-  }
+#   set {
+#     name  = "cni.enabled"
+#     value = "true"
+#   }
+#   set {
+#     name  = "global.cni.enabled"
+#     value = "true"
+#   }
+#   set {
+#     name  = "global.istioNamespace"
+#     value = "istio-system"
+#   }
+#   set {
+#     name  = "cni.excludeNamespaces"
+#     value = "kube-system,istio-system"
+#   }
+#   set {
+#     name  = "cni.repair.enabled"
+#     value = "true"
+#   }
 
-  depends_on = [helm_release.istio_base]
-}
+#   depends_on = [helm_release.istio_base]
+# }
