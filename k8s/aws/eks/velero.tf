@@ -41,13 +41,13 @@ resource "aws_iam_user_policy" "velero" {
           "s3:ListMultipartUploadParts"
         ],
         Resource = [
-          "arn:aws:s3:::${module.s3_bucket.s3_bucket_id}/*"
+          "arn:aws:s3:::${aws_s3_bucket.velero.id}/*"
         ]
       },
       {
         Effect = "Allow",
         Action = ["s3:ListBucket"],
-        Resource = ["arn:aws:s3:::${module.s3_bucket.s3_bucket_id}"]
+        Resource = ["arn:aws:s3:::${aws_s3_bucket.velero.id}"]
       }
     ]
   })
@@ -63,7 +63,7 @@ data "template_file" "velero_values" {
   vars = {
     access_key        = aws_iam_access_key.velero.id
     secret_access_key = aws_iam_access_key.velero.secret
-    bucket_name       = module.s3_bucket.s3_bucket_id
+    bucket_name       = "${local.cluster_name}-velero-backups"
     region            = var.app_region
   }
 }
