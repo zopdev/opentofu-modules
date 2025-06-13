@@ -23,7 +23,7 @@ resource "kubernetes_manifest" "virtual_service" {
       namespace = each.value.namespace
     }
     spec = {
-      hosts = [each.value.host]
+      hosts = ["*"]  # Match all hosts
       gateways = ["mesh"]
       http = [
         {
@@ -37,13 +37,18 @@ resource "kubernetes_manifest" "virtual_service" {
           route = [
             {
               destination = {
-                host = each.value.service_name
+                host = "${each.value.service_name}.${each.value.namespace}.svc.cluster.local"
                 port = {
                   number = 80
                 }
               }
             }
           ]
+          retries = {
+            attempts = 3
+            perTryTimeout = "2s"
+          }
+          timeout = "3s"
         }
       ]
     }
@@ -62,7 +67,7 @@ resource "kubernetes_manifest" "destination_rule" {
       namespace = each.value.namespace
     }
     spec = {
-      host = each.value.service_name
+      host = "${each.value.service_name}.${each.value.namespace}.svc.cluster.local"
       trafficPolicy = {
         tls = {
           mode = "ISTIO_MUTUAL"
@@ -86,6 +91,45 @@ resource "kubernetes_manifest" "destination_rule" {
           maxEjectionPercent = 10
         }
       }
+      subsets = [
+        {
+          name = "v1"
+          labels = {
+            version = "v1"
+          }
+        }
+      ]
+    }
+  }
+}
+
+# Add ServiceEntry for external services if needed
+resource "kubernetes_manifest" "service_entry" {
+  for_each = local.istio_services
+
+  manifest = {
+    apiVersion = "networking.istio.io/v1alpha3"
+    kind       = "ServiceEntry"
+    metadata = {
+      name      = "${each.value.service_name}-se"
+      namespace = each.value.namespace
+    }
+    spec = {
+      hosts = [each.value.host]
+      ports = [
+        {
+          number = 80
+          name = "http"
+          protocol = "HTTP"
+        },
+        {
+          number = 443
+          name = "https"
+          protocol = "HTTPS"
+        }
+      ]
+      resolution = "DNS"
+      location = "MESH_EXTERNAL"
     }
   }
 } 
