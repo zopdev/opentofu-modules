@@ -23,7 +23,7 @@ resource "kubernetes_manifest" "virtual_service" {
       namespace = each.value.namespace
     }
     spec = {
-      hosts = ["*"]  # Match all hosts
+      hosts = ["${each.value.service_name}.${each.value.namespace}.svc.cluster.local"]
       gateways = ["mesh"]
       http = [
         {
@@ -115,7 +115,7 @@ resource "kubernetes_manifest" "service_entry" {
       namespace = each.value.namespace
     }
     spec = {
-      hosts = [each.value.host]
+      hosts = ["${each.value.service_name}.${each.value.namespace}.svc.cluster.local"]
       ports = [
         {
           number = 80
@@ -129,7 +129,7 @@ resource "kubernetes_manifest" "service_entry" {
         }
       ]
       resolution = "DNS"
-      location = "MESH_EXTERNAL"
+      location = "MESH_INTERNAL"
     }
   }
 } 
