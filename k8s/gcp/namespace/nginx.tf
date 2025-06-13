@@ -113,6 +113,10 @@ resource "kubernetes_ingress_v1" "default_service_ingress" {
       "nginx.ingress.kubernetes.io/auth-type" = each.value.basic_auth ? "basic" : ""
       "nginx.ingress.kubernetes.io/auth-secret" = each.value.basic_auth ? "${each.value.service_name}-basic-auth" : ""
       "nginx.ingress.kubernetes.io/auth-realm" = each.value.basic_auth ? "Authentication Required" : ""
+      "sidecar.istio.io/inject" = "true"
+      "traffic.sidecar.istio.io/includeInboundPorts" = "80,443"
+      "traffic.sidecar.istio.io/includeOutboundPorts" = "80,443"
+      "sidecar.istio.io/logLevel" = "debug"
     }
   }
   spec {
@@ -152,7 +156,10 @@ resource "kubernetes_ingress_v1" "custom_service_ingress" {
       "nginx.ingress.kubernetes.io/auth-type" = each.value.basic_auth ? "basic" : ""
       "nginx.ingress.kubernetes.io/auth-secret" = each.value.basic_auth ? "${each.value.service_name}-basic-auth" : ""
       "nginx.ingress.kubernetes.io/auth-realm" = each.value.basic_auth ? "Authentication Required" : ""
-
+      "sidecar.istio.io/inject" = "true"
+      "traffic.sidecar.istio.io/includeInboundPorts" = "80,443"
+      "traffic.sidecar.istio.io/includeOutboundPorts" = "80,443"
+      "sidecar.istio.io/logLevel" = "debug"
     }
   }
   spec {
@@ -194,7 +201,10 @@ resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
       "nginx.ingress.kubernetes.io/auth-type" = each.value.basic_auth ? "basic" : ""
       "nginx.ingress.kubernetes.io/auth-secret" = each.value.basic_auth ? "${each.value.service_name}-basic-auth" : ""
       "nginx.ingress.kubernetes.io/auth-realm" = each.value.basic_auth ? "Authentication Required" : ""
-
+      "sidecar.istio.io/inject" = "true"
+      "traffic.sidecar.istio.io/includeInboundPorts" = "80,443"
+      "traffic.sidecar.istio.io/includeOutboundPorts" = "80,443"
+      "sidecar.istio.io/logLevel" = "debug"
     }
   }
   spec {
