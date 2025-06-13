@@ -51,7 +51,17 @@ resource "helm_release" "kiali" {
   
   set {
     name  = "external_services.istio.istiod_url"
-    value = "http://istiod.istio-system:15012"
+    value = "https://istiod.istio-system:15012"
+  }
+
+  set {
+    name  = "external_services.istio.istio_identity_domain"
+    value = "svc.cluster.local"
+  }
+
+  set {
+    name  = "external_services.istio.istio_sidecar_injector_configmap"
+    value = "istio-sidecar-injector"
   }
 
   set {
