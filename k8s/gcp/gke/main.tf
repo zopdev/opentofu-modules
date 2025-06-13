@@ -57,8 +57,9 @@ module "gke" {
   region                      = var.app_region
   network                     = data.google_compute_network.vpc.name
   subnetwork                  = data.google_compute_subnetwork.app_subnet.name
-  ip_range_pods               = ""
-  ip_range_services           = ""
+  ip_range_pods               = data.google_compute_subnetwork.app_subnet.secondary_ip_range[0].range_name
+  ip_range_services           = data.google_compute_subnetwork.app_subnet.secondary_ip_range[1].range_name
+
   create_service_account      = false
   enable_cost_allocation      = true
   enable_binary_authorization = false

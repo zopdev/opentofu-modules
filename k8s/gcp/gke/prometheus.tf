@@ -1,7 +1,11 @@
 resource "kubernetes_namespace" "monitoring" {
   metadata {
     name = "monitoring"
+    labels = {
+      "istio-injection" = "enabled"
+    }
   }
+
 }
 
 locals{
@@ -84,6 +88,35 @@ resource "helm_release" "prometheus" {
   values = [
     data.template_file.prom_template[count.index].rendered
   ]
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.failurePolicy"
+    value = "Ignore"
+  }
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.patch.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.createSecretJob.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.certManager.enabled"
+    value = "false"
+  }
+
+  depends_on = [
+    kubernetes_namespace.monitoring
+  ]
 }
 
 resource "helm_release" "alerts_teams" {
@@ -124,3 +157,36 @@ resource "kubectl_manifest" "cluster-alerts" {
   yaml_body  = data.template_file.cluster-alerts.rendered
   depends_on = [helm_release.prometheus]
 }
+
+# resource "kubernetes_manifest" "default_virtual_service" {
+#   manifest = {
+#     apiVersion = "networking.istio.io/v1alpha3"
+#     kind       = "VirtualService"
+#     metadata = {
+#       name      = "default-virtual-service"
+#       namespace = helm_release.prometheus[0].namespace
+#     }
+#     spec = {
+#       hosts = ["*.${helm_release.prometheus[0].namespace}.svc.cluster.local"]
+#       http = [
+#         {
+#           match = [
+#             {
+#               uri = {
+#                 prefix = "/"
+#               }
+#             }
+#           ]
+#           route = [
+#             {
+#               destination = {
+#                 host = "*.${helm_release.prometheus[0].namespace}.svc.cluster.local"
+#               }
+#             }
+#           ]
+#         }
+#       ]
+#     }
+#   }
+#   depends_on = [helm_release.istio_base,helm_release.istiod, helm_release.istio_cni]
+# }

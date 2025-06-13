@@ -125,6 +125,7 @@ resource "google_container_cluster" "primary" {
         }
       }
     }
+
   }
 
   master_auth {
