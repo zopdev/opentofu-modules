@@ -7,16 +7,20 @@ resource "helm_release" "istio_base" {
   create_namespace = true
 }
 
-# Install Istiod
+# Install Istiod with CNI awareness
 resource "helm_release" "istiod" {
   name       = "istiod"
   repository = "https://istio-release.storage.googleapis.com/charts"
   chart      = "istiod"
   namespace  = "istio-system"
-  
+
   set {
     name  = "global.istioNamespace"
     value = "istio-system"
+  }
+  set {
+    name  = "pilot.cni.enabled"
+    value = "true"
   }
 
   depends_on = [helm_release.istio_base]
@@ -32,6 +36,7 @@ resource "kubernetes_namespace" "istio_system" {
   }
 }
 
+# Install Istio CNI as a separate Helm release
 resource "helm_release" "istio_cni" {
   name       = "istio-cni"
   repository = "https://istio-release.storage.googleapis.com/charts"
@@ -42,58 +47,21 @@ resource "helm_release" "istio_cni" {
     name  = "cni.enabled"
     value = "true"
   }
-
   set {
     name  = "global.cni.enabled"
     value = "true"
   }
-
   set {
     name  = "global.istioNamespace"
     value = "istio-system"
   }
-
   set {
-    name  = "global.proxy.autoInject"
-    value = "enabled"
+    name  = "cni.excludeNamespaces"
+    value = "kube-system,istio-system,monitoring"
   }
-
-  # Disable priority class to avoid quota issues
-  set {
-    name  = "cni.priorityClassName"
-    value = ""
-  }
-
-  # Set lower priority for CNI daemon set
-  set {
-    name  = "cni.daemonSet.priorityClassName"
-    value = ""
-  }
-
-  # Disable system critical priority
-  set {
-    name  = "cni.daemonSet.priority"
-    value = "0"
-  }
-
   set {
     name  = "cni.repair.enabled"
     value = "true"
-  }
-
-  set {
-    name  = "cni.repair.deletePods"
-    value = "true"
-  }
-
-  set {
-    name  = "cni.repair.labelPods"
-    value = "true"
-  }
-
-  set {
-    name  = "cni.repair.nodeSelector"
-    value = "{}"
   }
 
   depends_on = [helm_release.istio_base]
