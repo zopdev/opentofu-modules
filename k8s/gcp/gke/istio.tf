@@ -76,12 +76,6 @@ resource "helm_release" "istio_cni" {
     value = "0"
   }
 
-  # Ensure CNI is properly configured for Istiod
-  set {
-    name  = "cni.excludeNamespaces"
-    value = "[]"
-  }
-
   set {
     name  = "cni.repair.enabled"
     value = "true"
