@@ -20,6 +20,25 @@ resource "random_string" "cluster_svc_account" {
   special  = false
 }
 
+resource "google_compute_subnetwork" "app_subnet_with_secondary_ranges" {
+  name          = data.google_compute_subnetwork.app_subnet.name
+  ip_cidr_range = data.google_compute_subnetwork.app_subnet.ip_cidr_range
+  region        = var.app_region
+  network       = data.google_compute_network.vpc.id
+
+  secondary_ip_range {
+    range_name    = "gke-pods"
+    ip_cidr_range = "10.0.0.0/16"
+  }
+
+  secondary_ip_range {
+    range_name    = "gke-services"
+    ip_cidr_range = "10.1.0.0/16"
+  }
+
+  depends_on = [data.google_compute_subnetwork.app_subnet]
+}
+
 locals {
   cluster_name = var.app_env == "" ? var.app_name : "${var.app_name}-${var.app_env}"
   cluster_name_parts = split("-", local.cluster_name)
@@ -56,9 +75,9 @@ module "gke" {
   zones                       = try(var.node_config.availability_zones, [])
   region                      = var.app_region
   network                     = data.google_compute_network.vpc.name
-  subnetwork                  = data.google_compute_subnetwork.app_subnet.name
-  ip_range_pods               = ""
-  ip_range_services           = ""
+  subnetwork                  = google_compute_subnetwork.app_subnet_with_secondary_ranges.name
+  ip_range_pods               = "gke-pods"
+  ip_range_services           = "gke-services"
   create_service_account      = false
   enable_cost_allocation      = true
   enable_binary_authorization = false
