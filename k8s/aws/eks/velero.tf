@@ -25,6 +25,18 @@ resource "aws_iam_user_policy" "velero" {
         Effect = "Allow",
         Action = ["s3:ListBucket"],
         Resource = "arn:aws:s3:::*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "ec2:DescribeVolumes",
+          "ec2:DescribeSnapshots",
+          "ec2:CreateTags",
+          "ec2:CreateVolume",
+          "ec2:CreateSnapshot",
+          "ec2:DeleteSnapshot"
+        ],
+        Resource = "*"
       }
     ]
   })
