@@ -34,6 +34,21 @@ module "ebs_csi_irsa_role" {
     }
   }
 }
+
+resource "null_resource" "wait_for_ebs_csi" {
+  depends_on = [aws_eks_addon.aws_ebs_csi_driver]
+
+  provisioner "local-exec" {
+    command = <<EOT
+      for i in {1..30}; do
+        kubectl get pods -n kube-system -l app=ebs-csi-controller -o jsonpath='{.items[*].status.phase}' | grep -q Running && break
+        echo "Waiting for EBS CSI controller to be ready..."
+        sleep 10
+      done
+    EOT
+  }
+}
+
 resource "kubernetes_storage_class" "gp3_default" {
   metadata {
     name = "gp3"
@@ -52,5 +67,5 @@ resource "kubernetes_storage_class" "gp3_default" {
     fsType     = "ext4"  
   }
 
-  depends_on = [aws_eks_addon.aws_ebs_csi_driver]
+  depends_on = [null_resource.wait_for_ebs_csi]
 }
