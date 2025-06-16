@@ -68,6 +68,10 @@ resource "helm_release" "velero" {
 
   values = [data.template_file.velero_values.rendered]
 }
+resource "time_sleep" "wait_for_velero" {
+  depends_on      = [helm_release.velero]
+  create_duration = "60s"
+}
 
 resource "kubernetes_manifest" "velero_backup_schedule" {
   manifest = {
@@ -86,5 +90,9 @@ resource "kubernetes_manifest" "velero_backup_schedule" {
     }
   }
 
-  depends_on = [helm_release.velero]
+  depends_on = [
+    helm_release.velero,
+    time_sleep.wait_for_velero,
+    module.eks
+  ]
 }
