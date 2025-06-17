@@ -74,8 +74,8 @@ resource "time_sleep" "wait_for_velero" {
   create_duration = "60s"
 }
 
-resource "kubernetes_manifest" "velero_schedule" {
-  manifest = {
+resource "kubectl_manifest" "velero_schedule" {
+  yaml_body = yamlencode({
     apiVersion = "velero.io/v1"
     kind       = "Schedule"
     metadata = {
@@ -89,17 +89,10 @@ resource "kubernetes_manifest" "velero_schedule" {
         ttl                = "240h0m0s"
       }
     }
-  }
+  })
 
   depends_on = [
     helm_release.velero,
     time_sleep.wait_for_velero
   ]
-
-  lifecycle {
-    precondition {
-      condition     = helm_release.velero.status == "deployed"
-      error_message = "Velero Helm release is not successfully deployed yet."
-    }
-  }
 }
