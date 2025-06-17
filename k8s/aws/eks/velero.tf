@@ -75,20 +75,20 @@ resource "time_sleep" "wait_for_velero" {
 
 resource "null_resource" "velero_backup_schedule" {
   provisioner "local-exec" {
-    command = <<EOT
-      kubectl apply -f - <<EOF
-      apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: ${local.cluster_name}-daily-backup
-        namespace: velero
-      spec:
-        schedule: "0 2 * * *"
-        template:
-          excludedNamespaces:
-            - velero
-          ttl: 240h0m0s
-      EOF
+    command = <<-EOT
+      cat <<EOF | kubectl apply -f -
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: ${local.cluster_name}-daily-backup
+  namespace: velero
+spec:
+  schedule: "0 2 * * *"
+  template:
+    excludedNamespaces:
+      - velero
+    ttl: 240h0m0s
+EOF
     EOT
   }
 
