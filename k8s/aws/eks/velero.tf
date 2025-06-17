@@ -73,26 +73,28 @@ resource "time_sleep" "wait_for_velero" {
   create_duration = "60s"
 }
 
-# resource "kubernetes_manifest" "velero_backup_schedule" {
-#   manifest = {
-#     apiVersion = "velero.io/v1"
-#     kind       = "Schedule"
-#     metadata = {
-#       name      = "${local.cluster_name}-daily-backup"
-#       namespace = "velero"
-#     }
-#     spec = {
-#       schedule = "0 2 * * *"
-#       template = {
-#         excludedNamespaces = ["velero"]
-#         ttl                = "240h0m0s"
-#       }
-#     }
-#   }
+resource "kubernetes_manifest" "velero_backup_schedule" {
+  count = helm_release.velero.status == "deployed" ? 1 : 0
+  
+  manifest = {
+    apiVersion = "velero.io/v1"
+    kind       = "Schedule"
+    metadata = {
+      name      = "${local.cluster_name}-daily-backup"
+      namespace = "velero"
+    }
+    spec = {
+      schedule = "0 2 * * *"
+      template = {
+        excludedNamespaces = ["velero"]
+        ttl                = "240h0m0s"
+      }
+    }
+  }
 
-#   depends_on = [
-#     helm_release.velero,
-#     time_sleep.wait_for_velero,
-#     module.eks
-#   ]
-# }
+  depends_on = [
+    helm_release.velero,
+    time_sleep.wait_for_velero,
+    module.eks
+  ]
+}
