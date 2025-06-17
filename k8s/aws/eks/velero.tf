@@ -76,6 +76,10 @@ resource "time_sleep" "wait_for_velero" {
 resource "null_resource" "velero_backup_schedule" {
   provisioner "local-exec" {
     command = <<-EOT
+      for i in {1..30}; do
+        kubectl get crd schedules.velero.io && break || sleep 5
+      done
+
       cat <<EOF | kubectl apply -f -
 apiVersion: velero.io/v1
 kind: Schedule
