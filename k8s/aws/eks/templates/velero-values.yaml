@@ -14,8 +14,7 @@ credentials:
       aws_secret_access_key= ${secret_access_key}
 configuration:
   backupStorageLocation:
-    - name: ${cluster_name}-backup-location
-      bucket: ${bucket_name}
+    - bucket: ${bucket_name}
       provider: aws
       config:
         region: ${region}

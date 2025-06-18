@@ -100,7 +100,6 @@ resource "kubectl_manifest" "velero_schedule" {
         ttl = "240h0m0s"
         snapshotVolumes = false  
         defaultVolumesToFsBackup = true  
-        storageLocation = "${local.cluster_name}-backup-location"
       }
     }
   })
