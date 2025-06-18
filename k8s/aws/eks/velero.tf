@@ -85,8 +85,18 @@ resource "kubectl_manifest" "velero_schedule" {
     spec = {
       schedule = "0 2 * * *"
       template = {
-        excludedNamespaces = ["velero"]
-        ttl                = "240h0m0s"
+        excludedNamespaces = [
+          "cert-manager",
+          "db",
+          "default",
+          "kube-node-lease",
+          "kube-public",
+          "kube-system",
+          "monitoring",
+          "velero",
+          "zop-system"
+        ]
+        ttl = "240h0m0s"
       }
     }
   })
