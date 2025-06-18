@@ -14,10 +14,8 @@ credentials:
       aws_secret_access_key= ${secret_access_key}
 configuration:
   backupStorageLocation:
-    - bucket: ${bucket_name}
-      provider: aws
-      config:
-        region: ${region}
+  - bucket: ${bucket_name}
+    provider: aws
 
 deployNodeAgent: true
 nodeAgent:
