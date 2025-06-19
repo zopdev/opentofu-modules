@@ -23,18 +23,6 @@ resource "helm_release" "istiod" {
     value = "false"
   }
 
-  # Exclude jobs and cronjobs from sidecar injection
-  set {
-    name  = "pilot.injectionPolicy"
-    value = "enabled"
-  }
-  
-  # Configure sidecar injection to exclude Job and CronJob resources
-  set {
-    name  = "pilot.resourcesToExclude"
-    value = "Job,CronJob"
-  }
-
   depends_on = [helm_release.istio_base]
 }
 
