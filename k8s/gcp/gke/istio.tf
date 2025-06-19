@@ -23,6 +23,27 @@ resource "helm_release" "istiod" {
     value = "false"
   }
 
+  values = [
+    yamlencode({
+      global = {
+        sidecarInjectorWebhook = {
+          neverInjectSelector = []
+          alwaysInjectSelector = [
+            {
+              matchExpressions = [
+                {
+                  key      = "sidecar.istio.io/inject"
+                  operator = "In"
+                  values   = ["true"]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    })
+  ]
+
   depends_on = [helm_release.istio_base]
 }
 

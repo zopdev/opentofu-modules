@@ -1,3 +1,7 @@
+defaultBackend:
+  podAnnotations:
+    sidecar.istio.io/inject: "true"
+
 controller:
   opentelemetry:
     enabled: true
@@ -16,7 +20,6 @@ controller:
     annotations:
       kubernetes.io/ingress.global-static-ip-name: ${cluster_name}-https-lb-ip
       cloud.google.com/load-balancer-ip: ${lb_ip}
-      sidecar.istio.io/inject: "true"
     replicaCount: 1
   autoscaling:
     enabled: true
