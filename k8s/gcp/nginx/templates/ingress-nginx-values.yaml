@@ -1,4 +1,10 @@
+defaultBackend:
+  podAnnotations:
+    sidecar.istio.io/inject: "true"
+
 controller:
+  podAnnotations:
+    sidecar.istio.io/inject: "true"
   opentelemetry:
     enabled: true
   config:

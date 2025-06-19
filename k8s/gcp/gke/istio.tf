@@ -23,23 +23,26 @@ resource "helm_release" "istiod" {
     value = "false"
   }
 
-  # Exclude jobs and cronjobs from sidecar injection
-  set {
-    name  = "pilot.injectionPolicy"
-    value = "enabled"
-  }
-  
-  # Configure sidecar injection to exclude Job and CronJob resources
-  set {
-    name  = "pilot.resourcesToExclude"
-    value = "Job,CronJob"
-  }
-
-  # Enable injection for specific pods in kube-system
-  set {
-    name  = "pilot.alwaysInjectSelector"
-    value = "[{\"matchLabels\":{\"app\":\"nginx-ingress-controller\"}},{\"matchLabels\":{\"app.kubernetes.io/name\":\"ingress-nginx\"}}]"
-  }
+  values = [
+    yamlencode({
+      global = {
+        sidecarInjectorWebhook = {
+          neverInjectSelector = []
+          alwaysInjectSelector = [
+            {
+              matchExpressions = [
+                {
+                  key      = "sidecar.istio.io/inject"
+                  operator = "In"
+                  values   = ["true"]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    })
+  ]
 
   depends_on = [helm_release.istio_base]
 }
