@@ -23,23 +23,61 @@ resource "helm_release" "istiod" {
     value = "false"
   }
 
+  # Configure the sidecar injector webhook
+  set {
+    name  = "sidecarInjectorWebhook.enableNamespacesByDefault"
+    value = "false"
+  }
+
+  # Custom webhook configuration to target specific pods in kube-system
   values = [
     yamlencode({
-      global = {
-        sidecarInjectorWebhook = {
-          neverInjectSelector = []
-          alwaysInjectSelector = [
+      sidecarInjectorWebhook = {
+        # Enable the webhook
+        enabled = true
+
+        # Custom webhook configuration
+        webhookName = "istio-sidecar-injector"
+
+        # Namespace selector configuration
+        namespaceSelector = {
+          matchExpressions = [
             {
-              matchExpressions = [
-                {
-                  key      = "sidecar.istio.io/inject"
-                  operator = "In"
-                  values   = ["true"]
-                }
-              ]
+              key      = "name"
+              operator = "NotIn"
+              values   = ["kube-public", "kube-node-lease"]
             }
           ]
         }
+
+        # Object selector for targeting specific pods
+        objectSelector = {
+          matchExpressions = [
+            {
+              key      = "sidecar.istio.io/inject"
+              operator = "In"
+              values   = ["true"]
+            }
+          ]
+        }
+
+        # Injection policy
+        policy = "enabled"
+
+        # Template for injection
+        template = <<-EOT
+          policy: enabled
+          alwaysInjectSelector:
+            - matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: ["ingress-nginx"]
+          neverInjectSelector:
+            - matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: NotIn
+                values: ["ingress-nginx"]
+        EOT
       }
     })
   ]
