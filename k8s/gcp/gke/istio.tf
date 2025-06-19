@@ -23,6 +23,24 @@ resource "helm_release" "istiod" {
     value = "false"
   }
 
+  # Exclude jobs and cronjobs from sidecar injection
+  set {
+    name  = "pilot.injectionPolicy"
+    value = "enabled"
+  }
+  
+  # Configure sidecar injection to exclude Job and CronJob resources
+  set {
+    name  = "pilot.resourcesToExclude"
+    value = "Job,CronJob"
+  }
+
+  # Enable injection for specific pods in kube-system
+  set {
+    name  = "pilot.alwaysInjectSelector"
+    value = "[{\"matchLabels\":{\"app\":\"nginx-ingress-controller\"}},{\"matchLabels\":{\"app.kubernetes.io/name\":\"ingress-nginx\"}}]"
+  }
+
   depends_on = [helm_release.istio_base]
 }
 
@@ -35,34 +53,3 @@ resource "kubernetes_namespace" "istio_system" {
     }
   }
 }
-
-# # Install Istio CNI as a separate Helm release
-# resource "helm_release" "istio_cni" {
-#   name       = "istio-cni"
-#   repository = "https://istio-release.storage.googleapis.com/charts"
-#   chart      = "cni"
-#   namespace  = "kube-system"
-
-#   set {
-#     name  = "cni.enabled"
-#     value = "true"
-#   }
-#   set {
-#     name  = "global.cni.enabled"
-#     value = "true"
-#   }
-#   set {
-#     name  = "global.istioNamespace"
-#     value = "istio-system"
-#   }
-#   set {
-#     name  = "cni.excludeNamespaces"
-#     value = "kube-system,istio-system"
-#   }
-#   set {
-#     name  = "cni.repair.enabled"
-#     value = "true"
-#   }
-
-#   depends_on = [helm_release.istio_base]
-# }
