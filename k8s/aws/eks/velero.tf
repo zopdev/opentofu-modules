@@ -97,8 +97,6 @@ resource "kubectl_manifest" "velero_schedule" {
           "zop-system"
         ]
         ttl = "240h0m0s"
-        snapshotVolumes = false  
-        defaultVolumesToFsBackup = true  
       }
     }
   })
