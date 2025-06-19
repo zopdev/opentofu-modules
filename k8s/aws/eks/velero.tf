@@ -68,31 +68,43 @@ resource "helm_release" "velero" {
 
   values = [data.template_file.velero_values.rendered]
 }
+
 resource "time_sleep" "wait_for_velero" {
   depends_on      = [helm_release.velero]
   create_duration = "60s"
 }
 
-# resource "kubernetes_manifest" "velero_backup_schedule" {
-#   manifest = {
-#     apiVersion = "velero.io/v1"
-#     kind       = "Schedule"
-#     metadata = {
-#       name      = "${local.cluster_name}-daily-backup"
-#       namespace = "velero"
-#     }
-#     spec = {
-#       schedule = "0 2 * * *"
-#       template = {
-#         excludedNamespaces = ["velero"]
-#         ttl                = "240h0m0s"
-#       }
-#     }
-#   }
+resource "kubectl_manifest" "velero_schedule" {
+  yaml_body = yamlencode({
+    apiVersion = "velero.io/v1"
+    kind       = "Schedule"
+    metadata = {
+      name      = "${local.cluster_name}-daily-backup"
+      namespace = "velero"
+    }
+    spec = {
+      schedule = "0 2 * * *"
+      template = {
+        excludedNamespaces = [
+          "cert-manager",
+          "db",
+          "default",
+          "kube-node-lease",
+          "kube-public",
+          "kube-system",
+          "monitoring",
+          "velero",
+          "zop-system"
+        ]
+        ttl = "240h0m0s"
+        snapshotVolumes = false  
+        defaultVolumesToFsBackup = true  
+      }
+    }
+  })
 
-#   depends_on = [
-#     helm_release.velero,
-#     time_sleep.wait_for_velero,
-#     module.eks
-#   ]
-# }
+  depends_on = [
+    helm_release.velero,
+    time_sleep.wait_for_velero
+  ]
+}

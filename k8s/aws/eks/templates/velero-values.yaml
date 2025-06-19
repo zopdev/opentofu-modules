@@ -16,7 +16,19 @@ configuration:
   backupStorageLocation:
   - bucket: ${bucket_name}
     provider: aws
-  volumeSnapshotLocation:
-  - config:
-      region: ${region}
-    provider: aws
+
+deployNodeAgent: true
+nodeAgent:
+  podVolumePath: /var/lib/kubelet/pods
+  privileged: false
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 500m
+    limits:
+      memory: 1Gi
+      cpu: 1000m
+
+snapshotsEnabled: false
+
+defaultVolumesToFsBackup: true
