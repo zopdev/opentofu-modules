@@ -17,4 +17,4 @@ configuration:
   - bucket: ${bucket_name}
     provider: aws
   volumeSnapshotLocation:
-    provider: aws
+  - provider: aws
