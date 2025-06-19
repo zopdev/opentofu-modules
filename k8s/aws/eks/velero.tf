@@ -54,7 +54,6 @@ data "template_file" "velero_values" {
     secret_access_key = aws_iam_access_key.velero.secret
     bucket_name       = "k8s-resource-backups"
     region            = var.app_region
-    cluster_name      = local.cluster_name
   }
 }
 
