@@ -35,12 +35,6 @@ resource "helm_release" "istiod" {
     value = "Job,CronJob"
   }
 
-  # Enable injection for specific pods in kube-system
-  set {
-    name  = "pilot.alwaysInjectSelector"
-    value = "[{\"matchLabels\":{\"app\":\"nginx-ingress-controller\"}},{\"matchLabels\":{\"app.kubernetes.io/name\":\"ingress-nginx\"}}]"
-  }
-
   depends_on = [helm_release.istio_base]
 }
 
