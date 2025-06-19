@@ -1,0 +1,15 @@
+_internal_defaults_do_not_set:
+  sidecarInjectorWebhook:
+    # You can use the field called alwaysInjectSelector and neverInjectSelector which will always inject the sidecar or
+    # always skip the injection on pods that match that label selector, regardless of the global policy.
+    # See https://istio.io/docs/setup/kubernetes/additional-setup/sidecar-injection/#more-control-adding-exceptions
+    neverInjectSelector:
+      - matchExpressions:
+          - key: "job-type"
+            operator: In
+            values: ["batch", "cron", "job"]
+    alwaysInjectSelector:
+      - matchExpressions:
+          - key: "app.kubernetes.io/part-of"
+            operator: In
+            values: ["ingress-nginx"]
