@@ -89,7 +89,7 @@ type: GCS
 config:
   bucket: "${google_storage_bucket.thanos_data[0].name}"
   service_account: |
-${indent(4, google_service_account_key.thanos_svc_acc_key[0].private_key)}
+${indent(6, google_service_account_key.thanos_svc_acc_key[0].private_key)}
 EOF
 }
 
