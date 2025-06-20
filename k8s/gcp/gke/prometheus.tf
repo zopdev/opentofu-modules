@@ -88,7 +88,7 @@ data "template_file" "thanos_objstore_yaml" {
 type: GCS
 config:
   bucket: "${google_storage_bucket.thanos_data[0].name}"
-  service_account: |
+  service_account: |-
 ${indent(2, base64decode(google_service_account_key.thanos_svc_acc_key[0].private_key))}
 EOF
 }
