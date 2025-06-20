@@ -8,6 +8,12 @@ resource "kubernetes_namespace" "monitoring" {
 
 }
 
+resource "kubernetes_namespace" "prometheus_storage" {
+  metadata {
+    name = "prometheus-storage"
+  }
+}
+
 locals{
   ### this app namespace level alerts:
   namespace_teams_webhook   =  merge([for n, s in var.app_namespaces : { for k, v in s.alert_webhooks : "namespace-webhook-${n}-${k}" => { data   = substr(v.data, 8, length(v.data)), labels = v.labels == null ? merge(v.labels, {severity = "critical", servicealert = "true",namespace = n}) : merge(v.labels, {namespace = n}), } if v.type == "teams"}if s.alert_webhooks != null]...)
@@ -41,73 +47,6 @@ locals{
   remote_write_config = concat(local.remote_write_config_list, local.default_remote_write_config)
 }
 
-# --- Thanos GCS Bucket and Service Account Setup ---
-
-# Generate an 8-digit random string for the bucket name
-resource "random_id" "thanos_bucket" {
-  byte_length = 4 # 8 hex digits
-}
-
-# Only create resources if Thanos is enabled
-locals {
-  # thanos_enabled = try(var.observability_config.prometheus.thanos.enable, false)
-  thanos_enabled = true
-  thanos_bucket_name = local.thanos_enabled ? "thanos-metrics-${random_id.thanos_bucket.hex}" : null
-}
-
-resource "google_storage_bucket" "thanos_data" {
-  count         = local.thanos_enabled ? 1 : 0
-  name          = local.thanos_bucket_name
-  location      = var.app_region
-  project       = var.provider_id
-  force_destroy = true
-  # Optionally add labels if you use them elsewhere
-}
-
-resource "google_service_account" "thanos_svc_acc" {
-  count        = local.thanos_enabled ? 1 : 0
-  project      = var.provider_id
-  account_id   = "thanos-objstore-${random_id.thanos_bucket.hex}"
-}
-
-resource "google_service_account_key" "thanos_svc_acc_key" {
-  count              = local.thanos_enabled ? 1 : 0
-  service_account_id = google_service_account.thanos_svc_acc[0].name
-}
-
-resource "google_storage_bucket_iam_member" "thanos_svc_acc" {
-  count  = local.thanos_enabled ? 1 : 0
-  bucket = google_storage_bucket.thanos_data[0].name
-  role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${google_service_account.thanos_svc_acc[0].email}"
-}
-
-data "template_file" "thanos_objstore_yaml" {
-  count    = local.thanos_enabled ? 1 : 0
-  template = <<EOF
-type: GCS
-config:
-  bucket: "${google_storage_bucket.thanos_data[0].name}"
-  service_account: |-
-${indent(2, base64decode(google_service_account_key.thanos_svc_acc_key[0].private_key))}
-EOF
-}
-
-resource "kubernetes_secret" "thanos_objstore" {
-  count = local.thanos_enabled ? 1 : 0
-
-  metadata {
-    name      = "thanos-objstore-secret"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
-  }
-
-  data = {
-    "objstore.yaml" = data.template_file.thanos_objstore_yaml[0].rendered
-  }
-
-  type = "Opaque"
-}
-
 data "template_file" "prom_template" {
   count = local.prometheus_enable ? 1 : 0
 
@@ -137,8 +76,6 @@ data "template_file" "prom_template" {
     GRAFANA_HOST                      = local.grafana_enable ? local.grafana_host : ""
   }
 }
-
-
 
 resource "helm_release" "prometheus" {
   count = local.prometheus_enable ? 1 : 0
@@ -181,6 +118,11 @@ resource "helm_release" "prometheus" {
     value = "false"
   }
 
+  set {
+    name  = "prometheus.prometheusSpec.remoteWrite[0].url"
+    value = "http://prometheus-storage.prometheus-storage.svc.cluster.local:9090/api/v1/write"
+  }
+
   depends_on = [
     kubernetes_namespace.monitoring
   ]
@@ -197,6 +139,19 @@ resource "helm_release" "alerts_teams" {
 
   values = [
     file("./templates/prom-teams-alert-values.yaml")
+  ]
+}
+
+resource "helm_release" "prometheus_storage" {
+  chart            = "kube-prometheus-stack"
+  name             = "prometheus-storage"
+  namespace        = kubernetes_namespace.prometheus_storage.metadata[0].name
+  create_namespace = true
+  version          = "60.0.0"
+  repository       = "https://prometheus-community.github.io/helm-charts"
+
+  values = [
+    file("${path.module}/templates/prometheus-storage-values.yaml")
   ]
 }
 

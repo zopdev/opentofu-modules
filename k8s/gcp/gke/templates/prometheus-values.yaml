@@ -104,12 +104,6 @@ grafana:
   enabled: false
 prometheus:
   prometheusSpec:
-    thanos:
-      objectStorageConfig:
-        existingSecret:
-          name: thanos-objstore-secret
-          key: objstore.yaml
-      version: v0.34.1
     externalLabels:
       cluster_name: ${CLUSTER_NAME}
     retentionSize: ${PROMETHEUS_RETENTION_SIZE}
@@ -129,44 +123,3 @@ prometheus:
         headers:
           ${v.key}: ${v.value}
       %{~ endfor ~}
-
-
-thanosQuery:
-  enabled: true
-  replicaCount: 1
-  service:
-    type: ClusterIP
-    port: 8080
-
-thanosStoreGateway:
-  enabled: true
-  replicaCount: 1
-  objectStorageConfig:
-    existingSecret:
-      name: thanos-objstore-secret
-      key: objstore.yaml
-
-thanosCompactor:
-  enabled: true
-  retentionResolutionRaw: 30d       # Raw samples retention (e.g., 1m)
-  retentionResolution5m: 30d        # 5m downsampled data retention
-  retentionResolution1h: 60d        # 1h downsampled data retention
-  objectStorageConfig:
-    existingSecret:
-      name: thanos-objstore-secret
-      key: objstore.yaml
-  resources:
-    requests:
-      cpu: "200m"
-      memory: "512Mi"
-  persistentVolume:
-    enabled: true
-    size: 10Gi
-    storageClass: standard  # Update this if using a different storage class
-
-thanosBucketWeb:
-  enabled: true
-  objectStorageConfig:
-    existingSecret:
-      name: thanos-objstore-secret
-      key: objstore.yaml

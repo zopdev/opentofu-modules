@@ -1,0 +1,19 @@
+prometheus:
+  prometheusSpec:
+    service:
+      type: ClusterIP
+    scrapeInterval: "60s"
+    evaluationInterval: "60s"
+    serviceMonitorSelector: {}
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelector: {}
+    podMonitorSelectorNilUsesHelmValues: false
+    probeSelector: {}
+    probeSelectorNilUsesHelmValues: false
+    ruleSelector: {}
+    ruleSelectorNilUsesHelmValues: false
+    alertingEndpoints: []
+    additionalScrapeConfigs: []
+    # Disable default targets
+    enableAdminAPI: false
+    enableRemoteWriteReceiver: true 
