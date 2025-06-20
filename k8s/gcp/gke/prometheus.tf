@@ -95,13 +95,16 @@ EOF
 
 resource "kubernetes_secret" "thanos_objstore" {
   count = local.thanos_enabled ? 1 : 0
+
   metadata {
     name      = "thanos-objstore-secret"
     namespace = kubernetes_namespace.monitoring.metadata[0].name
   }
+
   data = {
-    "objstore.yaml" = base64encode(data.template_file.thanos_objstore_yaml[0].rendered)
+    "objstore.yaml" = data.template_file.thanos_objstore_yaml[0].rendered
   }
+
   type = "Opaque"
 }
 
