@@ -118,11 +118,6 @@ resource "helm_release" "prometheus" {
     value = "false"
   }
 
-  set {
-    name  = "prometheus.prometheusSpec.remoteWrite[0].url"
-    value = "http://prometheus-storage.prometheus-storage.svc.cluster.local:9090/api/v1/write"
-  }
-
   depends_on = [
     kubernetes_namespace.monitoring
   ]
