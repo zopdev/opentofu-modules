@@ -810,3 +810,9 @@ variable "slack_alerts_configs" {
   }))
   default = []
 }
+
+variable "velero_schedule" {
+  description = "The backup schedule for velero"
+  type        = string
+  default     = "0 2 * * *"
+}

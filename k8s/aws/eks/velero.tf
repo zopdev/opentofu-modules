@@ -83,7 +83,7 @@ resource "kubectl_manifest" "velero_schedule" {
       namespace = "velero"
     }
     spec = {
-      schedule = "0 2 * * *"
+      schedule = var.velero_schedule
       template = {
         excludedNamespaces = [
           "cert-manager",
