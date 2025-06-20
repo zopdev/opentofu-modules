@@ -1,0 +1,22 @@
+initContainers:
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.4.1
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+credentials:
+  useSecret: true
+  secretContents:
+    cloud: |
+      [default]
+      aws_access_key_id= ${access_key}
+      aws_secret_access_key= ${secret_access_key}
+configuration:
+  backupStorageLocation:
+  - bucket: ${bucket_name}
+    provider: aws
+  volumeSnapshotLocation:
+  - config:
+      region: ${region}
+    provider: aws
