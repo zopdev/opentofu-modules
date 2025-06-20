@@ -67,7 +67,7 @@ resource "google_storage_bucket" "thanos_data" {
 resource "google_service_account" "thanos_svc_acc" {
   count        = local.thanos_enabled ? 1 : 0
   project      = var.provider_id
-  account_id   = "thanos-objstore"
+  account_id   = "thanos-objstore-${random_id.thanos_bucket.hex}"
 }
 
 resource "google_service_account_key" "thanos_svc_acc_key" {
@@ -88,7 +88,7 @@ data "template_file" "thanos_objstore_yaml" {
 type: GCS
 config:
   bucket: "${google_storage_bucket.thanos_data[0].name}"
-  service_account: |-
+  service_account: |
 ${indent(4, google_service_account_key.thanos_svc_acc_key[0].private_key)}
 EOF
 }
@@ -98,10 +98,9 @@ resource "kubernetes_secret" "thanos_objstore" {
   metadata {
     name      = "thanos-objstore-secret"
     namespace = kubernetes_namespace.monitoring.metadata[0].name
-    # Optionally add labels/annotations if you want
   }
   data = {
-    "objstore.yaml" = data.template_file.thanos_objstore_yaml[0].rendered
+    "objstore.yaml" = base64encode(data.template_file.thanos_objstore_yaml[0].rendered)
   }
   type = "Opaque"
 }
