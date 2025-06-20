@@ -118,6 +118,7 @@ prometheus:
             requests:
               storage: ${PROMETHEUS_DISK_SIZE}
     remoteWrite:
+      - url: "http://prometheus-storage.prometheus-storage.svc.cluster.local:9090/api/v1/write"
       %{~ for k,v in jsondecode(REMOTE_WRITE_CONFIGS) ~}
       - url: ${v.host}
         headers:

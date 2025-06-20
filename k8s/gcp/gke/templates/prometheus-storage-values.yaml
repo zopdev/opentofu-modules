@@ -16,4 +16,7 @@ prometheus:
     additionalScrapeConfigs: []
     # Disable default targets
     enableAdminAPI: false
-    enableRemoteWriteReceiver: true 
+    enableRemoteWriteReceiver: true
+
+nodeExporter:
+  enabled: false 
