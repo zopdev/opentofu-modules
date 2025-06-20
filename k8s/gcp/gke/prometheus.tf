@@ -41,6 +41,72 @@ locals{
   remote_write_config = concat(local.remote_write_config_list, local.default_remote_write_config)
 }
 
+# --- Thanos GCS Bucket and Service Account Setup ---
+
+# Generate an 8-digit random string for the bucket name
+resource "random_id" "thanos_bucket" {
+  byte_length = 4 # 8 hex digits
+}
+
+# Only create resources if Thanos is enabled
+locals {
+  # thanos_enabled = try(var.observability_config.prometheus.thanos.enable, false)
+  thanos_enabled = true
+  thanos_bucket_name = local.thanos_enabled ? "thanos-metrics-${random_id.thanos_bucket.hex}" : null
+}
+
+resource "google_storage_bucket" "thanos" {
+  count  = local.thanos_enabled ? 1 : 0
+  name   = local.thanos_bucket_name
+  location = var.app_region
+  project  = var.provider_id
+  force_destroy = true
+}
+
+resource "google_service_account" "thanos" {
+  count        = local.thanos_enabled ? 1 : 0
+  account_id   = "thanos-objstore"
+  display_name = "Thanos Object Storage Service Account"
+  project      = var.provider_id
+}
+
+resource "google_storage_bucket_iam_member" "thanos_bucket_access" {
+  count  = local.thanos_enabled ? 1 : 0
+  bucket = google_storage_bucket.thanos[0].name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.thanos[0].email}"
+}
+
+resource "google_service_account_key" "thanos" {
+  count              = local.thanos_enabled ? 1 : 0
+  service_account_id = google_service_account.thanos[0].name
+}
+
+data "template_file" "thanos_objstore_yaml" {
+  count    = local.thanos_enabled ? 1 : 0
+  template = <<EOF
+{
+  "type": "GCS",
+  "config": {
+    "bucket": "${google_storage_bucket.thanos[0].name}",
+    "service_account": ${google_service_account_key.thanos[0].private_key}
+  }
+}
+EOF
+}
+
+resource "kubernetes_secret" "thanos_objstore" {
+  count = local.thanos_enabled ? 1 : 0
+  metadata {
+    name      = "thanos-objstore-secret"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+  }
+  data = {
+    "objstore.yaml" = data.template_file.thanos_objstore_yaml[0].rendered
+  }
+  type = "Opaque"
+}
+
 data "template_file" "prom_template" {
   count = local.prometheus_enable ? 1 : 0
 

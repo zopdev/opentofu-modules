@@ -243,6 +243,9 @@ variable "observability_config" {
                     value = optional(string)
                 }))
             })))
+            thanos = optional(object({
+                enable = bool
+            }))
         }))
         grafana = optional(object({
             version           = optional(string)
