@@ -45,6 +45,9 @@ locals{
   }] : []
 
   remote_write_config = concat(local.remote_write_config_list, local.default_remote_write_config)
+
+  enable_storage_prometheus = try(var.observability_config.prometheus != null ? var.observability_config.prometheus.storage_replica != null ?  var.observability_config.prometheus.storage_replica:false:false,false)
+
 }
 
 data "template_file" "prom_template" {
@@ -138,6 +141,7 @@ resource "helm_release" "alerts_teams" {
 }
 
 resource "helm_release" "prometheus_storage" {
+  count            = local.enable_storage_prometheus ? 1 : 0
   chart            = "kube-prometheus-stack"
   name             = "prometheus-storage"
   namespace        = kubernetes_namespace.prometheus_storage.metadata[0].name
@@ -174,36 +178,3 @@ resource "kubectl_manifest" "cluster-alerts" {
   yaml_body  = data.template_file.cluster-alerts.rendered
   depends_on = [helm_release.prometheus]
 }
-
-# resource "kubernetes_manifest" "default_virtual_service" {
-#   manifest = {
-#     apiVersion = "networking.istio.io/v1alpha3"
-#     kind       = "VirtualService"
-#     metadata = {
-#       name      = "default-virtual-service"
-#       namespace = helm_release.prometheus[0].namespace
-#     }
-#     spec = {
-#       hosts = ["*.${helm_release.prometheus[0].namespace}.svc.cluster.local"]
-#       http = [
-#         {
-#           match = [
-#             {
-#               uri = {
-#                 prefix = "/"
-#               }
-#             }
-#           ]
-#           route = [
-#             {
-#               destination = {
-#                 host = "*.${helm_release.prometheus[0].namespace}.svc.cluster.local"
-#               }
-#             }
-#           ]
-#         }
-#       ]
-#     }
-#   }
-#   depends_on = [helm_release.istio_base,helm_release.istiod, helm_release.istio_cni]
-# }
