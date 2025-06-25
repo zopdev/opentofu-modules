@@ -1,0 +1,30 @@
+prometheus:
+  prometheusSpec:
+    service:
+      type: ClusterIP
+    serviceMonitorSelector: {}
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelector: {}
+    podMonitorSelectorNilUsesHelmValues: false
+    probeSelector: {}
+    probeSelectorNilUsesHelmValues: false
+    ruleSelector: {}
+    ruleSelectorNilUsesHelmValues: false
+    alertingEndpoints: []
+    additionalScrapeConfigs: []
+    # Disable default targets
+    enableAdminAPI: false
+    enableRemoteWriteReceiver: true
+    retentionSize: "20GB"
+    retention: "7d"
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: standard-rwo
+          accessModes: [ "ReadWriteOnce" ]
+          resources:
+            requests:
+              storage: "50Gi"
+
+nodeExporter:
+  enabled: false

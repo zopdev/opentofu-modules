@@ -243,6 +243,7 @@ variable "observability_config" {
                     value = optional(string)
                 }))
             })))
+            storage_replica = optional(bool)
         }))
         grafana = optional(object({
             version           = optional(string)

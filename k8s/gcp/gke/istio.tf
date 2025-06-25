@@ -1,3 +1,45 @@
+# Install Istio base
+resource "helm_release" "istio_base" {
+  name       = "istio-base"
+  repository = "https://istio-release.storage.googleapis.com/charts"
+  chart      = "base"
+  namespace  = "istio-system"
+  create_namespace = true
+}
+
+# Install Istiod without CNI
+resource "helm_release" "istiod" {
+  name       = "istiod"
+  repository = "https://istio-release.storage.googleapis.com/charts"
+  chart      = "istiod"
+  namespace  = "istio-system"
+
+  set {
+    name  = "global.istioNamespace"
+    value = "istio-system"
+  }
+  set {
+    name  = "pilot.cni.enabled"
+    value = "false"
+  }
+
+  # Use external values file for sidecar injector configuration
+  values = [file("${path.module}/templates/istiod-values.yaml")]
+
+  depends_on = [helm_release.istio_base]
+}
+
+# Create Istio system namespace
+resource "kubernetes_namespace" "istio_system" {
+  metadata {
+    name = "istio-system"
+    labels = {
+      "istio-injection" = "disabled"
+    }
+  }
+}
+
+
 resource "kubernetes_namespace" "monitoring" {
   metadata {
     name = "monitoring"
@@ -11,9 +53,6 @@ resource "kubernetes_namespace" "monitoring" {
 resource "kubernetes_namespace" "prometheus_storage" {
   metadata {
     name = "prometheus-storage"
-    labels = {
-      "istio-injection" = "enable"
-    }
   }
 }
 
@@ -48,6 +87,9 @@ locals{
   }] : []
 
   remote_write_config = concat(local.remote_write_config_list, local.default_remote_write_config)
+
+  enable_storage_prometheus = try(var.observability_config.prometheus != null ? var.observability_config.prometheus.storage_replica != null ?  var.observability_config.prometheus.storage_replica:false:false,false)
+
 }
 
 data "template_file" "prom_template" {
@@ -77,11 +119,8 @@ data "template_file" "prom_template" {
     PAGER_DUTY_KEY                    = var.pagerduty_integration_key
     PAGER_DUTY_ENDPOINT_URL           = jsonencode(local.cluster_pagerduty_alerts)
     GRAFANA_HOST                      = local.grafana_enable ? local.grafana_host : ""
-    PROMETHEUS_STORAGE_ENABLED        = local.enable_storage_prometheus
   }
 }
-
-
 
 resource "helm_release" "prometheus" {
   count = local.prometheus_enable ? 1 : 0
@@ -98,6 +137,35 @@ resource "helm_release" "prometheus" {
   values = [
     data.template_file.prom_template[count.index].rendered
   ]
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.failurePolicy"
+    value = "Ignore"
+  }
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.patch.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.createSecretJob.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "prometheusOperator.admissionWebhooks.certManager.enabled"
+    value = "false"
+  }
+
+  depends_on = [
+    kubernetes_namespace.monitoring
+  ]
 }
 
 resource "helm_release" "alerts_teams" {
@@ -111,6 +179,20 @@ resource "helm_release" "alerts_teams" {
 
   values = [
     file("./templates/prom-teams-alert-values.yaml")
+  ]
+}
+
+resource "helm_release" "prometheus_storage" {
+  count            = local.enable_storage_prometheus ? 1 : 0
+  chart            = "kube-prometheus-stack"
+  name             = "prometheus-storage"
+  namespace        = kubernetes_namespace.prometheus_storage.metadata[0].name
+  create_namespace = true
+  version          = "60.0.0"
+  repository       = "https://prometheus-community.github.io/helm-charts"
+
+  values = [
+    file("${path.module}/templates/prometheus-storage-values.yaml")
   ]
 }
 

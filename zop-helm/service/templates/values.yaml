@@ -6,6 +6,8 @@ replicaCount: ${replica_count}
 
 image: ${image}
 
+injectIstio: true
+
 imagePullSecrets:
   %{~ for k, v in jsondecode(image_pull_secrets) ~}
   - ${v}
