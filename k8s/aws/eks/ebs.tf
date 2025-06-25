@@ -34,6 +34,12 @@ module "ebs_csi_irsa_role" {
     }
   }
 }
+
+resource "time_sleep" "wait_for_ebs" {
+  depends_on      = [module.ebs_csi_irsa_role]
+  create_duration = "80s"
+}
+
 resource "kubernetes_storage_class" "gp3_default" {
   metadata {
     name = "gp3"
@@ -52,5 +58,5 @@ resource "kubernetes_storage_class" "gp3_default" {
     fsType     = "ext4"  
   }
 
-  depends_on = [aws_eks_addon.aws_ebs_csi_driver]
+  depends_on = [time_sleep.wait_for_ebs]
 }
