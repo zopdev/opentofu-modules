@@ -816,3 +816,9 @@ variable "velero_schedule" {
   type        = string
   default     = "0 2 * * *"
 }
+
+variable "velero_enabled" {
+  description = "Enable Velero backup setup"
+  type        = bool
+  default     = false
+}
