@@ -23,6 +23,8 @@ locals {
         basic_auth         = (config.enable_basic_auth != null ? config.enable_basic_auth : false) ? true : false
         nginx_rewrite      = config.nginx_rewrite != null ? config.nginx_rewrite : true
       }
+      # Exclude wildcard hosts from custom host logic
+      if !can(regex("^\\*\\.", split("/", host)[0]))
     })if try(length(var.services[service].ingress_list),0) != 0
   ]...)
 
@@ -38,6 +40,21 @@ locals {
         basic_auth    = local.default_domain_list[service].basic_auth
       }
     }
+  ]...)
+
+  wildcard_custom_hosts = merge([
+    for service, config in var.services : tomap({
+      for host in try(config.ingress_list, []) :
+        "${service}-${var.namespace}-${host}" => {
+          service_name = split(":", service)[0]
+          service_port = length(split(":", service)) != 2 ? 80 : split(":", service)[1]
+          ingress_host = split("/", host)[0]
+          ns           = var.namespace
+          ingress_name = lower(replace("${split(":", service)[0]}-${replace(host, "/", "-")}-wildcard-ingress", "*", "wildcard"))
+          base_domain  = replace(split("/", host)[0], "*.", "")
+        }
+        if can(regex("^\\*\\.", split("/", host)[0]))
+    }) if try(length(config.ingress_list), 0) != 0
   ]...)
 
 }
@@ -68,7 +85,7 @@ resource "google_secret_manager_secret" "basic_auth_credentials" {
   labels           = local.common_tags
 
   replication {
-    automatic   = true
+    automatic = true
   }
 }
 
@@ -220,4 +237,48 @@ resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
     }
   }
   depends_on = [kubernetes_namespace.app_environments]
+}
+
+resource "kubectl_manifest" "wildcard_certificate" {
+  for_each = local.wildcard_custom_hosts
+  yaml_body = templatefile("${path.module}/templates/cluster-certificate.yaml", {
+    dns         = each.value.base_domain
+    secret_name = each.value.ingress_name
+    namespace   = each.value.ns
+  })
+}
+
+resource "kubernetes_ingress_v1" "wildcard_custom_service_ingress" {
+  for_each = local.wildcard_custom_hosts
+  metadata {
+    name      = each.value.ingress_name
+    namespace = each.value.ns
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+      "kubernetes.io/tls-acme"      = "true"
+    }
+  }
+  spec {
+    rule {
+      host = each.value.ingress_host
+      http {
+        path {
+          backend {
+            service {
+              name = each.value.service_name
+              port {
+                number = each.value.service_port
+              }
+            }
+          }
+          path = "/"
+        }
+      }
+    }
+    tls {
+      secret_name = each.value.ingress_name
+      hosts       = [each.value.ingress_host]
+    }
+  }
+  depends_on = [kubectl_manifest.wildcard_certificate]
 }
