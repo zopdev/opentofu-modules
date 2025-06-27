@@ -12,7 +12,3 @@ spec:
       - dns01:
           cloudDNS:
             project: ${provider}
-        selector:
-          dnsZones:
-            - "${dns}"
-            - "*.${dns}"
