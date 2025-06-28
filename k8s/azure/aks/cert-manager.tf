@@ -8,6 +8,13 @@ resource "azurerm_role_assignment" "cert-manager" {
   principal_id         = data.azurerm_kubernetes_cluster.cluster.kubelet_identity[0].object_id
 }
 
+resource "azurerm_role_assignment" "cert-manager-additional-zones" {
+  for_each             = toset(var.dns_zone_list)
+  scope                = "/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/dnsZones/${each.value}"
+  role_definition_name = "DNS Zone Contributor"
+  principal_id         = data.azurerm_kubernetes_cluster.cluster.kubelet_identity[0].object_id
+}
+
 resource "azurerm_federated_identity_credential" "cert-manager" {
   name                = "${local.cluster_name}-dns"
   resource_group_name = data.azurerm_kubernetes_cluster.cluster.node_resource_group
@@ -43,6 +50,7 @@ data "template_file" "cluster_wildcard_issuer" {
     SUBSCRIPTION_ID     = data.azurerm_subscription.current.subscription_id
     CLIENT_ID           = data.azurerm_kubernetes_cluster.cluster.kubelet_identity[0].client_id
     email               = var.cert_issuer_config.email
+    dns_zone_list       = join(",", var.dns_zone_list)
   }
   depends_on = [helm_release.cert_manager, kubernetes_namespace.monitoring]
 }

@@ -18,7 +18,3 @@ spec:
             secretAccessKeySecretRef:
               name: ${secret_name}
               key: access-key-secret
-        selector:
-          dnsZones:
-            - "${dns}"
-            - "*.${dns}"

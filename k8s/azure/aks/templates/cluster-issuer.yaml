@@ -10,7 +10,11 @@ spec:
       name: letsencrypt-prod
     # Use dns-01 challenges in order to support wildcard domain names
     solvers:
-      - dns01:
+      - selector:
+          dnsNames:
+            - "${DNS}"
+            - "*.${DNS}"
+        dns01:
           azureDNS:
             resourceGroupName: ${RESOURCE_GROUP_NAME}
             subscriptionID: ${SUBSCRIPTION_ID}
@@ -18,3 +22,18 @@ spec:
             environment: AzurePublicCloud
             managedIdentity:
               clientID: ${CLIENT_ID}
+%{ if length(trimspace(dns_zone_list)) > 0 ~}
+%{ for zone in split(",", dns_zone_list) ~}
+      - selector:
+          dnsNames:
+            - "*.${zone}"
+        dns01:
+          azureDNS:
+            resourceGroupName: ${RESOURCE_GROUP_NAME}
+            subscriptionID: ${SUBSCRIPTION_ID}
+            hostedZoneName: ${zone}
+            environment: AzurePublicCloud
+            managedIdentity:
+              clientID: ${CLIENT_ID}
+%{ endfor ~}
+%{ endif ~}

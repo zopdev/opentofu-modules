@@ -683,3 +683,9 @@ variable "slack_alerts_configs" {
   }))
   default = []
 }
+
+variable "dns_zone_list" {
+  description = "List of Azure DNS zone names to be used in the ClusterIssuer solvers."
+  type        = list(string)
+  default     = []
+}
