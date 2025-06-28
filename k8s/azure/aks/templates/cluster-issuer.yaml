@@ -12,6 +12,7 @@ spec:
     solvers:
       - selector:
           dnsNames:
+            - "{DNS}"
             - "*.${DNS}"
         dns01:
           azureDNS:
