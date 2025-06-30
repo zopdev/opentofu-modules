@@ -125,3 +125,8 @@ output "grafana_user_credentials" {
   )
   sensitive = true
 }
+
+output "dns_zone_list" {
+  description = "The list of Azure DNS zone names used in the ClusterIssuer solvers."
+  value       = var.dns_zone_list
+}
