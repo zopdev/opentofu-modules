@@ -40,14 +40,15 @@ data "aws_ami" "eks_ami" {
     name   = "name"
     values = [var.worker_ami_config.name]
   }
+  ami_type = "AL2023_x86_64_STANDARD"
 }
 
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
-  version         = "20.0.0"
+  version         = "20.37.1"
 
   cluster_name    = local.cluster_name
-  cluster_version = "1.30"
+  cluster_version = "1.33"
 
   enable_irsa              = true
   vpc_id                   = local.vpc_id
@@ -77,6 +78,7 @@ module "eks" {
 
   self_managed_node_groups = {
     "${local.cluster_name}" = {
+      ami_type                     = data.aws_ami.eks_ami.ami_type
       ami_id                       = data.aws_ami.eks_ami.id
       instance_type                = var.node_config.node_type
       desired_size                 = var.node_config.min_count
