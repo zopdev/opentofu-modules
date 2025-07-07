@@ -83,12 +83,43 @@ module "gke" {
 
     node_pools = [
       {
-        name                      = "node-pool"
-        image_type                = "ubuntu_containerd"
-        machine_type              = var.node_config.node_type
-        min_count                 = var.node_config.min_count
-        max_count                 = var.node_config.max_count
-        service_account           = "${data.google_project.this.number}-compute@developer.gserviceaccount.com"
+        name               = "node-pool"
+        image_type         = "ubuntu_containerd"
+        machine_type       = var.default_node_config.node_type
+        min_count          = var.default_node_config.min_count
+        max_count          = var.default_node_config.max_count
+        preemptible        = var.default_node_config.preemptible
+        service_account    = "${data.google_project.this.number}-compute@developer.gserviceaccount.com"
+      },
+      {
+        name               = "deployment-pool"
+        image_type         = "ubuntu_containerd"
+        machine_type       = var.deployment_node_config.node_type
+        min_count          = var.deployment_node_config.min_count
+        max_count          = var.deployment_node_config.max_count
+        preemptible        = var.deployment_node_config.preemptible
+        service_account    = "${data.google_project.this.number}-compute@developer.gserviceaccount.com"
+        node_labels = {
+          role = "deployment"
+        }
+        node_taints = [
+          "workload=deployment:NoSchedule"
+        ]
+      },
+      {
+        name               = "monitoring-pool"
+        image_type         = "ubuntu_containerd"
+        machine_type       = var.monitoring_node_config.node_type
+        min_count          = var.monitoring_node_config.min_count
+        max_count          = var.monitoring_node_config.max_count
+        preemptible        = var.monitoring_node_config.preemptible
+        service_account    = "${data.google_project.this.number}-compute@developer.gserviceaccount.com"
+        node_labels = {
+          role = "monitoring"
+        }
+        node_taints = [
+          "workload=monitoring:NoSchedule"
+        ]
       },
     ]
 
