@@ -121,6 +121,21 @@ module "gke" {
           "workload=monitoring:NoSchedule"
         ]
       },
+      {
+        name               = "job-pool"
+        image_type         = "ubuntu_containerd"
+        machine_type       = var.job_node_config.node_type
+        min_count          = var.job_node_config.min_count
+        max_count          = var.job_node_config.max_count
+        preemptible        = var.job_node_config.preemptible
+        service_account    = "${data.google_project.this.number}-compute@developer.gserviceaccount.com"
+        node_labels = {
+          role = "job"
+        }
+        node_taints = [
+          "workload=job:NoSchedule"
+        ]
+      },
     ]
 
   node_pools_oauth_scopes    = {
