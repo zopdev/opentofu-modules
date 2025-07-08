@@ -63,6 +63,24 @@ variable "node_config" {
     }
 }
 
+variable "monitoring_node_config" {
+    description = "List of values for the node configuration of kubernetes cluster"
+    type        = object({
+        node_type       = string
+        min_count       = number
+        max_count       = number
+        availability_zones = optional(list(string))
+    })
+    validation {
+        condition = (var.monitoring_node_config.min_count > 0)
+        error_message = "The variable kube_node_count_min must be greater than 0."
+    }
+    validation {
+        condition = (var.monitoring_node_config.max_count < 2)
+        error_message = "The variable kube_node_count_max value must less than 2."
+    }
+}
+
 variable "appd_controller_url" {
     description = "AppDynamics Controller URL."
     type        = string
