@@ -85,10 +85,10 @@ module "gke" {
       {
         name               = "node-pool"
         image_type         = "ubuntu_containerd"
-        machine_type       = var.default_node_config.node_type
-        min_count          = var.default_node_config.min_count
-        max_count          = var.default_node_config.max_count
-        preemptible        = var.default_node_config.preemptible
+        machine_type       = var.node_config.node_type
+        min_count          = var.node_config.min_count
+        max_count          = var.node_config.max_count
+        preemptible        = var.node_config.preemptible
         service_account    = "${data.google_project.this.number}-compute@developer.gserviceaccount.com"
       },
       {
