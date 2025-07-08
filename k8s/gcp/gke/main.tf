@@ -88,7 +88,6 @@ module "gke" {
         machine_type       = var.node_config.node_type
         min_count          = var.node_config.min_count
         max_count          = var.node_config.max_count
-        preemptible        = var.node_config.preemptible
         service_account    = "${data.google_project.this.number}-compute@developer.gserviceaccount.com"
       },
       {
@@ -97,7 +96,6 @@ module "gke" {
         machine_type       = var.monitoring_node_config.node_type
         min_count          = var.monitoring_node_config.min_count
         max_count          = var.monitoring_node_config.max_count
-        preemptible        = var.monitoring_node_config.preemptible
         service_account    = "${data.google_project.this.number}-compute@developer.gserviceaccount.com"
         node_labels = {
           role = "monitoring"
