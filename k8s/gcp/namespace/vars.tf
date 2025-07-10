@@ -138,6 +138,10 @@ variable "services" {
         memory_utilisation_threshold   = optional(number)
         cpu_utilisation_threshold      = optional(number)
       }))
+      ingress_with_secret = optional(list(object({
+        host         = string
+        cloud_secret = string
+      })), [])
     }))
   }))
   default     = {}

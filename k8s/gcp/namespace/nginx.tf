@@ -282,3 +282,49 @@ resource "kubernetes_ingress_v1" "wildcard_custom_service_ingress" {
   }
   depends_on = [kubectl_manifest.wildcard_certificate]
 }
+
+resource "kubernetes_ingress_v1" "service_ingress_with_secret" {
+  for_each = merge([
+    for service_name, service in var.services : {
+      for idx, ingress in try(service.ingress_with_secret, []) :
+        "${service_name}-${idx}" => {
+          service_name = service_name
+          host         = ingress.host
+          cloud_secret = ingress.cloud_secret
+          service_port = try(ingress.service_port, 80)
+        }
+    }
+  ]...)
+
+  metadata {
+    name      = "ingress-with-secret-${each.key}"
+    namespace = var.namespace
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+      # Add more annotations as needed
+    }
+  }
+
+  spec {
+    rule {
+      host = each.value.host
+      http {
+        path {
+          backend {
+            service {
+              name = each.value.service_name
+              port {
+                number = each.value.service_port
+              }
+            }
+          }
+          path = "/"
+        }
+      }
+    }
+    tls {
+      secret_name = each.value.cloud_secret
+      hosts       = [each.value.host]
+    }
+  }
+}
