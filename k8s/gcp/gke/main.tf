@@ -26,7 +26,6 @@ locals {
   environment        = var.app_env
   namespaces = [for namespace in var.namespace_folder_list : split("/", namespace)[0]]
   node_port    = 32443 # Node port which will be used by LB for exposure
-
   cidr_blocks  = try(var.accessibility.cidr_blocks != null ? var.accessibility.cidr_blocks : ["10.0.0.0/8"],  ["10.0.0.0/8"] )
 
   cluster_networks = concat([
@@ -43,7 +42,8 @@ locals {
       project     = try(var.standard_tags.project != null ? var.standard_tags.project : local.cluster_name ,local.cluster_name)
       provisioner = try(var.standard_tags.provisioner != null ? var.standard_tags.provisioner : "zop-dev", "zop-dev")
     }))
-
+  
+  enable_monitoring_node_pool = try(var.monitoring_node_config.enable_monitoring_node_pool != null ? var.monitoring_node_config.enable_monitoring_node_pool: false, false)
 }
 
 module "gke" {
@@ -81,16 +81,40 @@ module "gke" {
 
   master_authorized_networks = local.cluster_networks
 
-    node_pools = [
-      {
-        name                      = "node-pool"
-        image_type                = "ubuntu_containerd"
-        machine_type              = var.node_config.node_type
-        min_count                 = var.node_config.min_count
-        max_count                 = var.node_config.max_count
-        service_account           = "${data.google_project.this.number}-compute@developer.gserviceaccount.com"
-      },
-    ]
+  node_pools = concat(
+  [{
+    name               = "node-pool"
+    image_type         = "ubuntu_containerd"
+    machine_type       = var.node_config.node_type
+    min_count          = var.node_config.min_count
+    max_count          = var.node_config.max_count
+    service_account    = "${data.google_project.this.number}-compute@developer.gserviceaccount.com"
+  }],
+  local.enable_monitoring_node_pool ? [{
+    name               = "monitoring-pool"
+    image_type         = "ubuntu_containerd"
+    machine_type       = try(var.monitoring_node_config.node_type, "e2-standard-2")
+    min_count          = try(var.monitoring_node_config.min_count, 1)
+    max_count          = try(var.monitoring_node_config.max_count, 1)
+    service_account    = "${data.google_project.this.number}-compute@developer.gserviceaccount.com"
+  }] : []
+  )
+
+    node_pools_labels = {
+      monitoring-pool = {
+        role = "monitoring"
+        }
+    }
+
+    node_pools_taints = {
+      "monitoring-pool" = [
+        {
+          key    = "workload"
+          value  = "monitoring"
+          effect = "NO_SCHEDULE"
+        }
+      ]
+    }
 
   node_pools_oauth_scopes    = {
     "${local.cluster_name}-node-pool" = [
@@ -111,7 +135,3 @@ terraform {
   backend "gcs" {
   }
 }
-
-
-
-

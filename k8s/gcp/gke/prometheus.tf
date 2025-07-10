@@ -64,6 +64,7 @@ data "template_file" "prom_template" {
     PAGER_DUTY_KEY                    = var.pagerduty_integration_key
     PAGER_DUTY_ENDPOINT_URL           = jsonencode(local.cluster_pagerduty_alerts)
     GRAFANA_HOST                      = local.grafana_enable ? local.grafana_host : ""
+    USE_MONITORING_NODE_POOL          = try(local.enable_monitoring_node_pool != null ? local.enable_monitoring_node_pool : false, false)
   }
 }
 
@@ -105,7 +106,7 @@ data "template_file" "cluster-alerts" {
   vars     = {
     cluster_memory_usage_request_underutilisation_threshold = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.memory_underutilisation != null ? var.cluster_alert_thresholds.memory_underutilisation : 20)
     cluster_cpu_usage_request_underutilisation_threshold = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.cpu_underutilisation != null ? var.cluster_alert_thresholds.cpu_underutilisation : 20)
-    cluster_node_count_max_value = var.node_config.max_count
+    cluster_node_count_max_value = var.monitoring_node_config.max_count
     cluster_node_count_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.node_count != null ? var.cluster_alert_thresholds.node_count : 80)
     cluster_pod_count_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.pod_count != null ? var.cluster_alert_thresholds.pod_count: 80)
     cluster_total_cpu_utilization_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.cpu_utilisation != null ? var.cluster_alert_thresholds.cpu_utilisation: 80)

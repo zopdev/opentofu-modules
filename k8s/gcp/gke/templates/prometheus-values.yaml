@@ -104,6 +104,15 @@ grafana:
   enabled: false
 prometheus:
   prometheusSpec:
+  %{~ if USE_MONITORING_NODE_POOL ~}
+    nodeSelector:
+      role: "monitoring"
+    tolerations:
+      - key: "workload"
+        operator: "Equal"
+        value: "monitoring"
+        effect: "NoSchedule"
+    %{~ endif ~}    
     externalLabels:
       cluster_name: ${CLUSTER_NAME}
     retentionSize: ${PROMETHEUS_RETENTION_SIZE}

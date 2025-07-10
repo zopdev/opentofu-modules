@@ -98,3 +98,13 @@ grafana-sc-datasources:
       memory: ${GRAFANA_DATASOURCE_REQUEST_MEMORY}
 deploymentStrategy:
   type: Recreate
+%{~ if USE_MONITORING_NODE_POOL ~}  
+
+nodeSelector:
+  role: "monitoring"
+  
+tolerations:
+  - key: "workload"
+    value: "monitoring"
+    effect: NoSchedule
+%{~ endif ~} 
