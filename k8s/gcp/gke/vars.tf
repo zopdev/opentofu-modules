@@ -62,13 +62,13 @@ variable "node_config" {
         error_message = "The variable kube_node_count_max value must less than 30."
     }
 }
-
 variable "monitoring_node_config" {
     description = "List of values for the node configuration of kubernetes cluster"
     type        = object({
-        node_type       = string
-        min_count       = number
-        max_count       = number
+        enable_monitoring_node_pool = optional(bool)
+        node_type       = optional(string)
+        min_count       = optional(number)
+        max_count       = optional(number)
         availability_zones = optional(list(string))
     })
     validation {

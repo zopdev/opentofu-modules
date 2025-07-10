@@ -54,6 +54,7 @@ data "template_file" "grafana_template" {
     ALLOWED_DOMAINS                   = local.grafana_enable ? local.grafana_allowed_domains : ""
     OAUTH_ID                          = try(var.observability_config.grafana.configs != null ? (var.observability_config.grafana.configs.enable_sso != null ? data.google_secret_manager_secret_version.oauth_client_id[0].secret_data : null) : null, null)
     OAUTH_SECRET                      = try(var.observability_config.grafana.configs != null ? (var.observability_config.grafana.configs.enable_sso != null ? data.google_secret_manager_secret_version.oauth_client_secret[0].secret_data : null) : null, null)
+    USE_MONITORING_NODE_POOL          = try(local.enable_monitoring_node_pool == true ? local.enable_monitoring_node_pool : false , false)
   }
 }
 

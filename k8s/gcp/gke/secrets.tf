@@ -14,10 +14,17 @@ resource "helm_release" "csi_driver" {
     name  = "enableSecretRotation"
     value = "true"       # enable auto-rotation feature
   }
+  set {
+    name = "linux.nodeSelector"
+    value = try(var.monitoring_node_config.enable_monitoring_node_pool == true ? "role: monitoring" : "", "")
+  }
 }
 
 locals {
   gcp_secrets_driver_yaml = split("---", file("./templates/gcp-secrets-driver.yaml"))
+  vars     = {
+    ENABLE_MONITORING_NODE_POOL = try(var.monitoring_node_config.enable_monitoring_node_pool, false)
+  }
 }
 
 # GCP Secrets driver manifest

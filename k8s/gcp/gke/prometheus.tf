@@ -64,6 +64,7 @@ data "template_file" "prom_template" {
     PAGER_DUTY_KEY                    = var.pagerduty_integration_key
     PAGER_DUTY_ENDPOINT_URL           = jsonencode(local.cluster_pagerduty_alerts)
     GRAFANA_HOST                      = local.grafana_enable ? local.grafana_host : ""
+    USE_MONITORING_NODE_POOL          = try(local.enable_monitoring_node_pool != null ? local.enable_monitoring_node_pool : false, false)
   }
 }
 
