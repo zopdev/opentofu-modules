@@ -14,10 +14,6 @@ resource "helm_release" "csi_driver" {
     name  = "enableSecretRotation"
     value = "true"       # enable auto-rotation feature
   }
-  set {
-    name = "linux.nodeSelector"
-    value = try(var.monitoring_node_config.enable_monitoring_node_pool == true ? "role: monitoring" : "", "")
-  }
 }
 
 locals {
