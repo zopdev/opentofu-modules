@@ -18,9 +18,6 @@ resource "helm_release" "csi_driver" {
 
 locals {
   gcp_secrets_driver_yaml = split("---", file("./templates/gcp-secrets-driver.yaml"))
-  vars     = {
-    ENABLE_MONITORING_NODE_POOL = try(var.monitoring_node_config.enable_monitoring_node_pool, false)
-  }
 }
 
 # GCP Secrets driver manifest
