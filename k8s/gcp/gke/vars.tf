@@ -72,14 +72,6 @@ variable "monitoring_node_config" {
         availability_zones = optional(list(string))
     })
     default = null
-    validation {
-        condition = (var.monitoring_node_config == null || var.monitoring_node_config.min_count == null || var.monitoring_node_config.min_count > 0)
-        error_message = "The variable min_count must be greater than 0."
-    }
-    validation {
-        condition = (var.monitoring_node_config == null || var.monitoring_node_config.max_count == null || var.monitoring_node_config.max_count < 2)
-        error_message = "The variable max_count value must be less than 2."
-    }
 }
 
 variable "appd_controller_url" {
