@@ -106,7 +106,7 @@ data "template_file" "cluster-alerts" {
   vars     = {
     cluster_memory_usage_request_underutilisation_threshold = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.memory_underutilisation != null ? var.cluster_alert_thresholds.memory_underutilisation : 20)
     cluster_cpu_usage_request_underutilisation_threshold = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.cpu_underutilisation != null ? var.cluster_alert_thresholds.cpu_underutilisation : 20)
-    cluster_node_count_max_value = var.monitoring_node_config == null ? null : var.monitoring_node_config.max_count
+    cluster_node_count_max_value = local.enable_monitoring_node_pool ? var.monitoring_node_config.max_count : var.node_config.max_count
     cluster_node_count_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.node_count != null ? var.cluster_alert_thresholds.node_count : 80)
     cluster_pod_count_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.pod_count != null ? var.cluster_alert_thresholds.pod_count: 80)
     cluster_total_cpu_utilization_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.cpu_utilisation != null ? var.cluster_alert_thresholds.cpu_utilisation: 80)
