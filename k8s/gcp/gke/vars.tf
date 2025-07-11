@@ -64,13 +64,13 @@ variable "node_config" {
 }
 variable "monitoring_node_config" {
     description = "List of values for the node configuration of kubernetes cluster"
-    type        = object({
+    type        = optional(object({
         enable_monitoring_node_pool = optional(bool)
         node_type       = optional(string)
         min_count       = optional(number)
         max_count       = optional(number)
         availability_zones = optional(list(string))
-    })
+    }))
     validation {
         condition = (var.monitoring_node_config.min_count > 0)
         error_message = "The variable kube_node_count_min must be greater than 0."
