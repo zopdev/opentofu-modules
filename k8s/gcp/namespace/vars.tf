@@ -140,7 +140,10 @@ variable "services" {
       }))
       ingress_with_secret = optional(list(object({
         host         = string
-        cloud_secret = string
+        cloud_secret = object({
+          tls_crt_key = string
+          tls_key_key = string
+        })
       })), [])
     }))
   }))

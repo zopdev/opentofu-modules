@@ -323,7 +323,7 @@ resource "kubernetes_ingress_v1" "service_ingress_with_secret" {
       }
     }
     tls {
-      secret_name = each.value.cloud_secret
+      secret_name = "tls-secret-${each.value.host}"
       hosts       = [each.value.host]
     }
   }
