@@ -296,23 +296,16 @@ locals {
   ]...)
 }
 
-data "google_secret_manager_secret_version" "tls" {
+data "google_secret_manager_secret_version" "crt" {
   for_each = local.ingress_tls_secrets
-  secret  = "tls-secret-${each.value.host}"
-  version = "latest"
+  secret   = each.value.tls_crt_key
+  version  = "latest"
 }
 
-data "google_secret_manager_secret" "tls" {
+data "google_secret_manager_secret_version" "key" {
   for_each = local.ingress_tls_secrets
-  secret_id = "tls-secret-${each.value.host}"
-  project   = var.provider_id
-}
-
-locals {
-  tls_secret_data = {
-    for k, v in local.ingress_tls_secrets :
-    k => jsondecode(data.google_secret_manager_secret_version.tls[k].secret_data)
-  }
+  secret   = each.value.tls_key_key
+  version  = "latest"
 }
 
 resource "kubernetes_secret_v1" "tls" {
@@ -322,8 +315,8 @@ resource "kubernetes_secret_v1" "tls" {
     namespace = var.namespace
   }
   data = {
-    "tls.crt" = local.tls_secret_data[each.key][each.value.tls_crt_key]
-    "tls.key" = local.tls_secret_data[each.key][each.value.tls_key_key]
+    "tls.crt" = data.google_secret_manager_secret_version.crt[each.key].secret_data
+    "tls.key" = data.google_secret_manager_secret_version.key[each.key].secret_data
   }
   type = "kubernetes.io/tls"
 }
