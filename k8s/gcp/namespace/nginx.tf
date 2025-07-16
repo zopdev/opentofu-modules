@@ -311,7 +311,7 @@ data "google_secret_manager_secret" "tls" {
 locals {
   tls_secret_data = {
     for k, v in local.ingress_tls_secrets :
-    k => jsondecode(google_secret_manager_secret_version.tls[k].secret_data)
+    k => jsondecode(data.google_secret_manager_secret_version.tls[k].secret_data)
   }
 }
 
