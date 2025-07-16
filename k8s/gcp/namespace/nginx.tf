@@ -283,6 +283,52 @@ resource "kubernetes_ingress_v1" "wildcard_custom_service_ingress" {
   depends_on = [kubectl_manifest.wildcard_certificate]
 }
 
+locals {
+  ingress_tls_secrets = merge([
+    for service_name, service in var.services : {
+      for idx, ingress in try(service.ingress_with_secret, []) :
+        "${service_name}-${idx}" => {
+          host         = ingress.host
+          tls_crt_key  = ingress.cloud_secret.tls_crt_key
+          tls_key_key  = ingress.cloud_secret.tls_key_key
+        }
+    }
+  ]...)
+}
+
+resource "google_secret_manager_secret_version" "tls" {
+  for_each = local.ingress_tls_secrets
+  secret  = "tls-secret-${each.value.host}"
+  project = var.provider_id
+  version = "latest"
+}
+
+data "google_secret_manager_secret" "tls" {
+  for_each = local.ingress_tls_secrets
+  secret_id = "tls-secret-${each.value.host}"
+  project   = var.provider_id
+}
+
+locals {
+  tls_secret_data = {
+    for k, v in local.ingress_tls_secrets :
+    k => jsondecode(google_secret_manager_secret_version.tls[k].secret_data)
+  }
+}
+
+resource "kubernetes_secret_v1" "tls" {
+  for_each = local.ingress_tls_secrets
+  metadata {
+    name      = "tls-secret-${each.value.host}"
+    namespace = var.namespace
+  }
+  data = {
+    "tls.crt" = local.tls_secret_data[each.key][each.value.tls_crt_key]
+    "tls.key" = local.tls_secret_data[each.key][each.value.tls_key_key]
+  }
+  type = "kubernetes.io/tls"
+}
+
 resource "kubernetes_ingress_v1" "service_ingress_with_secret" {
   for_each = merge([
     for service_name, service in var.services : {
