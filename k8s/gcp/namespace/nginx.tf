@@ -296,10 +296,9 @@ locals {
   ]...)
 }
 
-resource "google_secret_manager_secret_version" "tls" {
+data "google_secret_manager_secret_version" "tls" {
   for_each = local.ingress_tls_secrets
   secret  = "tls-secret-${each.value.host}"
-  project = var.provider_id
   version = "latest"
 }
 
