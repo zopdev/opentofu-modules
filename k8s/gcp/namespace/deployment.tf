@@ -97,6 +97,6 @@ module "service_deployment" {
   infra_alerts     = each.value.helm_configs != null ? (each.value.helm_configs.infra_alerts != null ? each.value.helm_configs.infra_alerts : null ) : null
   service_random_string = random_string.service_account_name[each.key].result
   command = each.value.helm_configs != null ? (each.value.helm_configs.command != null ? each.value.helm_configs.command : null ) : null
-
+  custom_alerts = each.value.helm_configs != null && contains(keys(each.value.helm_configs), "custom_alerts") && each.value.helm_configs.custom_alerts != null ? each.value.helm_configs.custom_alerts : []
   depends_on = [module.sql_db, module.sql_db_v2 , module.local_redis]
 }
