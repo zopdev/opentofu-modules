@@ -35,7 +35,8 @@ resource "google_secret_manager_secret" "db_secret" {
 
   provider          = google-beta
   project           = var.project_id
-  secret_id = var.multi_ds ? "${var.cluster_name}-${var.namespace}-${replace(var.sql_name, "_", "-")}-db-secret" : "${var.cluster_name}-${var.namespace}-db-secret"  labels            = var.labels
+  secret_id = var.multi_ds ? "${var.cluster_name}-${var.namespace}-${replace(var.sql_name, "_", "-")}-db-secret" : "${var.cluster_name}-${var.namespace}-db-secret"
+  labels            = var.labels
 
   replication {
     automatic   = true
