@@ -37,7 +37,7 @@ resource "kubectl_manifest" "secrets_provider" {
     {
       secrets = jsonencode(concat(
         (each.value.db_name != null ? [{ key = "DB_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-${each.value.db_name}-db-secret" }] : []),
-        (each.value.datastore_configs != null ? [{ key = "DB_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-${replace(each.value.datastore_configs.databse,"_","-")}-db-secret" }] : []),
+        (each.value.datastore_configs != null ? [{ key = "DB_PASSWORD" , value = "${local.cluster_name}-${var.namespace}-${each.value.datastore_configs.databse}-db-secret" }] : []),
 #        var.cassandra_db == null ? [] : ["${local.cluster_name}-${var.namespace}-cassandra-secret"],
         try([for secret in each.value.custom_secrets  : { key = secret, value = "${local.cluster_name}-${var.namespace}-${each.key}-${secret}-secret"}], []),
         try([for ns in var.custom_namespace_secrets : { key = ns , value = "${local.cluster_name}-${var.namespace}-${ns}-secret"}], []),

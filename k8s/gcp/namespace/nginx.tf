@@ -17,7 +17,9 @@ locals {
         service_name       = split(":", service)[0]
         service_port       = length(split(":", service)) != 2 ? 80 : split(":", service)[1]
         ingress_host       = split("/", host)[0]
-        path_based_routing = length(split("/", host)) != 2 ? "" : split("/", host)[1]
+        path_based_routing = ( length(split("/", host)) > 1 
+                                ? join("/", slice(split("/", host) , 1, length(split("/", host))))
+                                :  "")
         ns                 = var.namespace
         ingress_name       = "${split(":", service)[0]}-${(replace(host, "/", "-"))}-ingress"
         basic_auth         = (config.enable_basic_auth != null ? config.enable_basic_auth : false) ? true : false
