@@ -39,7 +39,6 @@ locals {
     for k, v in local.grouped_database_map :
     k => distinct(flatten(v))
   }
-)
 }
 
 data "google_project" "this" {}
