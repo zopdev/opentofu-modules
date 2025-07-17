@@ -71,14 +71,7 @@ variable "monitoring_node_config" {
         max_count       = optional(number)
         availability_zones = optional(list(string))
     })
-    validation {
-        condition = (var.monitoring_node_config.min_count > 0)
-        error_message = "The variable kube_node_count_min must be greater than 0."
-    }
-    validation {
-        condition = (var.monitoring_node_config.max_count < 2)
-        error_message = "The variable kube_node_count_max value must less than 2."
-    }
+    default = null
 }
 
 variable "appd_controller_url" {

@@ -44,7 +44,8 @@ resource "kubectl_manifest" "secrets_provider" {
       ))
       namespace    = kubernetes_namespace.app_environments.metadata[0].name
       service_name = each.key
-      provider_id   = data.google_project.this.number
+      provider_id  = data.google_project.this.number
+      ingress_with_secret = try(each.value.ingress_with_secret, [])
     }
   )
 }
@@ -64,7 +65,8 @@ resource "kubectl_manifest" "secrets_provider_cron_jobs" {
       ))
       namespace    = kubernetes_namespace.app_environments.metadata[0].name
       service_name = each.key
-      provider_id   = data.google_project.this.number
+      provider_id  = data.google_project.this.number
+      ingress_with_secret = try(each.value.ingress_with_secret, [])
     }
   )
 }

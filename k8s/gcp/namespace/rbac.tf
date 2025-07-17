@@ -5,7 +5,7 @@ locals {
 }
 
 resource "random_string" "namespace_cluster_get_role" {
-  length = 6
+  length = 4
   special = false
 
   lower = true
@@ -14,7 +14,7 @@ resource "random_string" "namespace_cluster_get_role" {
 }
 
 resource "google_project_iam_custom_role" "namespace_cluster_get_role" {
-  role_id = "${local.app_name_role}_${local.namespace_role}_clusterGetRole_${random_string.namespace_cluster_get_role.result}"
+  role_id = "${local.app_name_role}_${local.namespace_role}_${random_string.namespace_cluster_get_role.result}"
   title = "${var.app_name} ${var.namespace} cluster-get-role"
   permissions = [
     "container.clusters.get",

@@ -36,16 +36,18 @@ output "os" {
 }
 
 output "node_configs" {
-  value = [{
-    machine_type   = var.node_config.node_type
-    min_node_count = tostring(var.node_config.min_count)
-    max_node_count = tostring(var.node_config.max_count)
-  },
-  {
-    machine_type   = var.monitoring_node_config.node_type
-    min_node_count = tostring(var.monitoring_node_config.min_count)
-    max_node_count = tostring(var.monitoring_node_config.max_count)
-  }]
+  value = [
+    {
+      machine_type   = var.node_config.node_type
+      min_node_count = tostring(var.node_config.min_count)
+      max_node_count = tostring(var.node_config.max_count)
+    },
+    var.monitoring_node_config == null ? null : {
+      machine_type   = var.monitoring_node_config.node_type
+      min_node_count = tostring(var.monitoring_node_config.min_count)
+      max_node_count = tostring(var.monitoring_node_config.max_count)
+    }
+  ]
 }
 
 output "cluster_get_role" {

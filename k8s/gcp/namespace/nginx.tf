@@ -282,3 +282,87 @@ resource "kubernetes_ingress_v1" "wildcard_custom_service_ingress" {
   }
   depends_on = [kubectl_manifest.wildcard_certificate]
 }
+
+locals {
+  ingress_tls_secrets = merge([
+    for service_name, service in var.services : {
+      for idx, ingress in try(service.ingress_with_secret, []) :
+        "${service_name}-${idx}" => {
+          host         = ingress.host
+          tls_crt_key  = ingress.cloud_secret.tls_crt_key
+          tls_key_key  = ingress.cloud_secret.tls_key_key
+        }
+    }
+  ]...)
+}
+
+data "google_secret_manager_secret_version" "crt" {
+  for_each = local.ingress_tls_secrets
+  secret   = each.value.tls_crt_key
+  version  = "latest"
+}
+
+data "google_secret_manager_secret_version" "key" {
+  for_each = local.ingress_tls_secrets
+  secret   = each.value.tls_key_key
+  version  = "latest"
+}
+
+resource "kubernetes_secret_v1" "tls" {
+  for_each = local.ingress_tls_secrets
+  metadata {
+    name      = "tls-secret-${each.value.host}"
+    namespace = var.namespace
+  }
+  data = {
+    "tls.crt" = data.google_secret_manager_secret_version.crt[each.key].secret_data
+    "tls.key" = data.google_secret_manager_secret_version.key[each.key].secret_data
+  }
+  type = "kubernetes.io/tls"
+}
+
+resource "kubernetes_ingress_v1" "service_ingress_with_secret" {
+  for_each = merge([
+    for service_name, service in var.services : {
+      for idx, ingress in try(service.ingress_with_secret, []) :
+        "${service_name}-${idx}" => {
+          service_name = service_name
+          host         = ingress.host
+          cloud_secret = ingress.cloud_secret
+          service_port = try(ingress.service_port, 80)
+        }
+    }
+  ]...)
+
+  metadata {
+    name      = "ingress-with-secret-${each.key}"
+    namespace = var.namespace
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+      # Add more annotations as needed
+    }
+  }
+
+  spec {
+    rule {
+      host = each.value.host
+      http {
+        path {
+          backend {
+            service {
+              name = each.value.service_name
+              port {
+                number = each.value.service_port
+              }
+            }
+          }
+          path = "/"
+        }
+      }
+    }
+    tls {
+      secret_name = "tls-secret-${each.value.host}"
+      hosts       = [each.value.host]
+    }
+  }
+}
