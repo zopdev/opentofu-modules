@@ -15,22 +15,29 @@ locals {
       provisioner = try(var.standard_tags.provisioner != null ? var.standard_tags.provisioner : "zop-dev", "zop-dev")
     }))
 
-  database_map = merge(
-  {
-    for service_key, service_value in var.services :
+  grouped_database_map = merge(
+    {
+      for service_key, service_value in var.services :
       service_value.datastore_configs.name => [
-        service_value.datastore_configs.databse
-      ]
+      service_value.datastore_configs.databse
+    ]...
       if try(service_value.datastore_configs.name, null) != null &&
-         try(service_value.datastore_configs.databse, null) != null
-  },
-  {
-    for cron_key, cron_value in var.cron_jobs :
+      try(service_value.datastore_configs.databse, null) != null
+    },
+    {
+      for cron_key, cron_value in var.cron_jobs :
       cron_value.datastore_configs.name => [
-        cron_value.datastore_configs.databse
-      ]
+      cron_value.datastore_configs.databse
+    ]...
       if try(cron_value.datastore_configs.name, null) != null &&
-         try(cron_value.datastore_configs.databse, null) != null
+      try(cron_value.datastore_configs.databse, null) != null
+    }
+  )
+
+  # Remove duplicates in each list
+  database_map = {
+    for k, v in local.grouped_database_map :
+    k => distinct(flatten(v))
   }
 )
 }
