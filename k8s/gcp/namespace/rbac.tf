@@ -90,3 +90,24 @@ resource "kubernetes_role_binding" "namespace_admin" {
     }
   }
 }
+
+resource "kubernetes_role_binding" "service_deployment_edit" {
+  for_each = google_service_account.service_deployment_svc_acc
+
+  metadata {
+    name      = "${each.value.display_name}-edit-binding"
+    namespace = kubernetes_namespace.app_environments.metadata[0].name
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "edit"
+  }
+
+  subject {
+    kind      = "User"
+    name      = each.value.email
+    api_group = "rbac.authorization.k8s.io"
+  }
+}

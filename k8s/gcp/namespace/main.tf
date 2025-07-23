@@ -17,7 +17,6 @@ locals {
 }
 
 resource "kubernetes_namespace" "app_environments" {
-
   metadata {
     name = var.namespace
   }
@@ -79,18 +78,23 @@ resource "google_secret_manager_secret_version" "namespace_svc_acc" {
   depends_on     = [google_secret_manager_secret.namespace_svc_acc]
 }
 
-resource "google_project_iam_member" "namespace_svc_acc_cluster" {
-  for_each    = local.gar_name_map
-  project     = var.provider_id
-  role        = "roles/container.clusterViewer"
-  member      = "serviceAccount:${google_service_account.service_deployment_svc_acc[each.key].email}"
+resource "google_project_iam_custom_role" "minimal_gke_access" {
+  role_id    = "minimalGkeAccess"
+  title      = "Minimal GKE Access Role"
+  description = "Minimal IAM permissions to access GKE clusters without full namespace access"
+  project    = var.provider_id
+
+  permissions = [
+    "container.clusters.get",
+    "container.clusters.list"
+  ]
 }
 
-resource "google_project_iam_member" "namespace_svc_acc_container" {
-  for_each    = local.gar_name_map
-  project     = var.provider_id
-  role        = "roles/container.developer"
-  member      = "serviceAccount:${google_service_account.service_deployment_svc_acc[each.key].email}"
+resource "google_project_iam_member" "namespace_svc_acc_custom" {
+  for_each = local.gar_name_map
+  project  = var.provider_id
+  role     = "projects/${var.provider_id}/roles/${google_project_iam_custom_role.minimal_gke_access.role_id}"
+  member   = "serviceAccount:${google_service_account.service_deployment_svc_acc[each.key].email}"
 }
 
 resource "google_artifact_registry_repository_iam_member" "artifact_member" {
