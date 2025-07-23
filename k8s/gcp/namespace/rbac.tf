@@ -28,6 +28,17 @@ resource "google_project_iam_member" "namespace_cluster_get" {
   member   = strcontains(each.value, "iam.gserviceaccount.com") ?"serviceAccount:${each.value}":"user:${each.value}"
 }
 
+resource "google_project_iam_member" "namespace_svc_acc_custom" {
+  for_each = {
+    for key, acc in google_service_account.service_deployment_svc_acc :
+    key => acc.email
+  }
+
+  project = var.provider_id
+  role    = "projects/${var.provider_id}/roles/${google_project_iam_custom_role.namespace_cluster_get_role.role_id}"
+  member  = "serviceAccount:${each.value}"
+}
+
 resource "kubernetes_role_binding" "namespace_editor" {
   count = length(coalesce(var.user_access.editors,[])) > 0 ? 1 : 0
   metadata {
