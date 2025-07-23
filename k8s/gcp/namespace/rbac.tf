@@ -91,7 +91,7 @@ resource "kubernetes_role_binding" "namespace_admin" {
   }
 }
 
-resource "kubernetes_role_binding" "service_deployment_edit" {
+resource "kubernetes_role_binding" "service_account_namespace_editor" {
   for_each = google_service_account.service_deployment_svc_acc
 
   metadata {
