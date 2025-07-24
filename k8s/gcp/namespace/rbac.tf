@@ -28,6 +28,17 @@ resource "google_project_iam_member" "namespace_cluster_get" {
   member   = strcontains(each.value, "iam.gserviceaccount.com") ?"serviceAccount:${each.value}":"user:${each.value}"
 }
 
+resource "google_project_iam_member" "namespace_svc_acc_custom" {
+  for_each = {
+    for key, acc in google_service_account.service_deployment_svc_acc :
+    key => acc.email
+  }
+
+  project = var.provider_id
+  role    = "projects/${var.provider_id}/roles/${google_project_iam_custom_role.namespace_cluster_get_role.role_id}"
+  member  = "serviceAccount:${each.value}"
+}
+
 resource "kubernetes_role_binding" "namespace_editor" {
   count = length(coalesce(var.user_access.editors,[])) > 0 ? 1 : 0
   metadata {
@@ -88,5 +99,26 @@ resource "kubernetes_role_binding" "namespace_admin" {
       kind = "User"
       name = subject.value
     }
+  }
+}
+
+resource "kubernetes_role_binding" "service_account_namespace_editor" {
+  for_each = google_service_account.service_deployment_svc_acc
+
+  metadata {
+    name      = "${each.value.display_name}-edit-binding"
+    namespace = kubernetes_namespace.app_environments.metadata[0].name
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "edit"
+  }
+
+  subject {
+    kind      = "User"
+    name      = each.value.email
+    api_group = "rbac.authorization.k8s.io"
   }
 }
