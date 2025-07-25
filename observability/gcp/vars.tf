@@ -374,5 +374,26 @@ variable "mimir" {
       max_cpu            = optional(string)
       max_memory         = optional(string)
     }))
+    caches = optional(object({
+      chunks = optional(object({
+        enabled           = optional(bool)
+        replicas          = optional(number)
+        max_item_memory   = optional(number)
+        connection_limit  = optional(number)
+      }))
+      index = optional(object({
+        enabled           = optional(bool)
+        replicas          = optional(number)
+        max_item_memory   = optional(number)
+        connection_limit  = optional(number)
+      }))
+      metadata = optional(object({
+        enabled           = optional(bool)
+        replicas          = optional(number)
+        max_item_memory   = optional(number)
+        connection_limit  = optional(number)
+      }))
+    }))
+
   })
 }

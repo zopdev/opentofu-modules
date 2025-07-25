@@ -19,13 +19,39 @@ mimir:
         bucket_name: "${data_bucket_name}"
       bucket_store:
         sync_dir: "/data"
+        {{- if index .Values "chunks-cache" "enabled" }}
+        chunks_cache:
+          backend: memcached
+          memcached:
+            addresses: {{ include "mimir.chunksCacheAddress" . }}
+            max_item_size: {{ mul (index .Values "chunks-cache").maxItemMemory 1024 1024 }}
+            timeout: 750ms
+            max_idle_connections: 150
+        {{- end }}
+        {{- if index .Values "index-cache" "enabled" }}
+        index_cache:
+          backend: memcached
+          memcached:
+            addresses: {{ include "mimir.indexCacheAddress" . }}
+            max_item_size: {{ mul (index .Values "index-cache").maxItemMemory 1024 1024 }}
+            timeout: 750ms
+            max_idle_connections: 150
+        {{- end }}
+        {{- if index .Values "metadata-cache" "enabled" }}
+        metadata_cache:
+          backend: memcached
+          memcached:
+            addresses: {{ include "mimir.metadataCacheAddress" . }}
+            max_item_size: {{ mul (index .Values "metadata-cache").maxItemMemory 1024 1024 }}
+            max_idle_connections: 150
+        {{- end }}
       tsdb:
         dir: "/data"
-        retention_period: 6h
-        block_ranges_period: ["2h", "12h", "24h"]
+        head_compaction_interval: 15m
     compactor:
       data_dir: "/data"
       compaction_interval: 5m
+      deletion_delay: 1h
     frontend:
       scheduler_address: mimir-query-scheduler.mimir.svc:9095
       split_queries_by_interval: 15m
@@ -37,6 +63,14 @@ mimir:
       max_outstanding_requests_per_tenant: ${limits_max_outstanding_requests_per_tenant}
     ruler:
       rule_path: /data
+      {{- if index .Values "metadata-cache" "enabled" }}
+    ruler_storage:
+      cache:
+        backend: memcached
+        memcached:
+          addresses: {{ include "mimir.metadataCacheAddress" . }}
+          max_item_size: {{ mul (index .Values "metadata-cache").maxItemMemory 1024 1024 }}
+      {{- end }}
     runtime_config:
       file: /var/{{ include "mimir.name" . }}/runtime.yaml
     store_gateway:
@@ -45,6 +79,24 @@ mimir:
           prefix: multi-zone/
           store: memberlist
         replication_factor: ${store_gateway_replication_factor}
+
+chunks-cache:
+  enabled:  {{ .Values.chunks_cache_enabled  }}
+  replicas: {{ .Values.chunks_cache_replicas }}
+  maxItemMemory: {{ .Values.chunks_cache_max_item_memory }}
+  connectionLimit: {{ .Values.chunks_cache_connection_limit }}
+
+index-cache:
+  enabled:  {{ .Values.index_cache_enabled  }}
+  replicas: {{ .Values.index_cache_replicas }}
+  maxItemMemory: {{ .Values.index_cache_max_item_memory }}
+  connectionLimit: {{ .Values.index_cache_connection_limit }}
+
+metadata-cache:
+  enabled:  {{ .Values.metadata_cache_enabled  }}
+  replicas: {{ .Values.metadata_cache_replicas }}
+  maxItemMemory: {{ .Values.metadata_cache_max_item_memory }}
+  connectionLimit: {{ .Values.metadata_cache_connection_limit }}
 
 nginx:
   enabled: false
