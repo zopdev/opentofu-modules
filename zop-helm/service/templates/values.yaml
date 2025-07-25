@@ -173,3 +173,22 @@ alerts:
       serviceCpuUtilizationThreshold: ${infra_alerts.cpu_utilisation_threshold}
       %{~ endif ~}
   %{~ endif ~}
+  %{~ if length(jsondecode(custom_alerts)) > 0 ~}
+  custom:
+  %{~ for alert in jsondecode(custom_alerts) ~}
+    - name: "${alert.name}"
+      description: "${alert.description}"
+      alertRule: "${alert.alertRule}"
+      sumByLabel: "${alert.sumByLabel}"
+      percentile: ${alert.percentile}
+      labelValue: "${alert.labelValue}"
+      queryOperator: "${alert.queryOperator}"
+      timeWindow: "${alert.timeWindow}"
+      threshold: ${alert.threshold}
+      labels:
+        %{~ for k, v in alert.labels ~}
+        ${k}: "${v}"
+        %{~ endfor ~}
+  %{~ endfor ~}
+ %{~ else ~}
+%{~ endif ~}

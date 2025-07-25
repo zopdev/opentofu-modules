@@ -247,3 +247,19 @@ variable "service_random_string" {
   type = string
   default = ""
 }
+variable "custom_alerts" {
+  description = "List of custom alerts"
+  type = list(object({
+    name         = string
+    description  = string
+    alertRule    = string
+    sumByLabel   = string
+    percentile   = number
+    labelValue   = string
+    queryOperator = string
+    timeWindow   = string
+    threshold    = number
+    labels       = map(string)
+  }))
+  default = []
+}

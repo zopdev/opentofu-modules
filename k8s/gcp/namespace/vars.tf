@@ -138,6 +138,18 @@ variable "services" {
         memory_utilisation_threshold   = optional(number)
         cpu_utilisation_threshold      = optional(number)
       }))
+      custom_alerts = optional(list(object({
+        name          = string
+        description   = string
+        alertRule     = string
+        sumByLabel    = optional(string)
+        percentile    = optional(number)
+        labelValue    = optional(string)
+        queryOperator = optional(string)
+        timeWindow    = optional(string)
+        threshold     = number
+        labels        = optional(map(string))
+      })))
     }))
     ingress_with_secret = optional(list(object({
       host         = string

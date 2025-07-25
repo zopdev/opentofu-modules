@@ -63,5 +63,6 @@ resource "helm_release" "service_helm"{
     db_ssl_enabled                  = var.db_ssl_enabled
     pub_sub                         = var.pub_sub
     service_random_string           = var.service_random_string
+    custom_alerts                   = jsonencode(var.custom_alerts)
   })]
 }
