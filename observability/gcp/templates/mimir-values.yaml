@@ -26,21 +26,21 @@ mimir:
         chunks_cache:
           backend: memcached
           memcached:
-            addresses: mimir-chunks-cache.mimir.svc:11211
+            addresses: dns+mimir-chunks-cache.mimir.svc:11211
             max_item_size: ${chunks_cache_max_item_memory_mb}
             timeout: 750ms
             max_idle_connections: 150
         index_cache:
           backend: memcached
           memcached:
-            addresses: mimir-index-cache.mimir.svc:11211
+            addresses: dns+mimir-index-cache.mimir.svc:11211
             max_item_size: ${index_cache_max_item_memory_mb}
             timeout: 750ms
             max_idle_connections: 150
         metadata_cache:
           backend: memcached
           memcached:
-            addresses: mimir-metadata-cache.mimir.svc:11211
+            addresses: dns+mimir-metadata-cache.mimir.svc:11211
             max_item_size: ${metadata_cache_max_item_memory_mb}
             max_idle_connections: 150
       tsdb:
@@ -66,7 +66,7 @@ mimir:
       cache:
         backend: memcached
         memcached:
-          addresses: mimir-metadata-cache.mimir.svc:11211
+          addresses: dns+mimir-metadata-cache.mimir.svc:11211
           max_item_size: ${metadata_cache_max_item_memory_mb}
     runtime_config:
       file: /var/mimir/runtime.yaml
