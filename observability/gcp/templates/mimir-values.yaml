@@ -45,11 +45,11 @@ mimir:
             max_idle_connections: 150
       tsdb:
         dir: "/data"
-        retention_period: 24h
+        retention_period: 6h
         head_compaction_interval: 15m
     compactor:
       data_dir: "/data"
-      compaction_interval: 4h
+      compaction_interval: 1h
       deletion_delay: 1h
     frontend:
       scheduler_address: mimir-query-scheduler.mimir.svc:9095
@@ -374,27 +374,7 @@ ruler:
 
 # Alertmanager Component
 alertmanager:
-  enabled: true
-  replicas: 3
-  resources:
-    limits:
-      memory: 1.4Gi
-    requests:
-      cpu: 0.1
-      memory: 1Gi
-  persistentVolume:
-    enabled: true
-    size: 1Gi
-  extraVolumes:
-    - name: ${cluster_name}-mimir-google-credentials
-      secret:
-        secretName: ${cluster_name}-mimir-google-credentials
-  extraVolumeMounts:
-    - name: ${cluster_name}-mimir-google-credentials
-      mountPath: /etc/mimir/google/
-  env:
-    - name: GOOGLE_APPLICATION_CREDENTIALS
-      value: "/etc/mimir/google/gcs.json"
+  enabled: false
 
 # Monitoring Components
 overrides_exporter:
