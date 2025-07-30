@@ -1,5 +1,6 @@
 data "template_file" "autoscale_template" {
-  template = file("./templates/cluster-auto-scaler-values.yaml")
+  count    = var.autoscaler == "cluster-autoscaler" ? 1 : 0
+  template = file("${path.module}/templates/cluster-auto-scaler-values.yaml")
   vars = {
     CLUSTER_REGION = var.app_region
     CLUSTER_NAME   = local.cluster_name
@@ -7,14 +8,26 @@ data "template_file" "autoscale_template" {
   }
 }
 
+resource "kubernetes_namespace" "cluster_autoscaler" {
+  count = var.autoscaler == "cluster-autoscaler" ? 1 : 0
+
+  metadata {
+    name = "kube-system"
+  }
+}
+
 resource "helm_release" "auto_scaler" {
+  count      = var.autoscaler == "cluster-autoscaler" ? 1 : 0
   chart      = "cluster-autoscaler"
   repository = "https://kubernetes.github.io/autoscaler"
   name       = "cluster-autoscaler"
   namespace  = "kube-system"
   version    = "9.28.0"
 
-  values = [data.template_file.autoscale_template.rendered]
+  values = [data.template_file.autoscale_template[0].rendered]
 
-  depends_on = [null_resource.wait_for_cluster]
+  depends_on = [
+    null_resource.wait_for_cluster,
+    kubernetes_namespace.cluster_autoscaler
+  ]
 }

@@ -1,0 +1,19 @@
+apiVersion: karpenter.sh/v1beta1
+kind: NodePool
+metadata:
+  name: general
+spec:
+  template:
+    metadata:
+      labels:
+        type: general
+    spec:
+      nodeClassRef:
+        name: general
+        kind: EC2NodeClass
+  limits:
+    cpu: 1000
+    memory: 1000Gi
+  disruption:
+    consolidationPolicy: WhenUnderutilized
+    expireAfter: 720h

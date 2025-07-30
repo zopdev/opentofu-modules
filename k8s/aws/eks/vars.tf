@@ -822,3 +822,13 @@ variable "velero_enabled" {
   type        = bool
   default     = false
 }
+
+variable "autoscaler" {
+  description = "Which autoscaler to deploy: cluster-autoscaler or karpenter"
+  type        = string
+  default     = "karpenter"
+  validation {
+    condition     = contains(["karpenter", "cluster-autoscaler"], var.autoscaler)
+    error_message = "autoscaler must be one of: karpenter, cluster-autoscaler"
+  }
+}

@@ -1,0 +1,58 @@
+settings:
+  clusterName: "${cluster_name}"
+  clusterEndpoint: "${cluster_endpoint}"
+
+  # Optional settings
+  metricsPort: 8000
+  logLevel: info
+  featureGates: {}
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: "${irsa_arn}"
+
+controller:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+  # Optional: leader election and replica settings
+  replicas: 1
+  enableLeaderElection: true
+
+affinity: {}
+
+tolerations: []
+
+# RBAC is enabled by default, ensure this is here for clarity
+rbac:
+  create: true
+
+# Webhook settings (important for provisioner validation)
+webhook:
+  port: 8443
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
+# Service settings (default ClusterIP, adjust if needed)
+service:
+  type: ClusterIP
+
+# Optional: for Prometheus scraping
+metricsService:
+  enabled: true
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+
+# PriorityClass (optional)
+priorityClassName: system-cluster-critical
