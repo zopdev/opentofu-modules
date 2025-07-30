@@ -16,7 +16,7 @@ mimir:
       max_cache_freshness: ${limits_max_cache_freshness}
     memberlist:
       join_members:
-      - dns+mimir-gossip-ring.mimir.svc.cluster.local:7946
+      - dns+{{ include "mimir.fullname" . }}-gossip-ring.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ include "mimir.memberlistBindPort" . }}
     blocks_storage:
       backend: gcs
       gcs:
@@ -69,7 +69,7 @@ mimir:
           addresses: dns+mimir-metadata-cache.mimir.svc:11211
           max_item_size: ${metadata_cache_max_item_memory_mb}
     runtime_config:
-      file: /var/mimir/runtime.yaml
+      file: /var/{{ include "mimir.name" . }}/runtime.yaml
     store_gateway:
       sharding_ring:
         kvstore:
@@ -77,10 +77,6 @@ mimir:
           store: memberlist
         replication_factor: ${store_gateway_replication_factor}
 
-# Image Configuration
-image:
-  repository: grafana/mimir
-  tag: 2.10.4
 
 # Global Settings
 global:
