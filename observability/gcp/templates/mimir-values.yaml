@@ -96,12 +96,12 @@ distributor:
       %{~ if  distributor_min_cpu != "null"  ~}
       cpu: ${distributor_min_cpu}
       %{~ else ~}
-      cpu: 200m
+      cpu: 100m
       %{~ endif ~}
       %{~ if  distributor_min_memory != "null"  ~}
       memory: ${distributor_min_memory}
       %{~ else ~}
-      memory: 1Gi
+      memory: 512Mi
       %{~ endif ~}
     limits:
       %{~ if  distributor_max_cpu != "null"  ~}
@@ -109,8 +109,6 @@ distributor:
       %{~ endif ~}
       %{~ if  distributor_max_memory != "null"  ~}
       memory: ${distributor_max_memory}
-      %{~ else ~}
-      memory: 2Gi
       %{~ endif ~}
   extraVolumes:
     - name: ${cluster_name}-mimir-google-credentials
@@ -145,12 +143,12 @@ ingester:
       %{~ if  ingester_min_cpu != "null"  ~}
       cpu: ${ingester_min_cpu}
       %{~ else ~}
-      cpu: 500m
+      cpu: 100m
       %{~ endif ~}
       %{~ if  ingester_min_memory != "null"  ~}
       memory: ${ingester_min_memory}
       %{~ else ~}
-      memory: 2Gi
+      memory: 512Mi
       %{~ endif ~}
     limits:
       %{~ if  ingester_max_cpu != "null"  ~}
@@ -158,8 +156,6 @@ ingester:
       %{~ endif ~}
       %{~ if  ingester_max_memory != "null"  ~}
       memory: ${ingester_max_memory}
-      %{~ else ~}
-      memory: 4Gi
       %{~ endif ~}
   extraVolumes:
     - name: ${cluster_name}-mimir-google-credentials
@@ -181,12 +177,12 @@ querier:
       %{~ if  querier_min_cpu != "null"  ~}
       cpu: ${querier_min_cpu}
       %{~ else ~}
-      cpu: 500m
+      cpu: 0.1
       %{~ endif ~}
       %{~ if  querier_min_memory != "null"  ~}
       memory: ${querier_min_memory}
       %{~ else ~}
-      memory: 4Gi
+      memory: 2Gi
       %{~ endif ~}
     limits:
       %{~ if  querier_max_cpu != "null"  ~}
@@ -195,7 +191,7 @@ querier:
       %{~ if  querier_max_memory != "null"  ~}
       memory: ${querier_max_memory}
       %{~ else ~}
-      memory: 6Gi
+      memory: 8.5Gi
       %{~ endif ~}
   extraVolumes:
     - name: ${cluster_name}-mimir-google-credentials
@@ -213,10 +209,10 @@ query_frontend:
   replicas: ${query_frontend_replicas}
   resources:
     requests:
-      cpu: 200m
-      memory: 2Gi
+      cpu: 0.1
+      memory: 1Gi
     limits:
-      memory: 4Gi
+      memory: 2.8Gi
   extraVolumes:
     - name: ${cluster_name}-mimir-google-credentials
       secret:
@@ -235,7 +231,7 @@ query_scheduler:
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 128Mi
 
 # Storage Components - Compactor
 compactor:
@@ -248,12 +244,12 @@ compactor:
       %{~ if  compactor_min_cpu != "null"  ~}
       cpu: ${compactor_min_cpu}
       %{~ else ~}
-      cpu: 500m
+      cpu: 0.1
       %{~ endif ~}
       %{~ if  compactor_min_memory != "null"  ~}
       memory: ${compactor_min_memory}
       %{~ else ~}
-      memory: 4Gi
+      memory: 2Gi
       %{~ endif ~}
     limits:
       %{~ if  compactor_max_cpu != "null"  ~}
@@ -262,7 +258,7 @@ compactor:
       %{~ if  compactor_max_memory != "null"  ~}
       memory: ${compactor_max_memory}
       %{~ else ~}
-      memory: 6Gi
+      memory: 2.8Gi
       %{~ endif ~}
   extraVolumes:
     - name: ${cluster_name}-mimir-google-credentials
@@ -288,12 +284,12 @@ store_gateway:
       %{~ if  store_gateway_min_cpu != "null"  ~}
       cpu: ${store_gateway_min_cpu}
       %{~ else ~}
-      cpu: 500m
+      cpu: 100m
       %{~ endif ~}
       %{~ if  store_gateway_min_memory != "null"  ~}
       memory: ${store_gateway_min_memory}
       %{~ else ~}
-      memory: 2Gi
+      memory: 512Mi
       %{~ endif ~}
     limits:
       %{~ if  store_gateway_max_cpu != "null"  ~}
@@ -301,8 +297,6 @@ store_gateway:
       %{~ endif ~}
       %{~ if  store_gateway_max_memory != "null"  ~}
       memory: ${store_gateway_max_memory}
-      %{~ else ~}
-      memory: 4Gi
       %{~ endif ~}
   extraVolumes:
     - name: ${cluster_name}-mimir-google-credentials
@@ -323,8 +317,7 @@ chunks-cache:
   connectionLimit: ${chunks_cache_connection_limit}
   resources:
     requests:
-      cpu: 0.1
-      memory: 1Gi
+      cpu: 0.02
 
 index-cache:
   enabled: ${index_cache_enabled}
@@ -333,18 +326,16 @@ index-cache:
   connectionLimit: ${index_cache_connection_limit}
   resources:
     requests:
-      cpu: 0.1
-      memory: 512Mi
+      cpu: 0.02
 
 results-cache:
   enabled: true
-  allocatedMemory: 2048
+  allocatedMemory: 1024
   maxItemMemory: 5
-  replicas: 2
+  replicas: 1
   resources:
     requests:
-      cpu: 0.1
-      memory: 256Mi
+      cpu: 0.02
 
 metadata-cache:
   enabled: ${metadata_cache_enabled}
@@ -368,8 +359,8 @@ ruler:
   replicas: 1
   resources:
     requests:
-      cpu: 100m
-      memory: 256Mi
+      cpu: 20m
+      memory: 128Mi
   extraVolumes:
     - name: ${cluster_name}-mimir-google-credentials
       secret:
