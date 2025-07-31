@@ -8,13 +8,6 @@ data "template_file" "autoscale_template" {
   }
 }
 
-resource "kubernetes_namespace" "cluster_autoscaler" {
-  count = var.autoscaler == "cluster-autoscaler" ? 1 : 0
-
-  metadata {
-    name = "kube-system"
-  }
-}
 
 resource "helm_release" "auto_scaler" {
   count      = var.autoscaler == "cluster-autoscaler" ? 1 : 0
@@ -27,7 +20,6 @@ resource "helm_release" "auto_scaler" {
   values = [data.template_file.autoscale_template[0].rendered]
 
   depends_on = [
-    null_resource.wait_for_cluster,
-    kubernetes_namespace.cluster_autoscaler
+    null_resource.wait_for_cluster
   ]
 }
