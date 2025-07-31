@@ -1,3 +1,7 @@
+# Mimir Distributed Helm Chart - Cleaned Values
+# Optimized for performance and storage efficiency
+
+# Core Mimir Configuration
 mimir:
   config: |
     usage_stats:
@@ -9,7 +13,7 @@ mimir:
       ingestion_burst_size: ${limits_ingestion_burst_size}
       max_fetched_chunks_per_query: ${limits_max_fetched_chunks_per_query}
       max_global_series_per_user: 500000
-      max_cache_freshness: 12h
+      max_cache_freshness: ${limits_max_cache_freshness}
     memberlist:
       join_members:
       - dns+{{ include "mimir.fullname" . }}-gossip-ring.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ include "mimir.memberlistBindPort" . }}
@@ -19,13 +23,34 @@ mimir:
         bucket_name: "${data_bucket_name}"
       bucket_store:
         sync_dir: "/data"
+        chunks_cache:
+          backend: memcached
+          memcached:
+            addresses: dns+mimir-chunks-cache.mimir.svc:11211
+            max_item_size: ${chunks_cache_max_item_memory_mb}
+            timeout: 750ms
+            max_idle_connections: 150
+        index_cache:
+          backend: memcached
+          memcached:
+            addresses: dns+mimir-index-cache.mimir.svc:11211
+            max_item_size: ${index_cache_max_item_memory_mb}
+            timeout: 750ms
+            max_idle_connections: 150
+        metadata_cache:
+          backend: memcached
+          memcached:
+            addresses: dns+mimir-metadata-cache.mimir.svc:11211
+            max_item_size: ${metadata_cache_max_item_memory_mb}
+            max_idle_connections: 150
       tsdb:
         dir: "/data"
         retention_period: 6h
-        block_ranges_period: ["2h", "12h", "24h"]
+        head_compaction_interval: 15m
     compactor:
       data_dir: "/data"
-      compaction_interval: 5m
+      compaction_interval: 1h
+      deletion_delay: 1h
     frontend:
       scheduler_address: mimir-query-scheduler.mimir.svc:9095
       split_queries_by_interval: 15m
@@ -37,6 +62,12 @@ mimir:
       max_outstanding_requests_per_tenant: ${limits_max_outstanding_requests_per_tenant}
     ruler:
       rule_path: /data
+    ruler_storage:
+      cache:
+        backend: memcached
+        memcached:
+          addresses: dns+mimir-metadata-cache.mimir.svc:11211
+          max_item_size: ${metadata_cache_max_item_memory_mb}
     runtime_config:
       file: /var/{{ include "mimir.name" . }}/runtime.yaml
     store_gateway:
@@ -46,40 +77,39 @@ mimir:
           store: memberlist
         replication_factor: ${store_gateway_replication_factor}
 
-nginx:
-  enabled: false
-minio:
-  enabled: false
 
-compactor:
-  replicas: ${compactor_replicas}
-  persistentVolume:
-    enabled: ${compactor_persistence_volume_enable}
-    size: ${compactor_persistence_volume_size}
+# Global Settings
+global:
+  clusterDomain: cluster.local
+  dnsNamespace: kube-system
+  dnsService: kube-dns
+
+# Core Components - Distributor
+distributor:
+  replicas: ${distributor_replicas}
   resources:
     requests:
-      %{~ if  compactor_min_cpu != "null"  ~}
-      cpu: ${compactor_min_cpu}
+      %{~ if  distributor_min_cpu != "null"  ~}
+      cpu: ${distributor_min_cpu}
+      %{~ else ~}
+      cpu: 100m
       %{~ endif ~}
-      
-      %{~ if  compactor_min_memory != "null"  ~}
-      memory: ${compactor_min_memory}
+      %{~ if  distributor_min_memory != "null"  ~}
+      memory: ${distributor_min_memory}
+      %{~ else ~}
+      memory: 512Mi
       %{~ endif ~}
-
     limits:
-      %{~ if  compactor_max_cpu != "null"  ~}
-      cpu: ${compactor_max_cpu}
+      %{~ if  distributor_max_cpu != "null"  ~}
+      cpu: ${distributor_max_cpu}
       %{~ endif ~}
-
-      %{~ if  compactor_max_memory != "null"  ~}
-      memory: ${compactor_max_memory}
+      %{~ if  distributor_max_memory != "null"  ~}
+      memory: ${distributor_max_memory}
       %{~ endif ~}
-
   extraVolumes:
     - name: ${cluster_name}-mimir-google-credentials
       secret:
         secretName: ${cluster_name}-mimir-google-credentials
-        defaultMode: 0640
   extraVolumeMounts:
     - name: ${cluster_name}-mimir-google-credentials
       mountPath: /etc/mimir/google/
@@ -87,6 +117,7 @@ compactor:
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: "/etc/mimir/google/gcs.json"
 
+# Core Components - Ingester
 ingester:
   replicas: ${ingester_replicas}
   lifecycler:
@@ -107,21 +138,21 @@ ingester:
     requests:
       %{~ if  ingester_min_cpu != "null"  ~}
       cpu: ${ingester_min_cpu}
+      %{~ else ~}
+      cpu: 100m
       %{~ endif ~}
-
       %{~ if  ingester_min_memory != "null"  ~}
       memory: ${ingester_min_memory}
+      %{~ else ~}
+      memory: 512Mi
       %{~ endif ~}
-
     limits:
       %{~ if  ingester_max_cpu != "null"  ~}
       cpu: ${ingester_max_cpu}
       %{~ endif ~}
-
       %{~ if  ingester_max_memory != "null"  ~}
       memory: ${ingester_max_memory}
       %{~ endif ~}
-
   extraVolumes:
     - name: ${cluster_name}-mimir-google-credentials
       secret:
@@ -133,6 +164,7 @@ ingester:
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: "/etc/mimir/google/gcs.json"
 
+# Core Components - Querier
 querier:
   replicas: ${querier_replicas}
   concurrency: 8
@@ -140,19 +172,22 @@ querier:
     requests:
       %{~ if  querier_min_cpu != "null"  ~}
       cpu: ${querier_min_cpu}
+      %{~ else ~}
+      cpu: 0.1
       %{~ endif ~}
-
       %{~ if  querier_min_memory != "null"  ~}
       memory: ${querier_min_memory}
+      %{~ else ~}
+      memory: 2Gi
       %{~ endif ~}
-
     limits:
       %{~ if  querier_max_cpu != "null"  ~}
       cpu: ${querier_max_cpu}
       %{~ endif ~}
-
       %{~ if  querier_max_memory != "null"  ~}
       memory: ${querier_max_memory}
+      %{~ else ~}
+      memory: 8.5Gi
       %{~ endif ~}
   extraVolumes:
     - name: ${cluster_name}-mimir-google-credentials
@@ -165,8 +200,15 @@ querier:
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: "/etc/mimir/google/gcs.json"
 
+# Core Components - Query Frontend
 query_frontend:
   replicas: ${query_frontend_replicas}
+  resources:
+    requests:
+      cpu: 0.1
+      memory: 1Gi
+    limits:
+      memory: 2.8Gi
   extraVolumes:
     - name: ${cluster_name}-mimir-google-credentials
       secret:
@@ -178,6 +220,55 @@ query_frontend:
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: "/etc/mimir/google/gcs.json"
 
+# Core Components - Query Scheduler
+query_scheduler:
+  enabled: true
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# Storage Components - Compactor
+compactor:
+  replicas: ${compactor_replicas}
+  persistentVolume:
+    enabled: ${compactor_persistence_volume_enable}
+    size: ${compactor_persistence_volume_size}
+  resources:
+    requests:
+      %{~ if  compactor_min_cpu != "null"  ~}
+      cpu: ${compactor_min_cpu}
+      %{~ else ~}
+      cpu: 0.1
+      %{~ endif ~}
+      %{~ if  compactor_min_memory != "null"  ~}
+      memory: ${compactor_min_memory}
+      %{~ else ~}
+      memory: 2Gi
+      %{~ endif ~}
+    limits:
+      %{~ if  compactor_max_cpu != "null"  ~}
+      cpu: ${compactor_max_cpu}
+      %{~ endif ~}
+      %{~ if  compactor_max_memory != "null"  ~}
+      memory: ${compactor_max_memory}
+      %{~ else ~}
+      memory: 2.8Gi
+      %{~ endif ~}
+  extraVolumes:
+    - name: ${cluster_name}-mimir-google-credentials
+      secret:
+        secretName: ${cluster_name}-mimir-google-credentials
+        defaultMode: 0640
+  extraVolumeMounts:
+    - name: ${cluster_name}-mimir-google-credentials
+      mountPath: /etc/mimir/google/
+  env:
+    - name: GOOGLE_APPLICATION_CREDENTIALS
+      value: "/etc/mimir/google/gcs.json"
+
+# Storage Components - Store Gateway
 store_gateway:
   zoneAwareReplication:
     enabled: false
@@ -188,20 +279,21 @@ store_gateway:
     requests:
       %{~ if  store_gateway_min_cpu != "null"  ~}
       cpu: ${store_gateway_min_cpu}
+      %{~ else ~}
+      cpu: 100m
       %{~ endif ~}
-
       %{~ if  store_gateway_min_memory != "null"  ~}
       memory: ${store_gateway_min_memory}
+      %{~ else ~}
+      memory: 512Mi
       %{~ endif ~}
     limits:
       %{~ if  store_gateway_max_cpu != "null"  ~}
       cpu: ${store_gateway_max_cpu}
       %{~ endif ~}
-
       %{~ if  store_gateway_max_memory != "null"  ~}
       memory: ${store_gateway_max_memory}
       %{~ endif ~}
-
   extraVolumes:
     - name: ${cluster_name}-mimir-google-credentials
       secret:
@@ -213,51 +305,58 @@ store_gateway:
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: "/etc/mimir/google/gcs.json"
 
-distributor:
-  replicas: ${distributor_replicas}
+# Caching Components - Optimized for Performance
+chunks-cache:
+  enabled: ${chunks_cache_enabled}
+  replicas: ${chunks_cache_replicas}
+  maxItemMemory: ${chunks_cache_max_item_memory}
+  connectionLimit: ${chunks_cache_connection_limit}
   resources:
     requests:
-      %{~ if  distributor_min_cpu != "null"  ~}
-      cpu: ${distributor_min_cpu}
-      %{~ endif ~}
+      cpu: 0.02
 
-      %{~ if  distributor_min_memory != "null"  ~}
-      memory: ${distributor_min_memory}
-      %{~ endif ~}
+index-cache:
+  enabled: ${index_cache_enabled}
+  replicas: ${index_cache_replicas}
+  maxItemMemory: ${index_cache_max_item_memory}
+  connectionLimit: ${index_cache_connection_limit}
+  resources:
+    requests:
+      cpu: 0.02
 
-    limits:
-      %{~ if  distributor_max_cpu != "null"  ~}
-      cpu: ${distributor_max_cpu}
-      %{~ endif ~}
-
-      %{~ if  distributor_max_memory != "null"  ~}
-      memory: ${distributor_max_memory}
-      %{~ endif ~}
-  extraVolumes:
-    - name: ${cluster_name}-mimir-google-credentials
-      secret:
-        secretName: ${cluster_name}-mimir-google-credentials
-  extraVolumeMounts:
-    - name: ${cluster_name}-mimir-google-credentials
-      mountPath: /etc/mimir/google/
-  env:
-    - name: GOOGLE_APPLICATION_CREDENTIALS
-      value: "/etc/mimir/google/gcs.json"
-
-ruler:
-  extraVolumes:
-    - name: ${cluster_name}-mimir-google-credentials
-      secret:
-        secretName: ${cluster_name}-mimir-google-credentials
-  extraVolumeMounts:
-    - name: ${cluster_name}-mimir-google-credentials
-      mountPath: /etc/mimir/google/
-  env:
-    - name: GOOGLE_APPLICATION_CREDENTIALS
-      value: "/etc/mimir/google/gcs.json"
-
-alertmanager:
+results-cache:
   enabled: true
+  allocatedMemory: 1024
+  maxItemMemory: 5
+  replicas: 1
+  resources:
+    requests:
+      cpu: 0.02
+
+metadata-cache:
+  enabled: ${metadata_cache_enabled}
+  replicas: ${metadata_cache_replicas}
+  maxItemMemory: ${metadata_cache_max_item_memory}
+  connectionLimit: ${metadata_cache_connection_limit}
+
+gr-aggr-cache:
+  enabled: true
+  allocatedMemory: 8192
+  replicas: 1
+
+gr-metricname-cache:
+  enabled: true
+  allocatedMemory: 8192
+  replicas: 1
+
+# Alerting Components
+ruler:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 20m
+      memory: 128Mi
   extraVolumes:
     - name: ${cluster_name}-mimir-google-credentials
       secret:
@@ -268,3 +367,66 @@ alertmanager:
   env:
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: "/etc/mimir/google/gcs.json"
+
+# Alertmanager Component
+alertmanager:
+  enabled: false
+
+# Monitoring Components
+overrides_exporter:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# Operational Components
+rollout_operator:
+  enabled: true
+  resources:
+    limits:
+      cpu: "1"
+      memory: 200Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+
+# Memcached Configuration
+memcached:
+  image:
+    repository: memcached
+    tag: 1.6.19-alpine
+
+memcachedExporter:
+  enabled: true
+  image:
+    repository: prom/memcached-exporter
+    tag: v0.11.2
+
+# Disabled Components
+nginx:
+  enabled: false
+
+minio:
+  enabled: false
+
+# RBAC Configuration
+rbac:
+  create: true
+  type: psp
+  podSecurityContext:
+    fsGroup: 10001
+    runAsGroup: 10001
+    runAsNonRoot: true
+    runAsUser: 10001
+    seccompProfile:
+      type: RuntimeDefault
+
+# Service Account
+serviceAccount:
+  create: true
+
+# External Config
+useExternalConfig: false
+configStorageType: ConfigMap
