@@ -1,5 +1,5 @@
 settings:
-  clusterName: "${cluster_name}"
+  clusterName: "${CLUSTER_NAME}"
   clusterEndpoint: "${cluster_endpoint}"
 
   # Optional settings

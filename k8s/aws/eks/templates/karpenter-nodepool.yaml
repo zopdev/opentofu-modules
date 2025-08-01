@@ -12,8 +12,8 @@ spec:
         name: general
         kind: EC2NodeClass
   limits:
-    cpu: 1000
-    memory: 1000Gi
-  disruption:
+    cpu: ${CPU_LIMIT}
+    memory: ${MEMORY_LIMIT}
+    disruption:
     consolidationPolicy: WhenUnderutilized
     expireAfter: 720h

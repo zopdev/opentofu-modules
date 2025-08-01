@@ -9,6 +9,34 @@ data "template_file" "karpenter_values" {
     irsa_arn          = module.karpenter_irsa[0].iam_role_arn
   }
 }
+locals {
+  total_cpu_limit    = var.node_config.cpu * var.node_config.max_count
+  total_memory_limit = "${var.node_config.memory * var.node_config.max_count}Gi"
+}
+
+data "template_file" "karpenter_nodepool" {
+  count    = var.autoscaler == "karpenter" ? 1 : 0
+  template = file("${path.module}/templates/karpenter-nodepool.yaml")
+
+  vars = {
+    CPU_LIMIT    = local.total_cpu_limit
+    MEMORY_LIMIT = local.total_memory_limit
+  }
+}
+
+data "template_file" "karpenter_nodeclass" {
+  count    = var.autoscaler == "karpenter" ? 1 : 0
+  template = file("${path.module}/templates/karpenter-ec2-nodeclass.yaml")
+  vars = {
+    CLUSTER_NAME = local.cluster_name
+    ACCOUNT_ID   = data.aws_caller_identity.current.account_id
+  }
+}
+resource "local_file" "karpenter_nodeclass" {
+  count    = var.autoscaler == "karpenter" ? 1 : 0
+  content  = data.template_file.karpenter_nodeclass[0].rendered
+  filename = "${path.module}/karpenter-ec2-nodeclass.yaml"
+}
 
 resource "kubernetes_namespace" "karpenter" {
   count = var.autoscaler == "karpenter" ? 1 : 0
@@ -78,10 +106,13 @@ resource "null_resource" "karpenter_manifests" {
 
   provisioner "local-exec" {
     command = <<EOT
-      kubectl apply -f ${path.module}/ec2-nodeclass.yaml
-      kubectl apply -f ${path.module}/nodepool.yaml
+      kubectl apply -f ${local_file.karpenter_nodeclass[0].filename}
+      echo '${data.template_file.karpenter_nodepool[0].rendered}' | kubectl apply -f -
     EOT
   }
 
-  depends_on = [helm_release.karpenter]
+  depends_on = [
+    helm_release.karpenter,
+    local_file.karpenter_nodeclass
+  ]
 }
