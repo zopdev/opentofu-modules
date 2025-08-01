@@ -65,6 +65,8 @@ variable "node_config" {
     node_type       = string
     min_count       = number
     max_count       = number
+    cpu             = number
+    memory          = number
   })
   validation {
     condition = (var.node_config.min_count > 0)
@@ -822,3 +824,26 @@ variable "velero_enabled" {
   type        = bool
   default     = false
 }
+
+variable "autoscaler" {
+  description = "Which autoscaler to deploy: cluster-autoscaler or karpenter"
+  type        = string
+  default     = "karpenter"
+  validation {
+    condition     = contains(["karpenter", "cluster-autoscaler"], var.autoscaler)
+    error_message = "autoscaler must be one of: karpenter, cluster-autoscaler"
+  }
+}
+
+variable "karpenter_nodepool_cpu_limit" {
+  type        = number
+  default     = 64
+  description = "Karpenter NodePool CPU limit"
+}
+
+variable "karpenter_nodepool_memory_limit" {
+  type        = string
+  default     = "128Gi"
+  description = "Karpenter NodePool memory limit"
+}
+
