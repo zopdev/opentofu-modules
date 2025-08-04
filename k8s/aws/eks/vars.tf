@@ -835,15 +835,5 @@ variable "autoscaler" {
   }
 }
 
-variable "karpenter_nodepool_cpu_limit" {
-  type        = number
-  default     = 64
-  description = "Karpenter NodePool CPU limit"
-}
 
-variable "karpenter_nodepool_memory_limit" {
-  type        = string
-  default     = "128Gi"
-  description = "Karpenter NodePool memory limit"
-}
 
