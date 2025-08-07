@@ -113,10 +113,12 @@ locals {
 
 # deploy NodeClass
 resource "kubernetes_manifest" "node_class" {
+  depends_on = [helm_release.karpenter]
   manifest = yamldecode(local.nodeclass_yaml)
 }
 
 # deploy NodePool
 resource "kubernetes_manifest" "node_pool" {
+  depends_on = [helm_release.karpenter]
   manifest = yamldecode(local.nodepool_yaml)
 }
