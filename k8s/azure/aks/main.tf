@@ -66,7 +66,7 @@ module "aks" {
   workload_identity_enabled          = true
   oidc_issuer_enabled                = true
   temporary_name_for_rotation        = "${var.app_name}1"
-
+  secret_rotation_enabled            = true
   tags = merge(local.common_tags,
     tomap({
       "Name" = local.cluster_name
