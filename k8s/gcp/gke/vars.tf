@@ -718,8 +718,8 @@ variable "karp_capacity_types" {
     description = "List of GCP VM instance capacity options for Karpenter: 'on-demand', 'spot'"
 
     validation {
-        condition = allTrue([
-            for t in var.karp_capacity_types :
+        condition = alltrue([
+            for t in var.karp_capacity_types:
                 contains(["on-demand", "spot"], t)
         ])
         error_message = "Capacity type can only be either 'on-demand' or 'spot'"
