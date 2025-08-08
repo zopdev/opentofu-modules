@@ -102,12 +102,14 @@ data "google_compute_zones" "zones" {
 # pass values to nodeClass and nodePool manifests
 locals {
   nodeclass_yaml = templatefile("./templates/karpenter-gcp-nodeclass.yaml", {
-      SERVICE_ACCOUNT = google_service_account.karpenter.email
-      ENVIRONMENT = var.app_env
+    SERVICE_ACCOUNT = google_service_account.karpenter.email
+    ENVIRONMENT = var.app_env
   })
 
   nodepool_yaml = templatefile("./templates/karpenter-gcp-nodepool.yaml", {
-      ZONES = data.google_compute_zones.zones.names
+    ZONES = data.google_compute_zones.zones.names
+    INSTANCE_TYPES = var.karp_machine_types
+    CAPACITY_TYPES = var.karp_capacity_types
   })
 }
 
