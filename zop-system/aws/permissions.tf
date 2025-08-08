@@ -178,3 +178,21 @@ resource "kubernetes_cluster_role_binding" "zop_cluster_role_binding_cluster_adm
     namespace = kubernetes_service_account.ksa_zop.metadata[0].namespace
   }
 }
+
+resource "kubernetes_cluster_role_binding_v1" "zop_system_role_binding" {
+  metadata {
+    name = "zop-system-role-binding"
+  }
+  
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "edit"
+  }
+  
+  subject {
+    kind      = "ServiceAccount"
+    name      = "default"
+    namespace = "zop-system"
+  }
+}

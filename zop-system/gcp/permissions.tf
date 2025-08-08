@@ -171,3 +171,21 @@ resource "kubernetes_cluster_role_binding" "zop_system_admin_role_binding_gcp_sa
     name      = google_service_account.kube_management_api_svc_acc.email
   }
 }
+
+resource "kubernetes_cluster_role_binding_v1" "zop_system_role_binding" {
+  metadata {
+    name = "zop-system-role-binding"
+  }
+  
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "edit"
+  }
+  
+  subject {
+    kind      = "ServiceAccount"
+    name      = "default"
+    namespace = "zop-system"
+  }
+}
