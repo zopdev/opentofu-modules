@@ -708,6 +708,12 @@ variable "slack_alerts_configs" {
     default = []
 }
 
+variable "karp_enable" {
+    type = bool
+    description = "Boolean variable to enable karpenter autoscaler"
+    default = false
+}
+
 variable "karp_machine_types" {
     type = list(string)
     description = "List of full GCP machine types for Karpenter nodes provisioning(e.g e2-standard-4)"
