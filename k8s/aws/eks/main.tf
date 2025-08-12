@@ -77,7 +77,7 @@ module "eks" {
 
   self_managed_node_groups = {
     "${local.cluster_name}" = {
-      ami_id                       = data.aws_ami.eks_ami.id
+      # ami_id                       = data.aws_ami.eks_ami.id
       instance_type                = var.node_config.node_type
       desired_size                 = var.node_config.min_count
       min_size                     = var.node_config.min_count
