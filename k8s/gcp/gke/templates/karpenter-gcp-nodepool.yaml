@@ -1,0 +1,28 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: karpenter-gcp-nodepool
+spec:
+  weight: 10
+  template:
+    spec:
+      nodeClassRef:
+        name: karpenter-gcp-nodeclass
+        kind: GCENodeClass
+        group: karpenter.k8s.gcp
+      requirements:
+        - key: "karpenter.sh/capacity-type"
+          operator: In
+          values: ${CAPACITY_TYPES}
+
+        - key: "node.kubernetes.io/instance-type"
+          operator: In
+          values: ${INSTANCE_TYPES}
+
+        - key: "kubernetes.io/arch"
+          operator: In
+          values: ["amd64"]
+
+        - key: "topology.kubernetes.io/zone"
+          operator: In
+          values: ${ZONES}
