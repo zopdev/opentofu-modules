@@ -119,6 +119,12 @@ resource "google_sql_database" "sql_database" {
   instance         = var.sql_type == "postgresql" ? google_sql_database_instance.postgres_sql_db[0].name : google_sql_database_instance.sql_db[0].name
   charset          = "UTF8"
   collation        = var.db_collation
+  lifecycle {
+    ignore_changes = [
+      charset,
+      collation,
+    ]
+  }
 }
 
 resource "google_sql_user" "sql_user" {
