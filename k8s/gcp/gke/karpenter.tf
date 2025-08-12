@@ -119,8 +119,8 @@ locals {
 
   nodepool_yaml = var.karpenter_configs.enable ? templatefile("./templates/karpenter-gcp-nodepool.yaml", {
     ZONES = data.google_compute_zones.zones.names
-    INSTANCE_TYPES = var.karpenter_configs.machine_types
-    CAPACITY_TYPES = var.karpenter_configs.capacity_types
+    INSTANCE_TYPES = len(var.karpenter_configs.machine_types) > 0 ? var.karpenter_configs.machine_types : ["e2-standard-2", "e2-standard-4"]
+    CAPACITY_TYPES = len(var.karpenter_configs.capacity_types) > 0 ? var.karpenter_configs.capacity_types : ["on-demand"]
   }) :  null
 }
 
