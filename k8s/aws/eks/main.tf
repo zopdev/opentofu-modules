@@ -42,10 +42,6 @@ data "aws_ami" "eks_ami" {
   }
 }
 
-data "aws_ssm_parameter" "eks_ami" {
-  name = "/aws/service/eks/optimized-ami/1.30/amazon-linux-2/recommended/image_id"
-}
-
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
   version         = "20.0.0"
@@ -81,7 +77,7 @@ module "eks" {
 
   self_managed_node_groups = {
     "${local.cluster_name}" = {
-      ami_id                       = data.aws_ssm_parameter.eks_ami.value
+      # ami_id                       = data.aws_ssm_parameter.eks_ami.value
       instance_type                = var.node_config.node_type
       desired_size                 = var.node_config.min_count
       min_size                     = var.node_config.min_count
