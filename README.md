@@ -30,7 +30,36 @@ To simplify and standardize **Kubernetes cluster creation**, **datastore managem
 - Cloud CLI (aws / gcloud / az / oci)
 - Helm (for local deployments)
 ---
+## 🚀 Getting Started
 
+Each module in this repository has a corresponding `vars.tf` file that defines the required and optional variables for that module. Users can create a custom `terraform.tfvars` file to provide their environment-specific values before running the Terraform commands.
+
+### Basic Commands
+
+1. **Initialize the module**
+
+   ```bash
+   terraform init
+   ```
+   - Downloads the required providers and modules.
+   - Sets up the Terraform backend configuration if specified.
+
+2. **Plan the deployment**
+
+   ```bash
+   terraform plan -var-file="path/to/your/terraform.tfvars"
+   ```
+   - Creates an execution plan without making any changes to your infrastructure.
+   - Shows you what changes Terraform will make if you run `apply`.
+
+3. **Apply the changes**
+
+   ```bash
+   terraform apply -var-file="path/to/your/terraform.tfvars"
+   ```
+   - Deploys the resources as defined in your Terraform configuration files.
+   - Prompts for confirmation before making any actual changes unless you use the `-auto-approve` flag.
+---
 ## 📦 Module Overview
 
 | #  | Module          | Purpose                                         |
