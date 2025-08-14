@@ -40,7 +40,7 @@ data "aws_ami" "eks_ami" {
     name   = "name"
     values = [var.worker_ami_config.name]
   }
-  ami_type = "AL2023_x86_64_STANDARD"
+
 }
 
 module "eks" {
