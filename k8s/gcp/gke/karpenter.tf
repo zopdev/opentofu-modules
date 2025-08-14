@@ -129,6 +129,7 @@ resource "kubernetes_manifest" "node_class" {
   count      = var.karpenter_configs.enable ? 1 : 0
   depends_on = [helm_release.karpenter]
   manifest   = yamldecode(local.nodeclass_yaml)
+  server_side_apply = true
 }
 
 # deploy NodePool
@@ -136,4 +137,5 @@ resource "kubernetes_manifest" "node_pool" {
   count      = var.karpenter_configs.enable ? 1 : 0
   depends_on = [helm_release.karpenter, kubernetes_manifest.node_class]
   manifest   = yamldecode(local.nodepool_yaml)
+  server_side_apply = true
 }
