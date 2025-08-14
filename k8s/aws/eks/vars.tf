@@ -65,6 +65,7 @@ variable "node_config" {
     node_type       = string
     min_count       = number
     max_count       = number
+    cpu             = number
   })
   validation {
     condition = (var.node_config.min_count > 0)
