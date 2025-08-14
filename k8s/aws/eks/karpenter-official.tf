@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 # -------------------------------------------------------
-# IAM Roles for Karpenter (only if autoscaler == "karpenter")
+# IAM Roles for Karpenter
 # -------------------------------------------------------
 resource "aws_iam_role" "karpenter_node_role" {
   count              = var.karpenter_configs.enable ? 1 : 0
@@ -121,7 +121,7 @@ resource "kubernetes_config_map" "aws_auth_update" {
   }
 }
 # -------------------------------------------------------
-# Helm Release for Karpenter (only if autoscaler == "karpenter")
+# Helm Release for Karpenter
 # -------------------------------------------------------
 resource "helm_release" "karpenter" {
   count      = var.karpenter_configs.enable ? 1 : 0
@@ -170,6 +170,4 @@ resource "kubernetes_manifest" "karpenter_nodepool" {
 
 
 
-
-#............
 
