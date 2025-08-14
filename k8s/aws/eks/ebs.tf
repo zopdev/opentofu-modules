@@ -23,6 +23,7 @@ resource "aws_eks_addon" "aws_ebs_csi_driver" {
 
 module "ebs_csi_irsa_role" {
   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "v5.60.0"
 
   role_name             = "${local.cluster_name}-ebs-csi"
   attach_ebs_csi_policy = true
