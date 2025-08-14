@@ -44,10 +44,10 @@ data "aws_ami" "eks_ami" {
 
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
-  version         = "20.37.1"
+  version         = "20.0.0"
 
   cluster_name    = local.cluster_name
-  cluster_version = "1.32"
+  cluster_version = "1.31"
 
   enable_irsa              = true
   vpc_id                   = local.vpc_id

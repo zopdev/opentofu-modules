@@ -70,7 +70,7 @@ resource "helm_release" "velero" {
   name             = "velero"
   repository       = "https://vmware-tanzu.github.io/helm-charts/"
   chart            = "velero"
-  version          = "10.0.8"
+  version          = "7.1.5"
   namespace        = "velero"
   create_namespace = true
   depends_on       = [module.eks]
