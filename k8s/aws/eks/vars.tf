@@ -240,7 +240,7 @@ variable "worker_ami_config" {
   })
   default = {
     owner_id          = "amazon"
-    name              = "amazon-eks-node-1.30-v20250403"
+    name              = "amazon-eks-node-1.31-v20250212"
   }
 }
 
