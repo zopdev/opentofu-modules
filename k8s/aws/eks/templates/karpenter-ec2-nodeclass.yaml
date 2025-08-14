@@ -1,0 +1,14 @@
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: default
+spec:
+  role: "KarpenterNodeRole-${CLUSTER_NAME}" # placeholder
+  amiSelectorTerms:
+    - alias: "al2023@${ALIAS_VERSION}"
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "${CLUSTER_NAME}"
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "${CLUSTER_NAME}"
