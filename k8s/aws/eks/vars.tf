@@ -65,6 +65,7 @@ variable "node_config" {
     node_type       = string
     min_count       = number
     max_count       = number
+    cpu             = number
   })
   validation {
     condition = (var.node_config.min_count > 0)
@@ -821,4 +822,64 @@ variable "velero_enabled" {
   description = "Enable Velero backup setup"
   type        = bool
   default     = false
+}
+
+variable "autoscaler" {
+  description = "Which autoscaler to deploy: cluster-autoscaler or karpenter"
+  type        = string
+  default     = "karpenter"
+  validation {
+    condition     = contains(["karpenter", "cluster-autoscaler"], var.autoscaler)
+    error_message = "autoscaler must be one of: karpenter, cluster-autoscaler"
+  }
+}
+
+variable "node_security_group_ids" {
+  type        = list(string)
+  description = "List of node security group IDs for the cluster"
+}
+
+variable "aws_partition" {
+  type    = string
+  default = "aws"
+}
+
+variable "karpenter_namespace" {
+  description = "Namespace where Karpenter will be installed"
+  type        = string
+  default     = "kube-system"
+}
+
+variable "karpenter_version" {
+  description = "Version of the Karpenter chart to install"
+  type        = string
+  default     = "1.6.0"
+}
+
+variable "ami_version" {
+  type        = string
+  default     = "v20250807"
+}
+
+variable "karpenter_configs" {
+  description = "Inputs for karpenter - enabling flag, GCP machine types, and capacity types ('on-demand' or 'spot')"
+
+  type = object({
+    enable = bool
+    machine_types = list(string)
+    capacity_types = list(string)
+  })
+  default = {
+    enable = false
+    machine_types = []
+    capacity_types = []
+  }
+
+  validation {
+    condition = alltrue([
+      for t in var.karpenter_configs.capacity_types :
+      contains(["on-demand", "spot"], t)
+    ])
+    error_message = "Capacity type can only be either 'on-demand' or 'spot'"
+  }
 }

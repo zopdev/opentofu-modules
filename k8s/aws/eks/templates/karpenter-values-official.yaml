@@ -1,0 +1,16 @@
+settings:
+  clusterName: "${CLUSTER_NAME}"
+  interruptionQueue: "${CLUSTER_NAME}"
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:${AWS_PARTITION}:iam::${AWS_ACCOUNT_ID}:role/KarpenterControllerRole-${CLUSTER_NAME}"
+
+controller:
+  resources:
+    requests:
+      cpu: 1
+      memory: 1Gi
+    limits:
+      cpu: 1
+      memory: 1Gi
