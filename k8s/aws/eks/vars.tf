@@ -824,16 +824,6 @@ variable "velero_enabled" {
   default     = false
 }
 
-variable "autoscaler" {
-  description = "Which autoscaler to deploy: cluster-autoscaler or karpenter"
-  type        = string
-  default     = "karpenter"
-  validation {
-    condition     = contains(["karpenter", "cluster-autoscaler"], var.autoscaler)
-    error_message = "autoscaler must be one of: karpenter, cluster-autoscaler"
-  }
-}
-
 variable "node_security_group_ids" {
   type        = list(string)
   description = "List of node security group IDs for the cluster"
