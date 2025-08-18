@@ -14,12 +14,18 @@ spec:
         - key: "karpenter.sh/capacity-type"
           operator: In
           values:
-            ${CAPACITY_TYPES}
+            %{~ for v in CAPACITY_TYPES ~}
+            - ${v}
+            %{~ endfor ~}
+
 
         - key: "node.kubernetes.io/instance-type"
           operator: In
           values:
-            ${INSTANCE_TYPES}
+            %{~ for v in INSTANCE_TYPES ~}
+            - ${v}
+            %{~ endfor ~}
+
 
         - key: "kubernetes.io/arch"
           operator: In
@@ -28,4 +34,6 @@ spec:
         - key: "topology.kubernetes.io/zone"
           operator: In
           values:
-            ${ZONES}
+            %{~ for v in ZONES ~}
+            - ${v}
+            %{~ endfor ~}
