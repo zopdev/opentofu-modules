@@ -125,15 +125,15 @@ locals {
 }
 
 # deploy NodeClass
-resource "kubernetes_manifest" "node_class" {
+resource "kubectl_manifest" "node_class" {
   count      = var.karpenter_configs.enable ? 1 : 0
   depends_on = [helm_release.karpenter]
-  manifest   = yamldecode(local.nodeclass_yaml)
+  yaml_body  = local.nodeclass_yaml
 }
 
 # deploy NodePool
-resource "kubernetes_manifest" "node_pool" {
+resource "kubectl_manifest" "node_pool" {
   count      = var.karpenter_configs.enable ? 1 : 0
-  depends_on = [helm_release.karpenter, kubernetes_manifest.node_class]
-  manifest   = yamldecode(local.nodepool_yaml)
+  depends_on = [helm_release.karpenter, kubectl_manifest.node_class]
+  yaml_body  = local.nodepool_yaml
 }
