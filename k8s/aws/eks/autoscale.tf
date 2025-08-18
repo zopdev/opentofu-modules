@@ -12,7 +12,7 @@ resource "helm_release" "auto_scaler" {
   repository = "https://kubernetes.github.io/autoscaler"
   name       = "cluster-autoscaler"
   namespace  = "kube-system"
-  version    = "9.28.0"
+  version    = "9.50.0"
 
   values = [data.template_file.autoscale_template.rendered]
 
