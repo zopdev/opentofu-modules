@@ -13,11 +13,13 @@ spec:
       requirements:
         - key: "karpenter.sh/capacity-type"
           operator: In
-          values: ${CAPACITY_TYPES}
+          values:
+            ${CAPACITY_TYPES}
 
         - key: "node.kubernetes.io/instance-type"
           operator: In
-          values: ${INSTANCE_TYPES}
+          values:
+            ${INSTANCE_TYPES}
 
         - key: "kubernetes.io/arch"
           operator: In
@@ -25,4 +27,5 @@ spec:
 
         - key: "topology.kubernetes.io/zone"
           operator: In
-          values: ${ZONES}
+          values:
+            ${ZONES}
