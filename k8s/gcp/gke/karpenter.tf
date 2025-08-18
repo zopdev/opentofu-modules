@@ -45,9 +45,9 @@ resource "google_project_iam_member" "monitoring_admin" {
 }
 
 # service account user role
-resource "google_service_account_iam_member" "service_account_user" {
+resource "google_project_iam_member" "service_account_user" {
   count              = var.karpenter_configs.enable ? 1 : 0
-  service_account_id = google_service_account.karpenter[0].name
+  project            = var.provider_id
   member             = google_service_account.karpenter[0].member
   role               = "roles/iam.serviceAccountUser"
 }
@@ -75,7 +75,7 @@ resource "kubernetes_secret" "gcp-credentials" {
   }
 
   data = {
-    "key.json" = google_service_account_key.karpenter_key[0].private_key
+    "key.json" = base64decode(google_service_account_key.karpenter_key[0].private_key)
   }
 }
 
