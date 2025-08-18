@@ -36,7 +36,7 @@ locals {
 
   osn_service_id = one([
     for s in data.oci_core_services.all_services.services : s.id
-    if s.service_name == "all-services-in-oracle-services-network"
+    if s.cidr_block == "all-services-in-oracle-services-network"
   ])
 }
 
