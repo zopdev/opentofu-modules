@@ -19,10 +19,10 @@ resource "aws_iam_role_policy_attachment" "node_policies" {
 
 locals {
   node_policy_arns = [
-    "arn:${var.aws_partition}:iam::aws:policy/AmazonEKSWorkerNodePolicy",
-    "arn:${var.aws_partition}:iam::aws:policy/AmazonEKS_CNI_Policy",
-    "arn:${var.aws_partition}:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly",
-    "arn:${var.aws_partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    "arn:${var.karpenter_configs.aws_partition}:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+    "arn:${var.karpenter_configs.aws_partition}:iam::aws:policy/AmazonEKS_CNI_Policy",
+    "arn:${var.karpenter_configs.aws_partition}:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly",
+    "arn:${var.karpenter_configs.aws_partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
   ]
 }
 
@@ -40,7 +40,7 @@ resource "aws_iam_role" "karpenter_controller_role" {
     AWS_PARTITION       = data.aws_partition.current.partition
     AWS_ACCOUNT_ID      = data.aws_caller_identity.current.account_id
     OIDC_ENDPOINT       = replace(module.eks.cluster_oidc_issuer_url, "https://", "")
-    KARPENTER_NAMESPACE = var.karpenter_namespace
+    KARPENTER_NAMESPACE = var.karpenter_configs.namespace
   })
 }
 
@@ -70,7 +70,7 @@ resource "aws_ec2_tag" "karpenter_subnet_tags" {
 
 # Tag security groups for Karpenter
 resource "aws_ec2_tag" "karpenter_sg_tags" {
-  for_each = var.karpenter_configs.enable ? toset(var.node_security_group_ids) : {}
+  for_each = var.karpenter_configs.enable ? toset(var.karpenter_configs.node_security_groups) : {}
 
   resource_id = each.value
   key         = "karpenter.sh/discovery"
@@ -126,15 +126,15 @@ resource "kubernetes_config_map" "aws_auth_update" {
 resource "helm_release" "karpenter" {
   count      = var.karpenter_configs.enable ? 1 : 0
   name       = "karpenter"
-  namespace  = var.karpenter_namespace
+  namespace  = var.karpenter_configs.namespace
   chart      = "karpenter"
   repository = "oci://public.ecr.aws/karpenter/karpenter"
-  version    = var.karpenter_version
+  version    = var.karpenter_configs.version
 
   values = [
     templatefile("./templates/karpenter-values-official.yaml", {
       CLUSTER_NAME = local.cluster_name
-      AWS_PARTITION = var.aws_partition
+      AWS_PARTITION = var.karpenter_configs.aws_partition
       AWS_ACCOUNT_ID = data.aws_caller_identity.current.account_id
     })
   ]
@@ -144,7 +144,7 @@ resource "helm_release" "karpenter" {
 locals {
   ec2nodeclass_yaml = templatefile("./templates/karpenter-ec2-nodeclass.yaml", {
     CLUSTER_NAME  = local.cluster_name
-    ALIAS_VERSION = var.ami_version
+    ALIAS_VERSION = var.karpenter_configs.ami_version
   })
 }
 
@@ -154,7 +154,7 @@ resource "kubernetes_manifest" "karpenter_nodeclass" {
 }
 
 locals {
-  nodepool_yaml = templatefile("./templates/karpenter-nodepool-final.yaml", {
+  nodepool_yaml = templatefile("./templates/karpenter-nodepool.yaml", {
     CPU_LIMIT       = var.node_config.cpu * var.node_config.max_count
     INSTANCE_TYPES  = var.karpenter_configs.machine_types
     CAPACITY_TYPE   = var.karpenter_configs.capacity_types

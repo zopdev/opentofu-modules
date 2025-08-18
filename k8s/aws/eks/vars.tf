@@ -824,45 +824,29 @@ variable "velero_enabled" {
   default     = false
 }
 
-variable "node_security_group_ids" {
-  type        = list(string)
-  description = "List of node security group IDs for the cluster"
-}
-
-variable "aws_partition" {
-  type    = string
-  default = "aws"
-}
-
-variable "karpenter_namespace" {
-  description = "Namespace where Karpenter will be installed"
-  type        = string
-  default     = "kube-system"
-}
-
-variable "karpenter_version" {
-  description = "Version of the Karpenter chart to install"
-  type        = string
-  default     = "1.6.0"
-}
-
-variable "ami_version" {
-  type        = string
-  default     = "v20250807"
-}
 
 variable "karpenter_configs" {
   description = "Inputs for karpenter - enabling flag, GCP machine types, and capacity types ('on-demand' or 'spot')"
 
   type = object({
     enable = bool
+    namespace           = string
+    version             = string
+    ami_version         = string
+    node_security_groups = list(string)
     machine_types = list(string)
     capacity_types = list(string)
+    aws_partition        = string
   })
   default = {
     enable = false
+    namespace            = "kube-system"
+    version              = "1.6.0"
+    ami_version          = "v20250807"
+    node_security_groups = []
     machine_types = []
     capacity_types = []
+    aws_partition        = "aws"
   }
 
   validation {
