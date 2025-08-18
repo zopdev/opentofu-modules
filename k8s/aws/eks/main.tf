@@ -35,8 +35,7 @@ resource "aws_kms_key" "eks" {
 }
 
 data "aws_ami" "eks_ami" {
-  owners      = [var.worker_ami_config.owner_id]
-  most_recent = true
+  owners   = [var.worker_ami_config.owner_id]
   filter {
     name   = "name"
     values = [var.worker_ami_config.name]
@@ -48,7 +47,7 @@ module "eks" {
   version         = "20.0.0"
 
   cluster_name    = local.cluster_name
-  cluster_version = "1.33"
+  cluster_version = "1.32"
 
   enable_irsa              = true
   vpc_id                   = local.vpc_id
