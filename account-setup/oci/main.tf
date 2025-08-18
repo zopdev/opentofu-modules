@@ -33,8 +33,6 @@ locals {
       }
     })
   ]...)
-
-  osn_service_id = [for s in data.oci_core_services.all_services.services : s.id if s.cidr_block == "all-bom-services-in-oracle-services-network"][0]
 }
 
 resource "oci_core_vcn" "vcn" {
@@ -161,7 +159,7 @@ resource "oci_core_service_gateway" "service_gateway" {
   display_name   = "${each.key}-service-gateway"
 
   services {
-    service_id = local.osn_service_id
+    service_id = lookup(data.oci_core_services.all_services[0].services[0], id)
   }
 
   freeform_tags = {
