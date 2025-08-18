@@ -824,29 +824,18 @@ variable "velero_enabled" {
   default     = false
 }
 
-
 variable "karpenter_configs" {
   description = "Inputs for karpenter - enabling flag, GCP machine types, and capacity types ('on-demand' or 'spot')"
 
   type = object({
     enable = bool
-    namespace           = string
-    version             = string
-    ami_version         = string
-    node_security_groups = list(string)
     machine_types = list(string)
     capacity_types = list(string)
-    aws_partition        = string
   })
   default = {
     enable = false
-    namespace            = "kube-system"
-    version              = "1.6.0"
-    ami_version          = "v20250807"
-    node_security_groups = []
     machine_types = []
     capacity_types = []
-    aws_partition        = "aws"
   }
 
   validation {

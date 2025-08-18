@@ -3,9 +3,9 @@ kind: EC2NodeClass
 metadata:
   name: default
 spec:
-  role: "KarpenterNodeRole-${CLUSTER_NAME}" # placeholder
+  role: "${NODE_ROLE}" # placeholder
   amiSelectorTerms:
-    - alias: "al2023@${ALIAS_VERSION}"
+    - alias: "al2023@latest"
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: "${CLUSTER_NAME}"
