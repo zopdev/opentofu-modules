@@ -35,7 +35,8 @@ resource "aws_kms_key" "eks" {
 }
 
 data "aws_ami" "eks_ami" {
-  owners   = [var.worker_ami_config.owner_id]
+  owners      = [var.worker_ami_config.owner_id]
+  most_recent = true
   filter {
     name   = "name"
     values = [var.worker_ami_config.name]
