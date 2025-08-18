@@ -25,3 +25,6 @@ output "private_cidrs" {
   value = [for subnet in oci_core_subnet.private_subnets : subnet.cidr_block]
 }
 
+output "available_services" {
+  value = data.oci_core_services.all_services.services
+}
