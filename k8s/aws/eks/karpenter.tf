@@ -49,11 +49,19 @@ module "karpenter" {
 resource "kubernetes_manifest" "karpenter_nodeclass" {
   count    = var.karpenter_configs.enable ? 1 : 0
   manifest = yamldecode(local.ec2nodeclass_yaml)
+  depends_on = [
+    module.karpenter,
+    kubernetes_namespace.karpenter
+  ]
 }
 
 resource "kubernetes_manifest" "karpenter_nodepool" {
   count    = var.karpenter_configs.enable ? 1 : 0
   manifest = yamldecode(local.nodepool_yaml)
+  depends_on = [
+    module.karpenter,
+    kubernetes_namespace.karpenter
+  ]
 }
 
 
