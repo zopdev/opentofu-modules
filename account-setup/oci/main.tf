@@ -34,7 +34,10 @@ locals {
     })
   ]...)
 
-  osn_service_id = [for s in data.oci_core_services.all_services.services : s.id if s.cidr_block == "all-bom-services-in-oracle-services-network"][0]
+  osn_service_id = one([
+    for s in data.oci_core_services.all_services.services : s.id
+    if can(regex("oracle-services-network", s.cidr_block))
+  ])
 }
 
 resource "oci_core_vcn" "vcn" {
