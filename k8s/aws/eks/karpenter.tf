@@ -19,6 +19,7 @@ resource "kubernetes_namespace" "karpenter" {
 }
 
 module "karpenter" {
+  count     = local.enable_karpenter ? 1 : 0
   source = "terraform-aws-modules/eks/aws//modules/karpenter"
 
   cluster_name = local.cluster_name
