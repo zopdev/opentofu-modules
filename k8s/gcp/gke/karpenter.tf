@@ -98,7 +98,7 @@ resource "helm_release" "karpenter" {
   repository = "https://helm.zop.dev"
   chart      = "karpenter-gcp"
   namespace  = "karpenter"
-  version    = "0.0.1"
+  version    = "0.0.2"
 
   values = [data.template_file.karpenter_template[0].rendered]
 }
