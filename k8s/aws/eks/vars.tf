@@ -65,6 +65,7 @@ variable "node_config" {
     node_type       = string
     min_count       = number
     max_count       = number
+    cpu             = number
   })
   validation {
     condition = (var.node_config.min_count > 0)
@@ -821,4 +822,27 @@ variable "velero_enabled" {
   description = "Enable Velero backup setup"
   type        = bool
   default     = false
+}
+
+variable "karpenter_configs" {
+  description = "Inputs for karpenter - enabling flag, GCP machine types, and capacity types ('on-demand' or 'spot')"
+
+  type = object({
+    enable = bool
+    machine_types = list(string)
+    capacity_types = list(string)
+  })
+  default = {
+    enable = false
+    machine_types = []
+    capacity_types = []
+  }
+
+  validation {
+    condition = alltrue([
+      for t in var.karpenter_configs.capacity_types :
+      contains(["on-demand", "spot"], t)
+    ])
+    error_message = "Capacity type can only be either 'on-demand' or 'spot'"
+  }
 }
