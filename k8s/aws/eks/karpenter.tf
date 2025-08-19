@@ -1,9 +1,4 @@
 locals{
-  cpu_limit = (
-  (var.node_config.cpu != null && var.node_config.max_count != null) &&
-  (var.node_config.cpu * var.node_config.max_count > 0)
-  ) ? var.node_config.cpu * var.node_config.max_count : 2
-
   instance_type = length(var.karpenter_configs.machine_types) > 0 ? var.karpenter_configs.machine_types : ["t3.medium", "t3.large"]
   capacity_type = length(var.karpenter_configs.capacity_types) > 0 ? var.karpenter_configs.capacity_types : ["on-demand"]
   enable_karpenter = var.karpenter_configs.enable != null ? var.karpenter_configs.enable : false
@@ -50,7 +45,6 @@ resource "kubectl_manifest" "karpenter_nodeclass" {
 resource "kubectl_manifest" "karpenter_nodepool" {
   count     = local.enable_karpenter ? 1 : 0
   yaml_body = templatefile("./templates/karpenter-nodepool.yaml", {
-    CPU_LIMIT      = local.cpu_limit
     INSTANCE_TYPES = local.instance_type
     CAPACITY_TYPE  = local.capacity_type
   })
