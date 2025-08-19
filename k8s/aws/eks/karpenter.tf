@@ -18,6 +18,7 @@ resource "kubernetes_namespace" "karpenter" {
 module "karpenter" {
   count     = local.enable_karpenter ? 1 : 0
   source = "terraform-aws-modules/eks/aws//modules/karpenter"
+  version = "20.37.2"
 
   cluster_name = local.cluster_name
   region = var.app_region
@@ -42,7 +43,7 @@ resource "kubectl_manifest" "karpenter_nodeclass" {
   count     = local.enable_karpenter ? 1 : 0
   yaml_body = templatefile("./templates/karpenter-ec2-nodeclass.yaml", {
     CLUSTER_NAME = local.cluster_name
-    NODE_ROLE    = module.karpenter.node_iam_role_name
+    NODE_ROLE    = module.karpenter[0].node_iam_role_name
   })
   depends_on = [module.karpenter]
 }
