@@ -12,9 +12,6 @@ locals{
 resource "kubernetes_namespace" "karpenter" {
   metadata {
     name = "karpenter"
-    labels = {
-      "app.kubernetes.io/managed-by" = "terraform"
-    }
   }
 }
 

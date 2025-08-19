@@ -25,7 +25,7 @@ spec:
         group: karpenter.k8s.aws
         kind: EC2NodeClass
         name: default
-      expireAfter: 720h # 30 * 24h = 720h
+      expireAfter: 720h
   limits:
     cpu: ${CPU_LIMIT}
   disruption:
