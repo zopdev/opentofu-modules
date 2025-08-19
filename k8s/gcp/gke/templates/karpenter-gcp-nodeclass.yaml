@@ -8,3 +8,7 @@ spec:
     - alias: ContainerOptimizedOS@latest
   tags:
     env: ${ENVIRONMENT}
+  disks:
+    - category: pd-balanced
+      sizeGiB: 60
+      boot: true
