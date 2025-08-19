@@ -1,18 +1,12 @@
-locals {
-  ec2nodeclass_yaml = templatefile("./templates/karpenter-ec2-nodeclass.yaml", {
-    CLUSTER_NAME = local.cluster_name
-    NODE_ROLE    = module.karpenter.node_iam_role_name
-  })
+locals{
+  cpu_limit = (
+  (var.node_config.cpu != null && var.node_config.max_count != null) &&
+  (var.node_config.cpu * var.node_config.max_count > 0)
+  ) ? var.node_config.cpu * var.node_config.max_count : 2
 
-  nodepool_yaml = templatefile("./templates/karpenter-nodepool.yaml", {
-    CPU_LIMIT      = var.node_config.cpu * var.node_config.max_count
-    INSTANCE_TYPES = var.karpenter_configs.machine_types
-    CAPACITY_TYPE  = var.karpenter_configs.capacity_types
-  })
-}
-
-provider "aws" {
-  region = var.app_region
+  instance_type = length(var.karpenter_configs.machine_types) > 0 ? var.karpenter_configs.machine_types : ["t3.medium", "t3.large"]
+  capacity_type = length(var.karpenter_configs.capacity_types) > 0 ? var.karpenter_configs.capacity_types : ["on-demand"]
+  enable_karpenter = var.karpenter_configs.enable != null ? var.karpenter_configs.enable : false
 }
 
 resource "kubernetes_namespace" "karpenter" {
@@ -40,28 +34,29 @@ module "karpenter" {
   }
 
   create_iam_role = true
-  namespace       = "karpenter"
+  namespace       = kubernetes_namespace.karpenter.metadata[0].name
 }
 
 #-------------------
 # nodeclass & nodepool
 
-resource "kubernetes_manifest" "karpenter_nodeclass" {
-  count    = var.karpenter_configs.enable ? 1 : 0
-  manifest = yamldecode(local.ec2nodeclass_yaml)
-  depends_on = [
-    module.karpenter,
-    kubernetes_namespace.karpenter
-  ]
+resource "kubectl_manifest" "karpenter_nodeclass" {
+  count     = local.enable_karpenter ? 1 : 0
+  yaml_body = templatefile("./templates/karpenter-ec2-nodeclass.yaml", {
+    CLUSTER_NAME = local.cluster_name
+    NODE_ROLE    = module.karpenter.node_iam_role_name
+  })
+  depends_on = [module.karpenter]
 }
 
-resource "kubernetes_manifest" "karpenter_nodepool" {
-  count    = var.karpenter_configs.enable ? 1 : 0
-  manifest = yamldecode(local.nodepool_yaml)
-  depends_on = [
-    module.karpenter,
-    kubernetes_namespace.karpenter
-  ]
+resource "kubectl_manifest" "karpenter_nodepool" {
+  count     = local.enable_karpenter ? 1 : 0
+  yaml_body = templatefile("./templates/karpenter-nodepool.yaml", {
+    CPU_LIMIT      = local.cpu_limit
+    INSTANCE_TYPES = local.instance_type
+    CAPACITY_TYPE  = local.capacity_type
+  })
+  depends_on = [module.karpenter]
 }
 
 
