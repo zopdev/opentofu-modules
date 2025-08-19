@@ -21,7 +21,6 @@ module "karpenter" {
   version = "20.37.2"
 
   cluster_name = local.cluster_name
-  region = var.app_region
 
   create_node_iam_role = true
   # Attach additional IAM policies to the Karpenter node IAM role
