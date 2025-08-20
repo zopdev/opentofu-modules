@@ -79,6 +79,12 @@ variable "tags" {
   type        = map(any)
 }
 
+variable "provisioner" {
+  description = "Provisioner being used to setup Infra"
+  type        = string
+  default     = "zop-dev"
+}
+
 variable "multi_az" {
   description = "Option to enable multi availability zone"
   type        = bool

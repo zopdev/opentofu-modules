@@ -73,3 +73,9 @@ variable "ecr_configs" {
   }))
   default = []
 }
+
+variable "provisioner" {
+  description = "Provisioner being used to setup Infra"
+  type        = string
+  default     = "zop-dev"
+}

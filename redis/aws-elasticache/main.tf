@@ -73,7 +73,9 @@ resource "aws_security_group" "redis_group" {
     ]
   }
 
-  tags = var.tags
+  tags = merge(var.tags, {
+    Provisioner = var.provisioner
+  })
 }
 
 # count specifies if `var.redis.num_node_groups` is greater than 1 it creates redis in cluster mode
@@ -93,7 +95,9 @@ resource "aws_elasticache_replication_group" "redis_cluster" {
   replicas_per_node_group       = var.redis.replicas_per_node_group
   num_node_groups               = var.redis.num_node_groups
 
-  tags = var.tags
+  tags = merge(var.tags, {
+    Provisioner = var.provisioner
+  })
   security_group_names          = []
 }
 
@@ -113,7 +117,9 @@ resource "aws_elasticache_replication_group" "redis" {
   parameter_group_name          = "default.redis6.x"
   port                          = 6379
   subnet_group_name             = aws_elasticache_subnet_group.redis_subnets.name
-  tags                          = var.tags
+  tags                          = merge(var.tags, {
+    Provisioner = var.provisioner
+  })
 
   security_group_names          = []
 }
@@ -121,7 +127,9 @@ resource "aws_elasticache_replication_group" "redis" {
 resource "aws_elasticache_subnet_group" "redis_subnets" {
   name       = var.redis.name != "" && var.redis.name != null ? "${local.cluster_name}-${var.namespace}-${var.redis.name}-cache-subnet" : "${local.cluster_name}-${var.namespace}-cache-subnet"
   subnet_ids = local.db_subnets_ids
-  tags       = var.tags
+  tags       = merge(var.tags, {
+    Provisioner = var.provisioner
+  })
 }
 
 resource "kubernetes_service" "redis_service" {

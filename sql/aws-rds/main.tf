@@ -69,6 +69,7 @@ resource "aws_db_subnet_group" "db_subnet" {
   tags = merge(var.tags,
   tomap({
     "Name" = var.rds_name
+    "Provisioner" = var.provisioner
   })
   )
 }
@@ -94,6 +95,7 @@ resource "aws_security_group" "rds" {
   tags = merge(var.tags,
   tomap({
     "Name" = var.rds_name
+    "Provisioner" = var.provisioner
   })
   )
 }
@@ -113,6 +115,7 @@ resource "aws_db_parameter_group" "db_param_group" {
   tags = merge(var.tags,
   tomap({
     "Name" = var.rds_name
+    "Provisioner" = var.provisioner
   })
   )
 }
@@ -143,6 +146,7 @@ resource "aws_db_instance" "db_instance" {
   tags = merge(var.tags,
   tomap({
     "Name" = var.rds_name
+    "Provisioner" = var.provisioner
   })
   )
 }
@@ -170,6 +174,7 @@ resource "aws_db_instance" "rds_read_replica" {
   tags = merge(var.tags,
   tomap({
     "Name" = "rds-read-replica-${var.rds_name}"
+    "Provisioner" = var.provisioner
   })
   )
 }

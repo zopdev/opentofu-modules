@@ -1,6 +1,11 @@
 resource "aws_route53_zone" "main" {
   for_each = var.zones
   name     = each.value.domain
+
+  tags = {
+    Name        = each.value.domain
+    Provisioner = var.provisioner
+  }
 }
 
 data "google_dns_managed_zone" "zone" {

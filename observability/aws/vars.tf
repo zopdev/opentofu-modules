@@ -3,6 +3,12 @@ variable "app_name" {
   type        = string
 }
 
+variable "provisioner" {
+  description = "Provisioner being used to setup Infra"
+  type        = string
+  default     = "zop-dev"
+}
+
 variable "app_env" {
   description = "Application deployment environment."
   type        = string

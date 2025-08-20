@@ -43,6 +43,8 @@ resource "aws_iam_policy" "service_policy" {
       }
     ]
   })
+
+  tags = local.common_tags
 }
 
 resource "aws_iam_user_policy_attachment" "service_policy_attachment" {
@@ -59,6 +61,8 @@ resource "aws_iam_access_key" "user_credentials" {
 resource "aws_secretsmanager_secret" "access_key_id" {
   for_each = var.services
   name = "${var.namespace}_${each.value.service_deployer}_ACCESS_KEY_ID"
+  
+  tags = local.common_tags
 }
 
 resource "aws_secretsmanager_secret_version" "access_key_id_version" {
@@ -69,6 +73,8 @@ resource "aws_secretsmanager_secret_version" "access_key_id_version" {
 resource "aws_secretsmanager_secret" "secret_access_key" {
   for_each = var.services
   name = "${var.namespace}_${each.value.service_deployer}_ACCESS_SECRET_KEY"
+  
+  tags = local.common_tags
 }
 
 resource "aws_secretsmanager_secret_version" "secret_access_key_version" {

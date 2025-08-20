@@ -4,3 +4,9 @@ variable "services" {
   type        = list(string)
   default     = []
 }
+
+variable "provisioner" {
+  description = "Provisioner being used to setup Infra"
+  type        = string
+  default     = "zop-dev"
+}

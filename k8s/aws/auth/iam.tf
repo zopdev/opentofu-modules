@@ -61,6 +61,11 @@ resource "aws_iam_role" "eks_cluster_admin" {
       }
     ]
   })
+
+  tags = {
+    Name        = aws_iam_policy.eks_cluster_admin.name
+    Provisioner = var.provisioner
+  }
 }
 
 resource "aws_iam_policy_attachment" "eks_cluster_admin" {
@@ -120,6 +125,11 @@ resource "aws_iam_role" "eks_cluster_editor" {
       }
     ]
   })
+
+  tags = {
+    Name        = aws_iam_policy.eks_cluster_editor.name
+    Provisioner = var.provisioner
+  }
 }
 
 resource "aws_iam_policy_attachment" "eks_cluster_editor" {
@@ -170,9 +180,14 @@ resource "aws_iam_role" "eks_cluster_viewer" {
           "Service": "eks.amazonaws.com"
         },
         "Action": "sts:AssumeRole"
-      }
-    ]
-  })
+        }
+      ]
+    })
+
+  tags = {
+    Name        = aws_iam_policy.eks_cluster_viewer.name
+    Provisioner = var.provisioner
+  }
 }
 
 resource "aws_iam_policy_attachment" "eks_cluster_viewer" {
