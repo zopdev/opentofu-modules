@@ -36,8 +36,7 @@ resource "helm_release" "karpenter" {
   count      = local.enable_karpenter ? 1 : 0
   name       = "karpenter-aws"
   namespace  = kubernetes_namespace.karpenter.metadata[0].name
-  chart      = "karpenter"
-  repository = "oci://public.ecr.aws/karpenter/karpenter"
+  chart      = "oci://public.ecr.aws/karpenter/karpenter"
   version    = "1.6.0"
 
   values = [
