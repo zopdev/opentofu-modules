@@ -3,6 +3,7 @@ settings:
   interruptionQueue: "${CLUSTER_NAME}"
 
 serviceAccount:
+  name: karpenter
   annotations:
     eks.amazonaws.com/role-arn: "arn:${AWS_PARTITION}:iam::${AWS_ACCOUNT_ID}:role/${CONTROLLER_ROLE}"
 
