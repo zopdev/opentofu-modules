@@ -14,10 +14,16 @@ spec:
           values: ["linux"]
         - key: karpenter.sh/capacity-type
           operator: In
-          values: ${CAPACITY_TYPE}
+          values:
+            %{~ for v in CAPACITY_TYPE ~}
+            - ${v}
+            %{~ endfor ~}
         - key: node.kubernetes.io/instance-type
           operator: In
-          values: ${INSTANCE_TYPES}
+          values:
+            %{~ for v in INSTANCE_TYPES ~}
+            - ${v}
+            %{~ endfor ~}
         - key: karpenter.k8s.aws/instance-generation
           operator: Gt
           values: ["2"]
