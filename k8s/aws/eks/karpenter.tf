@@ -32,8 +32,6 @@ module "karpenter" {
 
 data "aws_partition" "current" {}
 
-data "aws_caller_identity" "current" {}
-
 resource "helm_release" "karpenter" {
   count      = local.enable_karpenter ? 1 : 0
   name       = "karpenter-aws"
