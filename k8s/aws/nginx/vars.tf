@@ -25,3 +25,9 @@ variable "public_app" {
   type        = bool
   default     = false
 }
+
+variable "provisioner" {
+  description = "Provisioner being used to setup Infra"
+  type        = string
+  default     = "zop-dev"
+}

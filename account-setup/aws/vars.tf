@@ -13,3 +13,9 @@ variable "subnets" {
   description = "CIDR block for subnets"
   default     = {}
 }
+
+variable "provisioner" {
+  description = "Provisioner being used to setup Infra"
+  type        = string
+  default     = "zop-dev"
+}

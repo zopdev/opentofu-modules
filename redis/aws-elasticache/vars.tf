@@ -3,6 +3,12 @@ variable "tags" {
   type        = map(any)
 }
 
+variable "provisioner" {
+  description = "Provisioner being used to setup Infra"
+  type        = string
+  default     = "zop-dev"
+}
+
 variable "redis" {
   description = "Inputs to provision Redis instances in the cloud platform"
   type        = object({

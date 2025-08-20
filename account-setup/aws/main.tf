@@ -41,6 +41,7 @@ resource "aws_vpc" "vpc" {
   tags = {
     Name        = "${each.key}-vpc"
     Environment = each.key
+    Provisioner = var.provisioner
   }
 }
 
@@ -54,6 +55,7 @@ resource "aws_subnet" "public_subnets" {
   tags = {
     Name        = "${each.key}-public-subnet"
     Environment = "${each.key}"
+    Provisioner = var.provisioner
   }
   depends_on = [
     aws_vpc.vpc
@@ -70,6 +72,7 @@ resource "aws_subnet" "private_subnets" {
   tags = {
     Name        = "${each.key}-private-subnet"
     Environment = "${each.key}"
+    Provisioner = var.provisioner
   }
   depends_on = [
     aws_vpc.vpc
@@ -86,6 +89,7 @@ resource "aws_subnet" "db_subnets" {
   tags = {
     Name        = "${each.key}-db-subnet"
     Environment = "${each.key}"
+    Provisioner = var.provisioner
   }
   depends_on = [
     aws_vpc.vpc
@@ -98,6 +102,7 @@ resource "aws_internet_gateway" "internet_gw" {
 
   tags = {
     Name = "${each.key}-internet-gw"
+    Provisioner = var.provisioner
   }
 }
 
@@ -108,6 +113,7 @@ resource "aws_route_table" "public_route_table" {
 
   tags = {
     Name = "${each.key}-public_route_table"
+    Provisioner = var.provisioner
   }
 }
 
@@ -117,6 +123,7 @@ resource "aws_route_table" "private_route_table" {
 
   tags = {
     Name = "${each.key}-private_route_table"
+    Provisioner = var.provisioner
   }
 }
 
@@ -126,6 +133,7 @@ resource "aws_route_table" "db_route_table" {
 
   tags = {
     Name = "${each.key}-db_route_table"
+    Provisioner = var.provisioner
   }
 }
 
@@ -135,6 +143,7 @@ resource "aws_eip" "eip" {
   depends_on = [aws_internet_gateway.internet_gw]
   tags = {
     Name = "${each.key}-nat-gateway-eip"
+    Provisioner = var.provisioner
   }
 }
 
@@ -144,6 +153,7 @@ resource "aws_nat_gateway" "nat-gateway" {
   subnet_id     = aws_subnet.public_subnets[each.key].id
   tags = {
     Name = "${each.key}-nat-gateway-public"
+    Provisioner = var.provisioner
   }
 
   depends_on = [aws_eip.eip,aws_subnet.public_subnets,aws_internet_gateway.internet_gw]
