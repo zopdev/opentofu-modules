@@ -45,7 +45,7 @@ resource "helm_release" "karpenter" {
       CLUSTER_NAME = local.cluster_name
       AWS_PARTITION = data.aws_partition.current.partition
       AWS_ACCOUNT_ID = data.aws_caller_identity.current.account_id
-      CONTROLLER_ROLE = module.karpenter.iam_role_name
+      CONTROLLER_ROLE = module.karpenter[0].iam_role_name
     })
   ]
   depends_on = [module.karpenter]
