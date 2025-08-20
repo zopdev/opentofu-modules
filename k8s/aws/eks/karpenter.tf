@@ -30,6 +30,28 @@ module "karpenter" {
   namespace       = kubernetes_namespace.karpenter.metadata[0].name
 }
 
+data "aws_partition" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+resource "helm_release" "karpenter" {
+  count      = local.enable_karpenter ? 1 : 0
+  name       = "karpenter-aws"
+  namespace  = kubernetes_namespace.karpenter.metadata[0].name
+  chart      = "karpenter"
+  repository = "oci://public.ecr.aws/karpenter/karpenter"
+  version    = "1.6.0"
+
+  values = [
+    templatefile("./templates/karpenter-values.yaml", {
+      CLUSTER_NAME = local.cluster_name
+      AWS_PARTITION = data.aws_partition.current.partition
+      AWS_ACCOUNT_ID = data.aws_caller_identity.current.account_id
+      CONTROLLER_ROLE = module.karpenter.iam_role_name
+    })
+  ]
+  depends_on = [module.karpenter]
+}
 #-------------------
 # nodeclass & nodepool
 
@@ -39,7 +61,7 @@ resource "kubectl_manifest" "karpenter_nodeclass" {
     CLUSTER_NAME = local.cluster_name
     NODE_ROLE    = module.karpenter[0].node_iam_role_name
   })
-  depends_on = [module.karpenter]
+  depends_on = [helm_release.karpenter]
 }
 
 resource "kubectl_manifest" "karpenter_nodepool" {
@@ -48,7 +70,7 @@ resource "kubectl_manifest" "karpenter_nodepool" {
     INSTANCE_TYPES = local.instance_type
     CAPACITY_TYPE  = local.capacity_type
   })
-  depends_on = [module.karpenter]
+  depends_on = [helm_release.karpenter]
 }
 
 

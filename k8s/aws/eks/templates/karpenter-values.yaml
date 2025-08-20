@@ -1,0 +1,16 @@
+settings:
+  clusterName: "${CLUSTER_NAME}"
+  interruptionQueue: "${CLUSTER_NAME}"
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:${AWS_PARTITION}:iam::${AWS_ACCOUNT_ID}:role/${CONTROLLER_ROLE}"
+
+controller:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 500Mi
+    limits:
+      cpu: 1500m
+      memory: 1500Mi
