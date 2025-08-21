@@ -1,5 +1,4 @@
 locals{
-  worker_sg_ids = module.eks.node_security_group_id
   instance_type = length(var.karpenter_configs.machine_types) > 0 ? var.karpenter_configs.machine_types : ["t3.medium", "t3.large"]
   capacity_type = length(var.karpenter_configs.capacity_types) > 0 ? var.karpenter_configs.capacity_types : ["on-demand"]
   enable_karpenter = var.karpenter_configs.enable != null ? var.karpenter_configs.enable : false
@@ -41,7 +40,7 @@ resource "aws_ec2_tag" "private_subnet_tags" {
 resource "aws_ec2_tag" "karpenter_sg_tag" {
   count = local.enable_karpenter ? 1 : 0
 
-  resource_id = local.worker_sg_ids
+  resource_id = module.eks.cluster_security_group_id
   key         = "karpenter.sh/discovery"
   value       = local.cluster_name
 }
@@ -71,7 +70,7 @@ resource "kubectl_manifest" "karpenter_nodeclass" {
   count     = local.enable_karpenter ? 1 : 0
   yaml_body = templatefile("./templates/karpenter-ec2-nodeclass.yaml", {
     CLUSTER_NAME = local.cluster_name
-    NODE_ROLE    = module.karpenter[0].instance_profile_name
+    NODE_ROLE    = module.karpenter[0].node_iam_role_arn
   })
   depends_on = [helm_release.karpenter]
 }
