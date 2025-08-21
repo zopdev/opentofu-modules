@@ -31,9 +31,8 @@ module "karpenter" {
 }
 
 resource "aws_ec2_tag" "private_subnet_tags" {
-  for_each = local.enable_karpenter ? toset(local.private_subnet_ids) : {}
-
-  resource_id = each.value
+  count       = local.enable_karpenter ? length(local.private_subnet_ids) : 0
+  resource_id = local.private_subnet_ids[count.index]
   key         = "karpenter.sh/discovery"
   value       = local.cluster_name
 }
