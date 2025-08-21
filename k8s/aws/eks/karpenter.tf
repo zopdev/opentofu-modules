@@ -1,4 +1,5 @@
 locals{
+  worker_sg_ids = module.eks.node_security_group_id
   instance_type = length(var.karpenter_configs.machine_types) > 0 ? var.karpenter_configs.machine_types : ["t3.medium", "t3.large"]
   capacity_type = length(var.karpenter_configs.capacity_types) > 0 ? var.karpenter_configs.capacity_types : ["on-demand"]
   enable_karpenter = var.karpenter_configs.enable != null ? var.karpenter_configs.enable : false
@@ -33,6 +34,14 @@ module "karpenter" {
 resource "aws_ec2_tag" "private_subnet_tags" {
   count       = local.enable_karpenter ? length(local.private_subnet_ids) : 0
   resource_id = local.private_subnet_ids[count.index]
+  key         = "karpenter.sh/discovery"
+  value       = local.cluster_name
+}
+
+resource "aws_ec2_tag" "karpenter_sg_tags" {
+  count = local.enable_karpenter ? length(local.worker_sg_ids) : 0
+
+  resource_id = local.worker_sg_ids[count.index]
   key         = "karpenter.sh/discovery"
   value       = local.cluster_name
 }
