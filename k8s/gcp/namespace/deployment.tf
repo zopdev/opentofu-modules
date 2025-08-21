@@ -35,7 +35,10 @@ resource "null_resource" "run_deployment_script" {
   provisioner "local-exec" {
     command = "./templates/deployment-image"
     environment = {
-      namespace = "fail-test-namespace"
+      namespace = kubernetes_namespace.app_environments.metadata[0].name
+      provider_id = var.provider_id
+      cluster_name = local.cluster_name
+      region = var.app_region
     }
   }
 }
