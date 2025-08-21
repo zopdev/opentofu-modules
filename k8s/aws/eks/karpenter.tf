@@ -82,7 +82,7 @@ resource "kubectl_manifest" "karpenter_nodepool" {
     INSTANCE_TYPES = local.instance_type
     CAPACITY_TYPE  = local.capacity_type
   })
-  depends_on = [helm_release.karpenter]
+  depends_on = [helm_release.karpenter , kubectl_manifest.karpenter_nodeclass]
 }
 
 
