@@ -4,8 +4,7 @@ metadata:
   name: default
 spec:
   role: "${NODE_ROLE}"
-  amiSelectorTerms:
-    - alias: "al2023@latest"
+  amiFamily: AL2
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: "${CLUSTER_NAME}"
