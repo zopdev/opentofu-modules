@@ -30,7 +30,13 @@ module "karpenter" {
   namespace       = kubernetes_namespace.karpenter.metadata[0].name
 }
 
-data "aws_partition" "current" {}
+resource "aws_ec2_tag" "private_subnet_tags" {
+  for_each = local.enable_karpenter ? toset(local.private_subnet_ids) : {}
+
+  resource_id = each.value
+  key         = "karpenter.sh/discovery"
+  value       = local.cluster_name
+}
 
 resource "helm_release" "karpenter" {
   count      = local.enable_karpenter ? 1 : 0
