@@ -26,7 +26,7 @@ module "karpenter" {
     AmazonEKS_CNI_Policy = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
     AmazonEC2ContainerRegistryPullOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
   }
-
+  create_instance_profile = true
   create_iam_role = true
   namespace       = kubernetes_namespace.karpenter.metadata[0].name
 }
