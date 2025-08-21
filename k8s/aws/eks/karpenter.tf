@@ -43,8 +43,8 @@ resource "helm_release" "karpenter" {
     templatefile("./templates/karpenter-values.yaml", {
       CLUSTER_NAME     = local.cluster_name
       CLUSTER_ENDPOINT = module.eks.cluster_endpoint
-      QUEUE_NAME = module.karpenter.queue_name
-      SA_NAME    = module.karpenter.service_account
+      QUEUE_NAME = module.karpenter[0].queue_name
+      SA_NAME    = module.karpenter[0].service_account
     })
   ]
   depends_on = [module.karpenter]
