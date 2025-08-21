@@ -1,11 +1,10 @@
 settings:
   clusterName: "${CLUSTER_NAME}"
-  interruptionQueue: "${CLUSTER_NAME}"
+  clusterEndpoint: "${CLUSTER_ENDPOINT}"
+  interruptionQueue: "${QUEUE_NAME}"
 
 serviceAccount:
-  name: karpenter
-  annotations:
-    eks.amazonaws.com/role-arn: "arn:${AWS_PARTITION}:iam::${AWS_ACCOUNT_ID}:role/${CONTROLLER_ROLE}"
+  name: ${SA_NAME}
 
 controller:
   resources:

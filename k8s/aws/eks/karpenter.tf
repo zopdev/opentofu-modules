@@ -41,10 +41,10 @@ resource "helm_release" "karpenter" {
 
   values = [
     templatefile("./templates/karpenter-values.yaml", {
-      CLUSTER_NAME = local.cluster_name
-      AWS_PARTITION = data.aws_partition.current.partition
-      AWS_ACCOUNT_ID = data.aws_caller_identity.current.account_id
-      CONTROLLER_ROLE = module.karpenter[0].iam_role_name
+      CLUSTER_NAME     = local.cluster_name
+      CLUSTER_ENDPOINT = module.eks.cluster_endpoint
+      QUEUE_NAME = module.karpenter.queue_name
+      SA_NAME    = module.karpenter.service_account
     })
   ]
   depends_on = [module.karpenter]
