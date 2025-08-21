@@ -32,20 +32,11 @@ module "karpenter" {
 
 data "aws_partition" "current" {}
 
-provider "aws"{
-  region = "us-east-1"
-  alias  = "virginia"
-}
-data "aws_ecrpublic_authorization_token" "token"{
-  provider = aws.virginia
-}
 resource "helm_release" "karpenter" {
   count      = local.enable_karpenter ? 1 : 0
   name       = "karpenter-aws"
   namespace  = kubernetes_namespace.karpenter.metadata[0].name
   chart      = "oci://public.ecr.aws/karpenter/karpenter"
-  repository_username = data.aws_ecrpublic_authorization_token.token.user_name
-  repository_password = data.aws_ecrpublic_authorization_token.token.password
   version    = "1.6.0"
 
   values = [
