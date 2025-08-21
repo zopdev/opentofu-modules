@@ -59,6 +59,7 @@ resource "helm_release" "karpenter" {
       CLUSTER_ENDPOINT = module.eks.cluster_endpoint
       QUEUE_NAME = module.karpenter[0].queue_name
       SA_NAME    = module.karpenter[0].service_account
+      CONTROLLER_ROLE_ARN = module.karpenter[0].iam_role_arn
     })
   ]
   depends_on = [module.karpenter]

@@ -5,6 +5,8 @@ settings:
 
 serviceAccount:
   name: ${SA_NAME}
+  annotations:
+    eks.amazonaws.com/role-arn: "${CONTROLLER_ROLE_ARN}"
 
 controller:
   resources:
