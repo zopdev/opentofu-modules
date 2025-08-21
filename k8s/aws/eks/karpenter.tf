@@ -38,13 +38,14 @@ resource "aws_ec2_tag" "private_subnet_tags" {
   value       = local.cluster_name
 }
 
-resource "aws_ec2_tag" "karpenter_sg_tags" {
-  count = local.enable_karpenter ? length(local.worker_sg_ids) : 0
+resource "aws_ec2_tag" "karpenter_sg_tag" {
+  count = local.enable_karpenter ? 1 : 0
 
-  resource_id = local.worker_sg_ids[count.index]
+  resource_id = local.worker_sg_ids
   key         = "karpenter.sh/discovery"
   value       = local.cluster_name
 }
+
 
 resource "helm_release" "karpenter" {
   count      = local.enable_karpenter ? 1 : 0
