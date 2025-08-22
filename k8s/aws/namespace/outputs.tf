@@ -95,3 +95,15 @@ output "custom_secrets_name_list" {
   })
 }
 
+
+output "namespace_user_access_keys" {
+  description = "AWS access keys for namespace users"
+  value = tomap({
+    for service, user in aws_iam_user.namespace_users :
+    "${service}-${var.namespace}-user" => {
+      access_key_id     = aws_iam_access_key.namespace_user_keys[service].id
+      secret_access_key = aws_iam_access_key.namespace_user_keys[service].secret
+    }
+  })
+  sensitive = true
+}
