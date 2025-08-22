@@ -27,6 +27,8 @@ module "karpenter" {
   }
   create_instance_profile = true
   create_iam_role = true
+  enable_irsa = true
+  irsa_oidc_provider_arn = module.eks.oidc_provider_arn
   namespace       = kubernetes_namespace.karpenter.metadata[0].name
 }
 
