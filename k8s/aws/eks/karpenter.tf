@@ -8,6 +8,7 @@ resource "kubernetes_namespace" "karpenter" {
   metadata {
     name = "karpenter"
   }
+  depends_on = [module.eks]
 }
 
 module "karpenter" {
@@ -29,7 +30,8 @@ module "karpenter" {
   create_iam_role = true
   enable_irsa = true
   irsa_oidc_provider_arn = module.eks.oidc_provider_arn
-  namespace       = kubernetes_namespace.karpenter.metadata[0].name
+  namespace       = "karpenter"
+  depends_on = [module.eks ]
 }
 
 resource "aws_ec2_tag" "private_subnet_tags" {
@@ -64,7 +66,7 @@ resource "helm_release" "karpenter" {
       CONTROLLER_ROLE_ARN = module.karpenter[0].iam_role_arn
     })
   ]
-  depends_on = [module.karpenter]
+  depends_on = [kubernetes_namespace.karpenter, module.karpenter]
 }
 #-------------------
 # nodeclass & nodepool
