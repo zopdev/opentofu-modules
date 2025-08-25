@@ -19,7 +19,8 @@ module "karpenter" {
 
   cluster_name = local.cluster_name
 
-  create_node_iam_role = true
+  create_node_iam_role = false
+  node_iam_role_arn = "arn:aws:iam::941614911918:role/KarpenterNodeRole-testing-karpenter"
   # Attach additional IAM policies to the Karpenter node IAM role
   node_iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
