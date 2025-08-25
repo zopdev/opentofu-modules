@@ -5,6 +5,7 @@ locals{
 }
 
 resource "kubernetes_namespace" "karpenter" {
+  count     = local.enable_karpenter ? 1 : 0
   metadata {
     name = "karpenter"
   }
@@ -65,7 +66,6 @@ resource "helm_release" "karpenter" {
       CONTROLLER_ROLE_ARN = module.karpenter[0].iam_role_arn
     })
   ]
-  depends_on = [kubernetes_namespace.karpenter, module.karpenter]
 }
 #-------------------
 # nodeclass & nodepool
