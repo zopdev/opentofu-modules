@@ -147,8 +147,3 @@ output "grafana_datasources" {
 output "lbip" {
   value = data.kubernetes_service.ingress-controller.status.0.load_balancer.0.ingress.0.hostname
 }
-
-output "karpenter_node_role_arn" {
-  description = "The ARN of the IAM role for Karpenter nodes."
-  value       = module.karpenter.node_iam_role_arn
-}
