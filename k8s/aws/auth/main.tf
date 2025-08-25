@@ -27,6 +27,11 @@ module "aws_auth" {
       rolearn  = aws_iam_role.eks_cluster_editor.arn
       username = aws_iam_role.eks_cluster_editor.name
       groups   = ["cluster-editor"]
+    },
+    {
+      rolearn  = aws_iam_role.karpenter_node_role.arn
+      username = "system:node:{{EC2PrivateDNSName}}"
+      groups   = ["system:bootstrappers", "system:nodes"]
     }
   ]
 
