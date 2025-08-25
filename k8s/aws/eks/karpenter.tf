@@ -31,7 +31,6 @@ module "karpenter" {
   enable_irsa = true
   irsa_oidc_provider_arn = module.eks.oidc_provider_arn
   namespace       = "karpenter"
-  depends_on = [module.eks ]
 }
 
 resource "aws_ec2_tag" "private_subnet_tags" {
