@@ -30,8 +30,6 @@ module "karpenter" {
   create_iam_role = true
   enable_irsa = true
   irsa_oidc_provider_arn = module.eks.oidc_provider_arn
-  enable_pod_identity = true
-  create_pod_identity_association = true
   namespace       = "karpenter"
   depends_on = [module.eks ]
 }
