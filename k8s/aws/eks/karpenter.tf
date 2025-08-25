@@ -53,7 +53,7 @@ resource "aws_ec2_tag" "karpenter_sg_tag" {
 resource "helm_release" "karpenter" {
   count      = local.enable_karpenter ? 1 : 0
   name       = "karpenter-aws"
-  namespace  = kubernetes_namespace.karpenter.metadata[0].name
+  namespace  = kubernetes_namespace.karpenter[0].metadata[0].name
   chart      = "oci://public.ecr.aws/karpenter/karpenter"
   version    = "1.6.0"
 
