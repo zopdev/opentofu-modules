@@ -19,8 +19,8 @@ module "karpenter" {
 
   cluster_name = local.cluster_name
 
-  create_node_iam_role = false
-  node_iam_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/KarpenterNodeRole-${local.cluster_name}"
+  create_node_iam_role = true
+
   # Attach additional IAM policies to the Karpenter node IAM role
   node_iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -75,7 +75,7 @@ resource "kubectl_manifest" "karpenter_nodeclass" {
   count     = local.enable_karpenter ? 1 : 0
   yaml_body = templatefile("./templates/karpenter-ec2-nodeclass.yaml", {
     CLUSTER_NAME = local.cluster_name
-    NODE_ROLE    = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/KarpenterNodeRole-${local.cluster_name}"
+    NODE_ROLE    = module.karpenter[0].node_iam_role_arn
   })
   depends_on = [helm_release.karpenter]
 }
