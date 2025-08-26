@@ -75,7 +75,7 @@ resource "kubectl_manifest" "karpenter_nodeclass" {
   count     = local.enable_karpenter ? 1 : 0
   yaml_body = templatefile("./templates/karpenter-ec2-nodeclass.yaml", {
     CLUSTER_NAME = local.cluster_name
-    NODE_ROLE    = module.karpenter[0].node_iam_role_arn
+    NODE_ROLE    = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/KarpenterNodeRole-${local.cluster_name}"
   })
   depends_on = [helm_release.karpenter]
 }
