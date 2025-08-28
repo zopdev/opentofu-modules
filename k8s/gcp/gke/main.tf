@@ -51,7 +51,7 @@ module "gke" {
   project_id                  = var.provider_id
   network_project_id          = var.provider_id
   name                        = local.cluster_name
-  kubernetes_version          = "1.32"
+  kubernetes_version          = "1.33"
   regional                    = true
   zones                       = try(var.node_config.availability_zones, [])
   region                      = var.app_region
