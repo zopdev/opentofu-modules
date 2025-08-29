@@ -99,7 +99,8 @@ module "eks" {
   })
   )
 
-  cluster_security_group_tags = local.enable_karpenter ? {
+  cluster_tags = local.enable_karpenter ? {
     "karpenter.sh/discovery" = local.cluster_name
   } : {}
+
 }
