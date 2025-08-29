@@ -46,15 +46,6 @@ resource "aws_ec2_tag" "private_subnet_tags" {
   value       = local.cluster_name
 }
 
-resource "aws_ec2_tag" "karpenter_sg_tag" {
-  count = local.enable_karpenter ? 1 : 0
-
-  resource_id = data.aws_security_group.eks_cluster_sg.id
-  key         = "karpenter.sh/discovery"
-  value       = local.cluster_name
-}
-
-
 resource "helm_release" "karpenter" {
   count      = local.enable_karpenter ? 1 : 0
   name       = "karpenter-aws"
