@@ -23,7 +23,7 @@ module "oke" {
 
   compartment_id       = var.provider_id
   cluster_name         = local.cluster_name
-  kubernetes_version   = "v1.32.1"
+  kubernetes_version   = "v1.33.1"
 
   create_vcn                            = false
   vcn_id                                = data.oci_core_vcn.vcn.id
