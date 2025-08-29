@@ -52,7 +52,7 @@ module "oke" {
       memory             = var.node_config.memory, 
       size               = var.node_config.size,
       boot_volume_size   = var.node_config.boot_volume_size,
-      kubernetes_version = "v1.32.1"
+      kubernetes_version = "v1.33.1"
     }
   }
 

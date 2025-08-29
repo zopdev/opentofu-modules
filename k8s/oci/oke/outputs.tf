@@ -29,7 +29,7 @@ output "location" {
 }
 
 output "k8s_version" {
-  value = "1.32.1"
+  value = "1.33.1"
 }
 
 output "node_configs" {
