@@ -82,6 +82,10 @@ resource "kubectl_manifest" "karpenter_nodepool" {
     CAPACITY_TYPE  = local.capacity_type
   })
   depends_on = [helm_release.karpenter , kubectl_manifest.karpenter_nodeclass]
+  lifecycle {
+    ignore_changes  = all
+    prevent_destroy = false
+  }
 }
 
 
