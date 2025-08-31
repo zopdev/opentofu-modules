@@ -4,16 +4,11 @@ locals{
   enable_karpenter = var.karpenter_configs.enable != null ? var.karpenter_configs.enable : false
 }
 
-data "aws_security_group" "eks_cluster_sg" {
-  id = module.eks.cluster_security_group_id
-}
-
 resource "kubernetes_namespace" "karpenter" {
   count     = local.enable_karpenter ? 1 : 0
   metadata {
     name = "karpenter"
   }
-  depends_on = [module.eks]
 }
 
 module "karpenter" {
@@ -46,6 +41,12 @@ resource "aws_ec2_tag" "private_subnet_tags" {
   value       = local.cluster_name
 }
 
+resource "aws_ec2_tag" "cluster_security_group_karpenter" {
+  count       = local.enable_karpenter ? 1 : 0
+  resource_id = module.eks.cluster_primary_security_group_id
+  key         = "karpenter.sh/discovery"
+  value       = local.cluster_name
+}
 resource "helm_release" "karpenter" {
   count      = local.enable_karpenter ? 1 : 0
   name       = "karpenter-aws"
