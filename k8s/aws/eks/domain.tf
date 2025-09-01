@@ -1,5 +1,5 @@
 locals {
-  domain_name = try(var.accessibility.domain_name != null ? var.accessibility.domain_name  : "", "")
+  domain_name = try(var.accessibility.domain_name != null ? var.accessibility.domain_name : "", "")
 }
 
 data "aws_route53_zone" "zone" {

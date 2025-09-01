@@ -1,23 +1,23 @@
 locals {
-  cluster_name       = var.app_env == "" ? var.app_name : "${var.app_name}-${var.app_env}"
-  node_port          = 32443 # Node port which will be used by LB for exposure
-  inbound_ip         = concat(["10.0.0.0/8"], var.custom_inbound_ip_range)
+  cluster_name = var.app_env == "" ? var.app_name : "${var.app_name}-${var.app_env}"
+  node_port    = 32443 # Node port which will be used by LB for exposure
+  inbound_ip   = concat(["10.0.0.0/8"], var.custom_inbound_ip_range)
 
   cluster_name_parts = split("-", local.cluster_name)
   environment        = var.app_env == "" ? element(local.cluster_name_parts, length(local.cluster_name_parts) - 1) : var.app_env
   namespaces         = [for namespace in var.namespace_folder_list : split("/", namespace)[0]]
-  common_tags        = merge(var.common_tags,
+  common_tags = merge(var.common_tags,
     tomap({
-      project     = try(var.standard_tags.project != null ? var.standard_tags.project : local.cluster_name ,local.cluster_name)
+      project     = try(var.standard_tags.project != null ? var.standard_tags.project : local.cluster_name, local.cluster_name)
       provisioner = try(var.standard_tags.provisioner != null ? var.standard_tags.provisioner : "zop-dev", "zop-dev")
-    }))
+  }))
 
-  namespace_users   = flatten([
-    for key, value in var.app_namespaces:[
+  namespace_users = flatten([
+    for key, value in var.app_namespaces : [
       for user in concat(value.admins, value.editors, value.viewers) :
       {
-        namespace   = key
-        name        = user
+        namespace = key
+        name      = user
       }
     ]
   ])
@@ -41,20 +41,20 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "21.0.0"
 
-  cluster_name    = local.cluster_name
-  cluster_version = "1.33"
+  name               = local.cluster_name
+  kubernetes_version = "1.33"
 
-  enable_irsa              = true
-  vpc_id                   = local.vpc_id
-  subnet_ids               = local.private_subnet_ids
-  control_plane_subnet_ids = local.private_subnet_ids
+  enable_irsa                              = true
+  vpc_id                                   = local.vpc_id
+  subnet_ids                               = local.private_subnet_ids
+  control_plane_subnet_ids                 = local.private_subnet_ids
   enable_cluster_creator_admin_permissions = true
 
   # Enable Control Plane Logging
-  cluster_enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+  enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
   # Enable cluster secrets encryption
-  cluster_encryption_config = {
+  encryption_config = {
     provider_key_arn = aws_kms_key.eks.arn
     resources        = ["secrets"]
   }
@@ -65,8 +65,8 @@ module "eks" {
 
   self_managed_node_group_defaults = {
     autoscaling_group_tags = {
-      "k8s.io/cluster-autoscaler/enabled"                = true,
-      "k8s.io/cluster-autoscaler/${local.cluster_name}"  = "owned",
+      "k8s.io/cluster-autoscaler/enabled"               = true,
+      "k8s.io/cluster-autoscaler/${local.cluster_name}" = "owned",
     }
   }
 
@@ -87,8 +87,8 @@ module "eks" {
           kind: NodeConfig
           cluster:
             name: ${local.cluster_name}
-            apiServerEndpoint: ${module.eks.cluster_endpoint}
-            certificateAuthority: ${module.eks.cluster_certificate_authority_data}
+            apiServerEndpoint: ${module.eks.endpoint}
+            certificateAuthority: ${module.eks.certificate_authority_data}
           kubelet:
             config:
               clusterDNS: [10.100.0.10]
