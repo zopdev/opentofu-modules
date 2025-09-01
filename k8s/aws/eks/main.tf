@@ -85,8 +85,8 @@ module "eks" {
           kind: NodeConfig
           cluster:
             name: ${local.cluster_name}
-            apiServerEndpoint: ${module.eks.endpoint}
-            certificateAuthority: ${module.eks.certificate_authority_data}
+            apiServerEndpoint: ${module.eks.cluster_endpoint}
+            certificateAuthority: ${module.eks.cluster_certificate_authority_data}
           kubelet:
             config:
               clusterDNS: [10.100.0.10]

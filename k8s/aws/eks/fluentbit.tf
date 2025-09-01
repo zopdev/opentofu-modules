@@ -79,7 +79,7 @@ resource "aws_iam_policy" "fluent_bit_policy" {
 
 resource "aws_iam_role_policy_attachment" "AmazonEKSCloudWatchLogsPolicy" {
   policy_arn = aws_iam_policy.fluent_bit_policy.arn
-  role       = module.eks.iam_role_name
+  role       = module.eks.cluster_iam_role_name
 }
 
 data "aws_iam_policy_document" "fluent_bit_policy" {

@@ -43,7 +43,7 @@ resource "aws_ec2_tag" "private_subnet_tags" {
 
 resource "aws_ec2_tag" "cluster_security_group_karpenter" {
   count       = local.enable_karpenter ? 1 : 0
-  resource_id = module.eks.primary_security_group_id
+  resource_id = module.eks.cluster_primary_security_group_id
   key         = "karpenter.sh/discovery"
   value       = local.cluster_name
 }
@@ -57,7 +57,7 @@ resource "helm_release" "karpenter" {
   values = [
     templatefile("./templates/karpenter-values.yaml", {
       CLUSTER_NAME        = local.cluster_name
-      CLUSTER_ENDPOINT    = module.eks.endpoint
+      CLUSTER_ENDPOINT    = module.eks.cluster_endpoint
       QUEUE_NAME          = module.karpenter[0].queue_name
       SA_NAME             = module.karpenter[0].service_account
       CONTROLLER_ROLE_ARN = module.karpenter[0].iam_role_arn
