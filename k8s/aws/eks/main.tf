@@ -105,8 +105,6 @@ module "eks" {
   tags = merge(local.common_tags, {
     "Name" = local.cluster_name
   })
-  )
-
 }
 
 # -------------------------------------------------------------------
