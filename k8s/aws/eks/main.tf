@@ -60,15 +60,8 @@ module "eks" {
   }
 
   # Endpoint access
-  cluster_endpoint_private_access = false
-  cluster_endpoint_public_access  = true
-
-  self_managed_node_group_defaults = {
-    autoscaling_group_tags = {
-      "k8s.io/cluster-autoscaler/enabled"               = true,
-      "k8s.io/cluster-autoscaler/${local.cluster_name}" = "owned",
-    }
-  }
+  endpoint_private_access = false
+  endpoint_public_access  = true
 
   self_managed_node_groups = {
     "${local.cluster_name}" = {
@@ -77,6 +70,11 @@ module "eks" {
       desired_size  = var.node_config.min_count
       min_size      = var.node_config.min_count
       max_size      = var.node_config.max_count
+
+      autoscaling_group_tags = {
+        "k8s.io/cluster-autoscaler/enabled"               = true,
+        "k8s.io/cluster-autoscaler/${local.cluster_name}" = "owned",
+      }
 
       # AL2023 does not use bootstrap.sh — must provide nodeadm config
       user_data = base64encode(<<-EOT
