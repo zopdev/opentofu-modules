@@ -232,18 +232,6 @@ variable "kong_config" {
 #    }
 }
 
-variable "worker_ami_config" {
-  description = "Object of worker_ami_config inputs"
-  type        = object({
-    owner_id = string
-    name     = string
-  })
-  default = {
-    owner_id          = "amazon"
-    name              = "amazon-eks-node-1.32-v20250804"
-  }
-}
-
 variable "cluster_alert_thresholds" {
   description = "Cluster related configuration."
   type = object({
