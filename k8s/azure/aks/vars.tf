@@ -93,6 +93,12 @@ variable "node_config" {
   }
 }
 
+variable "kubernetes_version" {
+  description = "Kubernetes version for the AKS cluster"
+  type        = string
+  default     = "1.33.0"
+}
+
 variable "app_namespaces" {
   description = "List of envs and respective users who will have access to edit non system resources in this cluster"
   type                 = map(object({
