@@ -41,6 +41,12 @@ variable "public_ingress" {
   default     = false
 }
 
+variable "kubernetes_version" {
+  description = "Kubernetes version of the AKS Cluster"
+  type        = string
+  default     = "1.31.10"
+}
+
 variable "user_access" {
   description = "List of users who will have access to clusters"
   type = object({
