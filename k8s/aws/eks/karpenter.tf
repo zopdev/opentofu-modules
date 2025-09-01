@@ -20,17 +20,17 @@ module "karpenter" {
 
   create_node_iam_role          = true
   node_iam_role_use_name_prefix = false
-  # Attach additional IAM policies to the Karpenter node IAM role
+
   node_iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore       = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
     AmazonEKSWorkerNodePolicy          = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
     AmazonEKS_CNI_Policy               = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
     AmazonEC2ContainerRegistryPullOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
   }
+
   create_instance_profile = true
   create_iam_role         = true
-  enable_irsa             = true
-  irsa_oidc_provider_arn  = module.eks.oidc_provider_arn
+
   namespace               = "karpenter"
 }
 
