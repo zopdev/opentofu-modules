@@ -1,12 +1,12 @@
 # EKS Output Variables
 output "cluster_id" {
   description = "EKS cluster ID."
-  value       = module.eks.cluster_id
+  value       = module.eks.id
 }
 
 output "cluster_name" {
   description = "Kubernetes Cluster Name"
-  value       = module.eks.cluster_name
+  value       = module.eks.name
 }
 
 output "region" {
@@ -16,12 +16,12 @@ output "region" {
 
 output "cluster_arn" {
   description = "EKS cluster ID."
-  value       = module.eks.cluster_arn
+  value       = module.eks.arn
 }
 
 output "cluster_endpoint" {
   description = "Endpoint for EKS control plane."
-  value       = module.eks.cluster_endpoint
+  value       = module.eks.endpoint
 }
 
 
@@ -43,24 +43,24 @@ output "node_configs" {
 
 output "cluster_security_group_id" {
   description = "Security group ids attached to the cluster control plane."
-  value       = module.eks.cluster_security_group_id
+  value       = module.eks.security_group_id
 }
 
-output "k8s_token"{
+output "k8s_token" {
   value     = data.aws_eks_cluster_auth.cluster.token
   sensitive = true
 }
 
 output "k8s_ca" {
-  value = module.eks.cluster_certificate_authority_data
+  value = module.eks.certificate_authority_data
 }
 
-output "oidc_role"{
-  value  = module.iam_assumable_role_admin.this_iam_role_arn
+output "oidc_role" {
+  value = module.iam_assumable_role_admin.this_iam_role_arn
 }
 
 output "oidc_issuer_url" {
-  value = module.eks.cluster_oidc_issuer_url
+  value = module.eks.oidc_issuer_url
 }
 
 output "kafka_host" {
@@ -107,11 +107,11 @@ output "public_subnets_id" {
 }
 
 output "mimir_host_url" {
-  value = try(module.observability[0].mimir_host_url,"")
+  value = try(module.observability[0].mimir_host_url, "")
 }
 
 output "loki_host_url" {
-  value = try(module.observability[0].loki_host_url,"")
+  value = try(module.observability[0].loki_host_url, "")
 }
 
 output "cluster_uid" {
@@ -119,16 +119,16 @@ output "cluster_uid" {
 }
 
 output "tempo_host_url" {
-  value =try( module.observability[0].tempo_host_url,"")
+  value = try(module.observability[0].tempo_host_url, "")
 }
 
 output "cortex_host_url" {
-  value = try(module.observability[0].cortex_host_url,"")
+  value = try(module.observability[0].cortex_host_url, "")
 }
 
 output "grafana_password" {
   sensitive = true
-  value = try(random_password.observability_admin[0].result,"")
+  value     = try(random_password.observability_admin[0].result, "")
 }
 
 output "grafana_admin" {
@@ -136,11 +136,11 @@ output "grafana_admin" {
 }
 
 output "grafana_host" {
-  value = try(local.grafana_host,"")
+  value = try(local.grafana_host, "")
 }
 
 output "grafana_datasources" {
-  value = local.grafana_datasource_list
+  value     = local.grafana_datasource_list
   sensitive = true
 }
 

@@ -1,6 +1,6 @@
 data "aws_eks_addon_version" "this" {
   addon_name         = "aws-ebs-csi-driver"
-  kubernetes_version = module.eks.cluster_version
+  kubernetes_version = module.eks.version
   most_recent        = true
 }
 
@@ -8,21 +8,21 @@ resource "aws_eks_addon" "aws_ebs_csi_driver" {
   cluster_name             = local.cluster_name
   addon_name               = "aws-ebs-csi-driver"
   addon_version            = data.aws_eks_addon_version.this.version
-  resolve_conflicts        =  "OVERWRITE"
+  resolve_conflicts        = "OVERWRITE"
   service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
   preserve                 = true
 
   tags = merge(local.common_tags,
     tomap({
       "ebs.csi.aws.com/cluster" = "true"
-      "CSIVolumeName" =  "gp3"
-    }))
+      "CSIVolumeName"           = "gp3"
+  }))
 
   depends_on = [module.ebs_csi_irsa_role]
 }
 
 module "ebs_csi_irsa_role" {
-  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "v5.60.0"
 
   role_name             = "${local.cluster_name}-ebs-csi"
@@ -55,8 +55,8 @@ resource "kubernetes_storage_class" "gp3_default" {
   allow_volume_expansion = true
 
   parameters = {
-    type       = "gp3"
-    fsType     = "ext4"  
+    type   = "gp3"
+    fsType = "ext4"
   }
 
   depends_on = [time_sleep.wait_for_ebs]

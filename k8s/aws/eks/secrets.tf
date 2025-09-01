@@ -12,7 +12,7 @@ resource "helm_release" "csi_driver" {
   }
   set {
     name  = "enableSecretRotation"
-    value = "true"       # enable auto-rotation feature
+    value = "true" # enable auto-rotation feature
   }
 
   depends_on = [null_resource.wait_for_cluster]
@@ -24,7 +24,7 @@ locals {
 
 # AWS Secrets driver manifest
 resource "kubectl_manifest" "aws_secrets_driver" {
-  for_each  = { for key, id in local.aws_secrets_driver_yaml : key => id }
-  yaml_body = each.value
+  for_each   = { for key, id in local.aws_secrets_driver_yaml : key => id }
+  yaml_body  = each.value
   depends_on = [module.eks]
 }

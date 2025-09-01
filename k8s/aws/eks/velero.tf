@@ -26,8 +26,8 @@ resource "aws_iam_user_policy" "velero" {
         Resource = "arn:aws:s3:::*/*"
       },
       {
-        Effect = "Allow",
-        Action = ["s3:ListBucket"],
+        Effect   = "Allow",
+        Action   = ["s3:ListBucket"],
         Resource = "arn:aws:s3:::*"
       },
       {

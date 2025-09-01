@@ -1,6 +1,6 @@
 data "template_file" "reloader_template" {
   template = file("${path.module}/templates/reloader-values.yaml")
-  vars     = {
+  vars = {
   }
 }
 
