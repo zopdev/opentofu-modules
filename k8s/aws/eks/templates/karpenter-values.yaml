@@ -1,0 +1,18 @@
+settings:
+  clusterName: "${CLUSTER_NAME}"
+  clusterEndpoint: "${CLUSTER_ENDPOINT}"
+  interruptionQueue: "${QUEUE_NAME}"
+
+serviceAccount:
+  name: ${SA_NAME}
+  annotations:
+    eks.amazonaws.com/role-arn: "${CONTROLLER_ROLE_ARN}"
+
+controller:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 500Mi
+    limits:
+      cpu: 1500m
+      memory: 1500Mi
