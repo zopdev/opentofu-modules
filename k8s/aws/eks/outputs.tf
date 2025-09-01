@@ -1,12 +1,12 @@
 # EKS Output Variables
 output "cluster_id" {
   description = "EKS cluster ID."
-  value       = module.eks.id
+  value       = module.eks.cluster_id
 }
 
 output "cluster_name" {
   description = "Kubernetes Cluster Name"
-  value       = module.eks.name
+  value       = module.eks.cluster_name
 }
 
 output "region" {
@@ -16,12 +16,12 @@ output "region" {
 
 output "cluster_arn" {
   description = "EKS cluster ID."
-  value       = module.eks.arn
+  value       = module.eks.cluster_arn
 }
 
 output "cluster_endpoint" {
   description = "Endpoint for EKS control plane."
-  value       = module.eks.endpoint
+  value       = module.eks.cluster_endpoint
 }
 
 
@@ -43,7 +43,7 @@ output "node_configs" {
 
 output "cluster_security_group_id" {
   description = "Security group ids attached to the cluster control plane."
-  value       = module.eks.security_group_id
+  value       = module.eks.cluster_security_group_id
 }
 
 output "k8s_token" {
@@ -52,15 +52,15 @@ output "k8s_token" {
 }
 
 output "k8s_ca" {
-  value = module.eks.certificate_authority_data
+  value = module.eks.cluster_certificate_authority_data
 }
 
 output "oidc_role" {
-  value = module.iam_assumable_role_admin.this_iam_role_arn
+  value = module.iam_assumable_role_admin.iam_role_arn
 }
 
 output "oidc_issuer_url" {
-  value = module.eks.oidc_issuer_url
+  value = module.eks.cluster_oidc_issuer_url
 }
 
 output "kafka_host" {

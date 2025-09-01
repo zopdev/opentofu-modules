@@ -1,6 +1,6 @@
 data "aws_eks_addon_version" "this" {
   addon_name         = "aws-ebs-csi-driver"
-  kubernetes_version = module.eks.version
+  kubernetes_version = module.eks.cluster_version
   most_recent        = true
 }
 
