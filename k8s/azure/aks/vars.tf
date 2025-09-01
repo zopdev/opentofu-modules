@@ -96,7 +96,7 @@ variable "node_config" {
 variable "kubernetes_version" {
   description = "Kubernetes version for the AKS cluster"
   type        = string
-  default     = "1.33.0"
+  default     = "1.31.10"
 }
 
 variable "app_namespaces" {
