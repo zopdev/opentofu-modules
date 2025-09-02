@@ -707,3 +707,26 @@ variable "slack_alerts_configs" {
     }))
     default = []
 }
+
+variable "karpenter_configs" {
+    description = "Inputs for karpenter - enabling flag, GCP machine types, and capacity types ('on-demand' or 'spot')"
+
+    type = object({
+        enable = bool
+        machine_types = list(string)
+        capacity_types = list(string)
+    })
+    default = {
+        enable = false
+        machine_types = []
+        capacity_types = []
+    }
+
+    validation {
+        condition = alltrue([
+            for t in var.karpenter_configs.capacity_types :
+            contains(["on-demand", "spot"], t)
+        ])
+        error_message = "Capacity type can only be either 'on-demand' or 'spot'"
+    }
+}
