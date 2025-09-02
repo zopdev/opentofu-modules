@@ -121,3 +121,17 @@ data "aws_ami" "eks_al2023" {
 
   owners = ["602401143452"] # Amazon EKS official account
 }
+
+data "aws_eks_addon_version" "vpc_cni" {
+  addon_name         = "vpc-cni"
+  kubernetes_version = module.eks.cluster_version
+  most_recent        = true
+}
+
+resource "aws_eks_addon" "vpc_cni" {
+  cluster_name             = local.cluster_name
+  addon_name               = "vpc-cni"
+  addon_version            = data.aws_eks_addon_version.vpc_cni.version
+  resolve_conflicts_on_create = "OVERWRITE"
+  preserve                 = true
+}
