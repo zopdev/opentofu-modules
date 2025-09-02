@@ -1,0 +1,14 @@
+apiVersion: karpenter.k8s.gcp/v1alpha1
+kind: GCENodeClass
+metadata:
+  name: karpenter-gcp-nodeclass
+spec:
+  serviceAccount: ${SERVICE_ACCOUNT}
+  imageSelectorTerms:
+    - alias: ContainerOptimizedOS@latest
+  tags:
+    env: ${ENVIRONMENT}
+  disks:
+    - category: pd-balanced
+      sizeGiB: 60
+      boot: true
