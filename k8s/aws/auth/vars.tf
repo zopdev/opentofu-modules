@@ -73,3 +73,9 @@ variable "ecr_configs" {
   }))
   default = []
 }
+
+variable "karpenter_node_role_name" {
+  description = "Name of the Karpenter node IAM role"
+  type        = string
+  default     = null
+}

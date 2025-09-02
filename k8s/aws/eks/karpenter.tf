@@ -1,6 +1,6 @@
-locals {
-  instance_type    = length(var.karpenter_configs.machine_types) > 0 ? var.karpenter_configs.machine_types : ["t3.medium", "t3.large"]
-  capacity_type    = length(var.karpenter_configs.capacity_types) > 0 ? var.karpenter_configs.capacity_types : ["on-demand"]
+locals{
+  instance_type = length(var.karpenter_configs.machine_types) > 0 ? var.karpenter_configs.machine_types : ["t3.medium", "t3.large"]
+  capacity_type = length(var.karpenter_configs.capacity_types) > 0 ? var.karpenter_configs.capacity_types : ["on-demand"]
   enable_karpenter = var.karpenter_configs.enable != null ? var.karpenter_configs.enable : false
 }
 
