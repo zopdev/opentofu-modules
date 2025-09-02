@@ -1,0 +1,90 @@
+locals{
+  instance_type = length(var.karpenter_configs.machine_types) > 0 ? var.karpenter_configs.machine_types : ["t3.medium", "t3.large"]
+  capacity_type = length(var.karpenter_configs.capacity_types) > 0 ? var.karpenter_configs.capacity_types : ["on-demand"]
+  enable_karpenter = var.karpenter_configs.enable != null ? var.karpenter_configs.enable : false
+}
+
+resource "kubernetes_namespace" "karpenter" {
+  count     = local.enable_karpenter ? 1 : 0
+  metadata {
+    name = "karpenter"
+  }
+}
+
+module "karpenter" {
+  count     = local.enable_karpenter ? 1 : 0
+  source = "terraform-aws-modules/eks/aws//modules/karpenter"
+  version = "20.37.2"
+
+  cluster_name = local.cluster_name
+
+  create_node_iam_role = true
+  node_iam_role_use_name_prefix = false
+  # Attach additional IAM policies to the Karpenter node IAM role
+  node_iam_role_additional_policies = {
+    AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    AmazonEKSWorkerNodePolicy = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+    AmazonEKS_CNI_Policy = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+    AmazonEC2ContainerRegistryPullOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
+  }
+  create_instance_profile = true
+  create_iam_role = true
+  enable_irsa = true
+  irsa_oidc_provider_arn = module.eks.oidc_provider_arn
+  namespace       = "karpenter"
+}
+
+resource "aws_ec2_tag" "private_subnet_tags" {
+  count       = local.enable_karpenter ? length(local.private_subnet_ids) : 0
+  resource_id = local.private_subnet_ids[count.index]
+  key         = "karpenter.sh/discovery"
+  value       = local.cluster_name
+}
+
+resource "aws_ec2_tag" "cluster_security_group_karpenter" {
+  count       = local.enable_karpenter ? 1 : 0
+  resource_id = module.eks.cluster_primary_security_group_id
+  key         = "karpenter.sh/discovery"
+  value       = local.cluster_name
+}
+resource "helm_release" "karpenter" {
+  count      = local.enable_karpenter ? 1 : 0
+  name       = "karpenter-aws"
+  namespace  = kubernetes_namespace.karpenter[0].metadata[0].name
+  chart      = "oci://public.ecr.aws/karpenter/karpenter"
+  version    = "1.6.0"
+
+  values = [
+    templatefile("./templates/karpenter-values.yaml", {
+      CLUSTER_NAME     = local.cluster_name
+      CLUSTER_ENDPOINT = module.eks.cluster_endpoint
+      QUEUE_NAME = module.karpenter[0].queue_name
+      SA_NAME    = module.karpenter[0].service_account
+      CONTROLLER_ROLE_ARN = module.karpenter[0].iam_role_arn
+    })
+  ]
+}
+#-------------------
+# nodeclass & nodepool
+
+resource "kubectl_manifest" "karpenter_nodeclass" {
+  count     = local.enable_karpenter ? 1 : 0
+  yaml_body = templatefile("./templates/karpenter-ec2-nodeclass.yaml", {
+    CLUSTER_NAME = local.cluster_name
+    NODE_ROLE    = module.karpenter[0].node_iam_role_arn
+  })
+  depends_on = [helm_release.karpenter]
+}
+
+resource "kubectl_manifest" "karpenter_nodepool" {
+  count     = local.enable_karpenter ? 1 : 0
+  yaml_body = templatefile("./templates/karpenter-nodepool.yaml", {
+    INSTANCE_TYPES = local.instance_type
+    CAPACITY_TYPE  = local.capacity_type
+  })
+  depends_on = [helm_release.karpenter , kubectl_manifest.karpenter_nodeclass]
+  lifecycle {
+    ignore_changes  = all
+    prevent_destroy = false
+  }
+}
