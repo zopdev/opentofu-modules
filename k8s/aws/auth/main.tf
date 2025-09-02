@@ -8,8 +8,8 @@ module "aws_auth" {
   source  = "terraform-aws-modules/eks/aws//modules/aws-auth"
   version = "20.0.0"
 
-  create_aws_auth_configmap = true
-  manage_aws_auth_configmap = true
+  create_aws_auth_configmap = false
+  manage_aws_auth_configmap = false
 
   // Organisation specific roles to be added for UI access.
   aws_auth_roles = concat(
