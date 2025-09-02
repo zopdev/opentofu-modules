@@ -65,7 +65,7 @@ module "eks" {
 
   self_managed_node_groups = {
     "${local.cluster_name}" = {
-      ami_id        = data.aws_ssm_parameter.eks_ami.value
+      ami_id        = data.aws_ami.eks_al2023.id
       instance_type = var.node_config.node_type
       desired_size  = var.node_config.min_count
       min_size      = var.node_config.min_count
@@ -105,9 +105,19 @@ module "eks" {
   })
 }
 
-# -------------------------------------------------------------------
-# Get AL2023 AMI for Kubernetes 1.33 (x86_64)
-# -------------------------------------------------------------------
-data "aws_ssm_parameter" "eks_ami" {
+# Get AL2023 AMI name from SSM
+data "aws_ssm_parameter" "eks_ami_name" {
   name = "/aws/service/eks/optimized-ami/1.33/amazon-linux-2023/x86_64/standard/recommended/image_id"
+}
+
+# Convert AMI name → AMI ID
+data "aws_ami" "eks_al2023" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = [data.aws_ssm_parameter.eks_ami_name.value]
+  }
+
+  owners = ["602401143452"] # Amazon EKS official account
 }
