@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.47, <= 5.100.0"
+      version = "6.0.0"
     }
 
     kubernetes = {
@@ -16,7 +16,7 @@ terraform {
     }
 
     kubectl = {
-      source = "alekc/kubectl"
+      source  = "alekc/kubectl"
       version = "2.0.4"
     }
 
@@ -26,6 +26,6 @@ terraform {
     }
   }
   required_version = ">= 1.0.0"
-#  experiments = [module_variable_optional_attrs]
+  #  experiments = [module_variable_optional_attrs]
 }
 

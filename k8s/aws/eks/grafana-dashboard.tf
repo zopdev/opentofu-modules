@@ -3,13 +3,13 @@ locals {
   folder_creation = false
 
   grafana_dashboard_folder = local.folder_creation ? {
-    Kong                        = ["kong-official"]
-    Partner_Standard_API        = ["partner-standard-api"]
-    Disk_Utilization            = ["cortex-disk-utilization", "prometheus-disk-utilization"]
+    Kong                 = ["kong-official"]
+    Partner_Standard_API = ["partner-standard-api"]
+    Disk_Utilization     = ["cortex-disk-utilization", "prometheus-disk-utilization"]
   } : {}
 
   folder_map = [
-    for key, value in local.grafana_dashboard_folder :  {
+    for key, value in local.grafana_dashboard_folder : {
       folder     = key
       dashboards = value
     }
@@ -17,7 +17,7 @@ locals {
 
   dashboard_map = merge([
     for key, value in local.folder_map : {
-      for dashboard in value.dashboards : "${value.folder}-${dashboard}" =>  {
+      for dashboard in value.dashboards : "${value.folder}-${dashboard}" => {
         folder    = value.folder
         dashboard = dashboard
       }
@@ -39,6 +39,6 @@ resource "grafana_dashboard" "dashboard" {
 }
 
 provider "grafana" {
-  url   = "https://grafana.${local.domain_name}"
-  auth  = local.grafana_auth
+  url  = "https://grafana.${local.domain_name}"
+  auth = local.grafana_auth
 }

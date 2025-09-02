@@ -27,6 +27,7 @@ resource "google_project_service" "cloud_sql" {
   disable_on_destroy = false
   depends_on = [google_project_service.cloudresourcemanager_project]
 }
+}
 
 resource "google_project_service" "secret_manager" {
   project      = var.provider_id
