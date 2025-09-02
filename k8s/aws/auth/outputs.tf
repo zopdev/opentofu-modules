@@ -4,7 +4,6 @@ output "access_entries_created" {
   description = "List of access entries that were created"
   value = {
     users = [for k, v in aws_eks_access_entry.users : {
-      username      = v.username
       principal_arn = v.principal_arn
       groups        = v.kubernetes_groups
     }]

@@ -1,76 +1,46 @@
+# EKS Access Entries Configuration
+# This replaces the legacy aws-auth ConfigMap approach
+
 locals {
-  system_authenticated_users = concat(var.system_authenticated_admins,var.system_authenticated_editors,var.system_authenticated_viewers)
+  system_authenticated_users = concat(var.system_authenticated_admins, var.system_authenticated_editors, var.system_authenticated_viewers)
 }
 
 data "aws_caller_identity" "current" {}
 
-module "aws_auth" {
-  source  = "terraform-aws-modules/eks/aws//modules/aws-auth"
-  version = "20.0.0"
+# Get cluster information from remote state
+locals {
+  cluster_prefix = var.shared_services.cluster_prefix != null ? var.shared_services.cluster_prefix : "${var.provider_id}/${var.app_env}/${var.app_name}"
+}
 
-  create_aws_auth_configmap = false
-  manage_aws_auth_configmap = false
+module "remote_state_gcp_cluster" {
+  source         = "../../../remote-state/gcp"
+  count          = var.shared_services.type == "gcp" ? 1 : 0
+  bucket_name    = var.shared_services.bucket
+  bucket_prefix  = local.cluster_prefix
+}
 
-  // Organisation specific roles to be added for UI access.
-  aws_auth_roles = concat(
-    [
-      {
-        rolearn  = aws_iam_role.eks_cluster_admin.arn
-        username = aws_iam_role.eks_cluster_admin.name
-        groups   = ["system:masters"]
-      },
-      {
-        rolearn  = aws_iam_role.eks_cluster_viewer.arn
-        username = aws_iam_role.eks_cluster_viewer.name
-        groups   = ["cluster-viewer"]
-      },
-      {
-        rolearn  = aws_iam_role.eks_cluster_editor.arn
-        username = aws_iam_role.eks_cluster_editor.name
-        groups   = ["cluster-editor"]
-      }
-    ],
-      var.karpenter_node_role_name != null ? [
-      {
-        rolearn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.karpenter_node_role_name}"
-        username = "system:node:{{EC2PrivateDNSName}}"
-        groups   = ["system:bootstrappers", "system:nodes"]
-      }
-    ] : []
-  )
+module "remote_state_aws_cluster" {
+  source         = "../../../remote-state/aws"
+  count          = var.shared_services.type == "aws" ? 1 : 0
+  bucket_name    = var.shared_services.bucket
+  provider_id    = var.shared_services.profile
+  bucket_prefix  = local.cluster_prefix
+  location       = var.shared_services.location
+}
 
-  aws_auth_users = concat(
-      var.masters != null ? [
-        for user in var.masters :
-        {
-          userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${user}"
-          username = user
-          groups   = ["system:masters"]
-        }
-      ]: [],
-      var.viewers != null ? [
-        for user in var.viewers :
-        {
-          userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${user}"
-          username = user
-          groups   = ["cluster-viewer"]
-        }
-      ] : [],
-      var.editors != null ? [
-        for user in var.editors :
-        {
-          userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${user}"
-          username = user
-          groups   = ["cluster-editor"]
-        }
-      ] : [],
-      local.system_authenticated_users != null ? [
-        for user in local.system_authenticated_users :
-        {
-          userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${user}"
-          username = user
-          groups   = []
-        }
-      ] : []
-    )
+module "remote_state_azure_cluster" {
+  source          = "../../../remote-state/azure"
+  count           = var.shared_services.type == "azure" ? 1 : 0
+  resource_group  = var.shared_services.resource_group
+  storage_account = var.shared_services.storage_account
+  container       = var.shared_services.container
+  bucket_prefix   = local.cluster_prefix
+}
+
+data "aws_eks_cluster" "cluster" {
+  name = var.shared_services.type == "aws" ? module.remote_state_aws_cluster[0].cluster_name : (var.shared_services.type == "gcp" ? module.remote_state_gcp_cluster[0].cluster_name : module.remote_state_azure_cluster[0].cluster_name)
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = var.shared_services.type == "aws" ? module.remote_state_aws_cluster[0].cluster_name : (var.shared_services.type == "gcp" ? module.remote_state_gcp_cluster[0].cluster_name : module.remote_state_azure_cluster[0].cluster_name)
 }
