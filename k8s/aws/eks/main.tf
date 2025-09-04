@@ -50,6 +50,9 @@ module "eks" {
   control_plane_subnet_ids                 = local.private_subnet_ids
   enable_cluster_creator_admin_permissions = true
 
+  # Enable node security group creation
+  create_node_security_group = true
+
   # Enable Control Plane Logging
   enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
@@ -71,19 +74,25 @@ module "eks" {
       min_size      = var.node_config.min_count
       max_size      = var.node_config.max_count
 
-      # Enable access entry creation for this node group
+      # Use module to create Access Entry but make it STANDARD (so policy assoc works)
       create_access_entry = true
-      
-      # Configure access entry for EC2 instances
+
       access_entry = {
-        type = "EC2_LINUX"
-        kubernetes_groups = ["system:bootstrappers", "system:nodes"]
+        # STANDARD type required to associate access policies
+        type = "STANDARD"
+        # do NOT include kubernetes_groups that start with "system:" - AWS blocks that
+        # If you include groups here they must NOT start with "system:"
       }
-      
-      # Configure access policy association
+
       access_policy_associations = {
         worker_node_policy = {
           policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSWorkerNodePolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+        worker_node_bootstrap_policy = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSNodeBootstrapPolicy"
           access_scope = {
             type = "cluster"
           }
@@ -93,7 +102,7 @@ module "eks" {
       launch_template = {
         metadata_options = {
           http_endpoint               = "enabled"
-          http_tokens                 = "optional"   # supports IMDSv1 + v2
+          http_tokens                 = "optional"
           http_put_response_hop_limit = 2
         }
       }
@@ -103,20 +112,32 @@ module "eks" {
         "k8s.io/cluster-autoscaler/${local.cluster_name}" = "owned"
       }
 
-      # AL2023 node bootstrap using EKS bootstrap script
+      # AL2023 node bootstrap via nodeadm (recommended for AL2023 EKS-optimized AMIs)
       user_data = base64encode(<<-EOT
-        #!/bin/bash
-        /etc/eks/bootstrap.sh ${local.cluster_name}
-      EOT
+      #cloud-config
+      ---
+      nodeadm:
+        apiVersion: node.eks.aws/v1alpha1
+        kind: NodeConfig
+        cluster:
+          name: ${local.cluster_name}
+          apiServerEndpoint: ${module.eks.cluster_endpoint}
+          certificateAuthority: ${module.eks.cluster_certificate_authority_data}
+        kubelet:
+          config:
+            # ensure this matches your cluster service CIDR's DNS (default often 10.100.0.10)
+            clusterDNS: [10.100.0.10]
+    EOT
       )
 
-      # Add required IAM policies for EKS node join
+      # Node IAM policies (attach to node role). Keep minimal and correct:
       iam_role_additional_policies = {
         AmazonSSMManagedInstanceCore       = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
         AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
         AmazonEKSWorkerNodePolicy          = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
         AmazonEKS_CNI_Policy               = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-        AmazonEKSClusterPolicy             = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+        AmazonEBSCSIDriverPolicy           = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+        # don't add AmazonEKSClusterPolicy to node role (that's control-plane usage)
       }
     }
   }
