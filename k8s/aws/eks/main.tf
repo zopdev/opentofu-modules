@@ -71,6 +71,14 @@ module "eks" {
       min_size      = var.node_config.min_count
       max_size      = var.node_config.max_count
 
+      launch_template = {
+        metadata_options = {
+          http_endpoint               = "enabled"
+          http_tokens                 = "optional"   # allows IMDSv1+IMDSv2, good for testing
+          http_put_response_hop_limit = 2
+        }
+      }
+
       autoscaling_group_tags = {
         "k8s.io/cluster-autoscaler/enabled"               = true,
         "k8s.io/cluster-autoscaler/${local.cluster_name}" = "owned",
