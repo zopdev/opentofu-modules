@@ -98,6 +98,7 @@ module "eks" {
           kubelet:
             config:
               clusterDNS: [10.100.0.10]
+          instanceID: ${local.cluster_name}-node
       EOT
       )
 
@@ -114,6 +115,11 @@ module "eks" {
   tags = merge(local.common_tags, {
     "Name" = local.cluster_name
   })
+
+  depends_on = [
+    aws_eks_access_entry.self_mng_nodes,
+    aws_eks_access_policy_association.self_mng_nodes
+  ]
 }
 
 # -------------------------------------------------------------------
@@ -143,8 +149,8 @@ data "aws_ssm_parameter" "eks_ami" {
 resource "aws_eks_access_entry" "self_mng_nodes" {
   cluster_name      = module.eks.cluster_name
   principal_arn     = module.eks.self_managed_node_groups["${local.cluster_name}"].iam_role_arn
-  kubernetes_groups = ["system:bootstrappers", "system:nodes"]
-  type              = "EC2"
+  kubernetes_groups = ["system:bootstrappers"]
+  type              = "STANDARD"
 }
 
 resource "aws_eks_access_policy_association" "self_mng_nodes" {

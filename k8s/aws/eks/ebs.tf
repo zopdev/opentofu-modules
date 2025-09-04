@@ -18,7 +18,11 @@ resource "aws_eks_addon" "aws_ebs_csi_driver" {
       "CSIVolumeName"           = "gp3"
   }))
 
-  depends_on = [module.ebs_csi_irsa_role]
+  depends_on = [
+    module.ebs_csi_irsa_role,
+    aws_eks_access_entry.self_mng_nodes,
+    aws_eks_access_policy_association.self_mng_nodes
+  ]
 }
 
 module "ebs_csi_irsa_role" {
