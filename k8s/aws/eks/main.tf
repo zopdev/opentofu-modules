@@ -128,17 +128,6 @@ resource "aws_eks_addon" "vpc_cni" {
   preserve                 = true
 }
 
-data "aws_ssm_parameter" "eks_ami_name" {
-  name = "/aws/service/eks/optimized-ami/${module.eks.cluster_version}/amazon-linux-2023/x86_64/standard/recommended/image_id"
-}
-
-data "aws_ami" "eks_al2023" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = [data.aws_ssm_parameter.eks_ami_name.value]
-  }
-
-  owners = ["602401143452"]  # Official Amazon EKS AMI owner account
+data "aws_ssm_parameter" "eks_ami" {
+  name = "/aws/service/eks/optimized-ami/1.33/amazon-linux-2023/x86_64/standard/recommended/image_id"
 }
