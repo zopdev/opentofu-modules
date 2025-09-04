@@ -73,6 +73,22 @@ module "eks" {
 
       # Enable access entry creation for this node group
       create_access_entry = true
+      
+      # Configure access entry for EC2 instances
+      access_entry = {
+        type = "EC2_LINUX"
+        kubernetes_groups = ["system:bootstrappers", "system:nodes"]
+      }
+      
+      # Configure access policy association
+      access_policy_associations = {
+        worker_node_policy = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSWorkerNodePolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
 
       launch_template = {
         metadata_options = {
@@ -87,21 +103,10 @@ module "eks" {
         "k8s.io/cluster-autoscaler/${local.cluster_name}" = "owned"
       }
 
-      # AL2023 node bootstrap
+      # AL2023 node bootstrap using EKS bootstrap script
       user_data = base64encode(<<-EOT
-        #cloud-config
-        ---
-        nodeadm:
-          apiVersion: node.eks.aws/v1alpha1
-          kind: NodeConfig
-          cluster:
-            name: ${local.cluster_name}
-            apiServerEndpoint: ${module.eks.cluster_endpoint}
-            certificateAuthority: ${module.eks.cluster_certificate_authority_data}
-          kubelet:
-            config:
-              clusterDNS: [10.100.0.10]
-          instanceID: ${local.cluster_name}-node
+        #!/bin/bash
+        /etc/eks/bootstrap.sh ${local.cluster_name}
       EOT
       )
 
@@ -111,6 +116,7 @@ module "eks" {
         AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
         AmazonEKSWorkerNodePolicy          = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
         AmazonEKS_CNI_Policy               = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+        AmazonEKSClusterPolicy             = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
       }
     }
   }
