@@ -71,6 +71,9 @@ module "eks" {
       min_size      = var.node_config.min_count
       max_size      = var.node_config.max_count
 
+      # Enable access entry creation for this node group
+      create_access_entry = true
+
       launch_template = {
         metadata_options = {
           http_endpoint               = "enabled"
@@ -116,10 +119,6 @@ module "eks" {
     "Name" = local.cluster_name
   })
 
-  depends_on = [
-    aws_eks_access_entry.self_mng_nodes,
-    aws_eks_access_policy_association.self_mng_nodes
-  ]
 }
 
 # -------------------------------------------------------------------
@@ -146,19 +145,4 @@ data "aws_ssm_parameter" "eks_ami" {
   name = "/aws/service/eks/optimized-ami/1.33/amazon-linux-2023/x86_64/standard/recommended/image_id"
 }
 
-resource "aws_eks_access_entry" "self_mng_nodes" {
-  cluster_name      = module.eks.cluster_name
-  principal_arn     = module.eks.self_managed_node_groups["${local.cluster_name}"].iam_role_arn
-  kubernetes_groups = ["system:bootstrappers"]
-  type              = "STANDARD"
-}
-
-resource "aws_eks_access_policy_association" "self_mng_nodes" {
-  cluster_name  = module.eks.cluster_name
-  principal_arn = module.eks.self_managed_node_groups["${local.cluster_name}"].iam_role_arn
-  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSWorkerNodePolicy"
-
-  access_scope {
-    type = "cluster"
-  }
-}
+# Access entries are handled internally by the EKS module for self-managed node groups
