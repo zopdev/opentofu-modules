@@ -74,17 +74,17 @@ module "eks" {
       launch_template = {
         metadata_options = {
           http_endpoint               = "enabled"
-          http_tokens                 = "optional"   # allows IMDSv1+IMDSv2, good for testing
+          http_tokens                 = "optional"   # supports IMDSv1 + v2
           http_put_response_hop_limit = 2
         }
       }
 
       autoscaling_group_tags = {
-        "k8s.io/cluster-autoscaler/enabled"               = true,
-        "k8s.io/cluster-autoscaler/${local.cluster_name}" = "owned",
+        "k8s.io/cluster-autoscaler/enabled"               = true
+        "k8s.io/cluster-autoscaler/${local.cluster_name}" = "owned"
       }
 
-      # AL2023 does not use bootstrap.sh — must provide nodeadm config
+      # AL2023 node bootstrap
       user_data = base64encode(<<-EOT
         #cloud-config
         ---
@@ -101,9 +101,12 @@ module "eks" {
       EOT
       )
 
+      # Add required IAM policies for EKS node join
       iam_role_additional_policies = {
         AmazonSSMManagedInstanceCore       = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
         AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+        AmazonEKSWorkerNodePolicy          = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        AmazonEKS_CNI_Policy               = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
       }
     }
   }
@@ -113,7 +116,9 @@ module "eks" {
   })
 }
 
-
+# -------------------------------------------------------------------
+# VPC CNI Addon
+# -------------------------------------------------------------------
 data "aws_eks_addon_version" "vpc_cni" {
   addon_name         = "vpc-cni"
   kubernetes_version = module.eks.cluster_version
@@ -128,6 +133,9 @@ resource "aws_eks_addon" "vpc_cni" {
   preserve                 = true
 }
 
+# -------------------------------------------------------------------
+# SSM Parameter for EKS AL2023 AMI
+# -------------------------------------------------------------------
 data "aws_ssm_parameter" "eks_ami" {
   name = "/aws/service/eks/optimized-ami/1.33/amazon-linux-2023/x86_64/standard/recommended/image_id"
 }
