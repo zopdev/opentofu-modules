@@ -1,23 +1,23 @@
 locals {
-  cluster_name = var.app_env == "" ? var.app_name : "${var.app_name}-${var.app_env}"
-  node_port    = 32443 # Node port which will be used by LB for exposure
-  inbound_ip   = concat(["10.0.0.0/8"], var.custom_inbound_ip_range)
+  cluster_name       = var.app_env == "" ? var.app_name : "${var.app_name}-${var.app_env}"
+  node_port          = 32443 # Node port which will be used by LB for exposure
+  inbound_ip         = concat(["10.0.0.0/8"], var.custom_inbound_ip_range)
 
   cluster_name_parts = split("-", local.cluster_name)
   environment        = var.app_env == "" ? element(local.cluster_name_parts, length(local.cluster_name_parts) - 1) : var.app_env
   namespaces         = [for namespace in var.namespace_folder_list : split("/", namespace)[0]]
-  common_tags = merge(var.common_tags,
+  common_tags        = merge(var.common_tags,
     tomap({
-      project     = try(var.standard_tags.project != null ? var.standard_tags.project : local.cluster_name, local.cluster_name)
+      project     = try(var.standard_tags.project != null ? var.standard_tags.project : local.cluster_name ,local.cluster_name)
       provisioner = try(var.standard_tags.provisioner != null ? var.standard_tags.provisioner : "zop-dev", "zop-dev")
-  }))
+    }))
 
-  namespace_users = flatten([
-    for key, value in var.app_namespaces : [
+  namespace_users   = flatten([
+    for key, value in var.app_namespaces:[
       for user in concat(value.admins, value.editors, value.viewers) :
       {
-        namespace = key
-        name      = user
+        namespace   = key
+        name        = user
       }
     ]
   ])
@@ -34,63 +34,61 @@ resource "aws_kms_key" "eks" {
   tags        = local.common_tags
 }
 
-# -------------------------------------------------------------------
-# EKS Cluster (Kubernetes 1.33)
-# -------------------------------------------------------------------
+
 module "eks" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "~> 21.0"
+  source          = "terraform-aws-modules/eks/aws"
+  version         = "20.20.0"
 
-  name               = local.cluster_name
-  kubernetes_version = "1.33"
+  cluster_name    = local.cluster_name
+  cluster_version = "1.33"
 
-  # EKS Addons
-  addons = {
-    coredns = {}
-    eks-pod-identity-agent = {
-      before_compute = true
-    }
-    kube-proxy = {}
-    vpc-cni = {
-      before_compute = true
-    }
+  enable_irsa              = true
+  vpc_id                   = local.vpc_id
+  subnet_ids               = local.private_subnet_ids
+  control_plane_subnet_ids = local.private_subnet_ids
+  enable_cluster_creator_admin_permissions = true
+
+  // Enable Control Plane Logging
+  cluster_enabled_log_types     = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+
+  // Enabled Cluster encryption
+  cluster_encryption_config = {
+    provider_key_arn = aws_kms_key.eks.arn
+    resources        = ["secrets"]
   }
 
-  vpc_id     = local.vpc_id
-  subnet_ids = local.private_subnet_ids
+  // Cluster endpoint should not have public access
+  cluster_endpoint_private_access = false
+  cluster_endpoint_public_access  = true
+
+  self_managed_node_group_defaults = {
+    autoscaling_group_tags = {
+      "k8s.io/cluster-autoscaler/enabled" : true,
+      "k8s.io/cluster-autoscaler/${local.cluster_name}" : "owned",
+    }
+  }
 
   self_managed_node_groups = {
-    example = {
+    "${local.cluster_name}" = {
       ami_type      = "AL2023_x86_64_STANDARD"
-      instance_type = var.node_config.node_type
-
-      min_size = var.node_config.min_count
-      max_size = var.node_config.max_count
-      # This value is ignored after the initial creation
-      # https://github.com/bryantbiggs/eks-desired-size-hack
-      desired_size = var.node_config.min_count
-
-      # This is not required - demonstrates how to pass additional configuration to nodeadm
-      # Ref https://awslabs.github.io/amazon-eks-ami/nodeadm/doc/api/
-      cloudinit_pre_nodeadm = [
-        {
-          content_type = "application/node.eks.aws"
-          content      = <<-EOT
-            ---
-            apiVersion: node.eks.aws/v1alpha1
-            kind: NodeConfig
-            spec:
-              kubelet:
-                config:
-                  shutdownGracePeriod: 30s
-          EOT
-        }
-      ]
+      instance_type                = var.node_config.node_type
+      desired_size                 = var.node_config.min_count
+      min_size                     = var.node_config.min_count
+      max_size                     = var.node_config.max_count
+      bootstrap_extra_args         = "--container-runtime containerd"
+      #         vpc_security_group_ids  = var.internal_loadbalancer ? [aws_security_group.worker_group_mgmt.id] : [aws_security_group.external_worker_group_mgmt.id]
+      #         target_group_arns       = var.public_ingress ? [aws_lb_target_group.cluster_tg.0.arn,aws_lb_target_group.kong_tg_admin.0.arn] : (var.public_app ? [aws_lb_target_group.cluster_alb_tg.0.arn] : [aws_lb_target_group.cluster_nlb_tg.0.arn])
+      #         user_data_template_path = file("./templates/user-data.tpl")
+      iam_role_additional_policies = {
+        AmazonSSMManagedInstanceCore       = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+      }
     }
   }
 
-  tags = merge(local.common_tags, {
-    "Name" = local.cluster_name
-  })
-
+  tags = merge(local.common_tags,
+    tomap({
+      "Name" = local.cluster_name
+    })
+  )
 }
