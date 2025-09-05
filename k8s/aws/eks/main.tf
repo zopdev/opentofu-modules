@@ -39,7 +39,7 @@ resource "aws_kms_key" "eks" {
 # -------------------------------------------------------------------
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "21.0.0"
+  version = "~> 21.0.0"
 
   name               = local.cluster_name
   kubernetes_version = "1.33"
@@ -86,7 +86,7 @@ module "eks" {
       min_size      = var.node_config.min_count
       max_size      = var.node_config.max_count
 
-      # Use the official cloudinit_pre_nodeadm approach
+      # Use the official cloudinit_pre_nodeadm approach (exactly as per official docs)
       cloudinit_pre_nodeadm = [
         {
           content_type = "application/node.eks.aws"
@@ -97,7 +97,6 @@ module "eks" {
             spec:
               kubelet:
                 config:
-                  clusterDNS: [10.100.0.10]
                   shutdownGracePeriod: 30s
           EOT
         }
@@ -132,8 +131,28 @@ module "eks" {
 
 }
 
-# VPC CNI addon is now handled by the main addons configuration
+# Debug outputs to help troubleshoot
+output "cluster_endpoint" {
+  description = "EKS cluster endpoint"
+  value       = module.eks.cluster_endpoint
+}
 
-# AMI is now handled by ami_type in the node group configuration
+output "cluster_certificate_authority_data" {
+  description = "EKS cluster certificate authority data"
+  value       = module.eks.cluster_certificate_authority_data
+}
 
-# Access entries are handled internally by the EKS module for self-managed node groups
+output "cluster_name" {
+  description = "EKS cluster name"
+  value       = module.eks.cluster_name
+}
+
+output "node_security_group_id" {
+  description = "EKS node security group ID"
+  value       = module.eks.node_security_group_id
+}
+
+output "self_managed_node_groups" {
+  description = "Self-managed node groups"
+  value       = module.eks.self_managed_node_groups
+}
