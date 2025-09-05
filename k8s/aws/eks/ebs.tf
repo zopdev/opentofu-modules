@@ -56,7 +56,7 @@ resource "kubernetes_storage_class" "gp3_default" {
 
   parameters = {
     type       = "gp3"
-    fsType     = "ext4"
+    fsType     = "ext4"  
   }
 
   depends_on = [time_sleep.wait_for_ebs]

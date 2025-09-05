@@ -19,6 +19,11 @@ output "cluster_arn" {
   value       = module.eks.cluster_arn
 }
 
+output "cluster_endpoint" {
+  description = "Endpoint for EKS control plane."
+  value       = module.eks.cluster_endpoint
+}
+
 
 output "k8s_version" {
   value = "1.29"
@@ -41,7 +46,7 @@ output "cluster_security_group_id" {
   value       = module.eks.cluster_security_group_id
 }
 
-output "k8s_token" {
+output "k8s_token"{
   value     = data.aws_eks_cluster_auth.cluster.token
   sensitive = true
 }
@@ -50,8 +55,8 @@ output "k8s_ca" {
   value = module.eks.cluster_certificate_authority_data
 }
 
-output "oidc_role" {
-  value = module.iam_assumable_role_admin.iam_role_arn
+output "oidc_role"{
+  value  = module.iam_assumable_role_admin.this_iam_role_arn
 }
 
 output "oidc_issuer_url" {
@@ -102,11 +107,11 @@ output "public_subnets_id" {
 }
 
 output "mimir_host_url" {
-  value = try(module.observability[0].mimir_host_url, "")
+  value = try(module.observability[0].mimir_host_url,"")
 }
 
 output "loki_host_url" {
-  value = try(module.observability[0].loki_host_url, "")
+  value = try(module.observability[0].loki_host_url,"")
 }
 
 output "cluster_uid" {
@@ -114,16 +119,16 @@ output "cluster_uid" {
 }
 
 output "tempo_host_url" {
-  value = try(module.observability[0].tempo_host_url, "")
+  value =try( module.observability[0].tempo_host_url,"")
 }
 
 output "cortex_host_url" {
-  value = try(module.observability[0].cortex_host_url, "")
+  value = try(module.observability[0].cortex_host_url,"")
 }
 
 output "grafana_password" {
   sensitive = true
-  value     = try(random_password.observability_admin[0].result, "")
+  value = try(random_password.observability_admin[0].result,"")
 }
 
 output "grafana_admin" {
@@ -131,11 +136,11 @@ output "grafana_admin" {
 }
 
 output "grafana_host" {
-  value = try(local.grafana_host, "")
+  value = try(local.grafana_host,"")
 }
 
 output "grafana_datasources" {
-  value     = local.grafana_datasource_list
+  value = local.grafana_datasource_list
   sensitive = true
 }
 

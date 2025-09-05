@@ -34,6 +34,13 @@ resource "aws_kms_key" "eks" {
   tags        = local.common_tags
 }
 
+data "aws_ami" "eks_ami" {
+  owners   = [var.worker_ami_config.owner_id]
+  filter {
+    name   = "name"
+    values = [var.worker_ami_config.name]
+  }
+}
 
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
@@ -53,9 +60,9 @@ module "eks" {
 
   // Enabled Cluster encryption
   cluster_encryption_config = {
-    provider_key_arn = aws_kms_key.eks.arn
-    resources        = ["secrets"]
-  }
+      provider_key_arn = aws_kms_key.eks.arn
+      resources        = ["secrets"]
+    }
 
   // Cluster endpoint should not have public access
   cluster_endpoint_private_access = false
@@ -87,8 +94,8 @@ module "eks" {
   }
 
   tags = merge(local.common_tags,
-    tomap({
-      "Name" = local.cluster_name
-    })
+  tomap({
+    "Name" = local.cluster_name
+  })
   )
 }
