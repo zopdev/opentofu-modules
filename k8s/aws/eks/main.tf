@@ -55,6 +55,12 @@ module "eks" {
   control_plane_subnet_ids = local.private_subnet_ids
   enable_cluster_creator_admin_permissions = true
 
+  # Use default EKS API and ConfigMap mode (supports both access entries and aws-auth ConfigMap)
+  # authentication_mode = "API_AND_CONFIG_MAP"  # This is the default
+
+  # Access entries are managed by the auth module
+
+
   // Enable Control Plane Logging
   cluster_enabled_log_types     = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
