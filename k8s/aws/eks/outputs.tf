@@ -19,11 +19,6 @@ output "cluster_arn" {
   value       = module.eks.cluster_arn
 }
 
-output "cluster_endpoint" {
-  description = "Endpoint for EKS control plane."
-  value       = module.eks.cluster_endpoint
-}
-
 
 output "k8s_version" {
   value = "1.29"
