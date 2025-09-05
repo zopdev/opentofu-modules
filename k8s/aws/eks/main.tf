@@ -130,29 +130,3 @@ module "eks" {
   })
 
 }
-
-# Debug outputs to help troubleshoot
-output "cluster_endpoint" {
-  description = "EKS cluster endpoint"
-  value       = module.eks.cluster_endpoint
-}
-
-output "cluster_certificate_authority_data" {
-  description = "EKS cluster certificate authority data"
-  value       = module.eks.cluster_certificate_authority_data
-}
-
-output "cluster_name" {
-  description = "EKS cluster name"
-  value       = module.eks.cluster_name
-}
-
-output "node_security_group_id" {
-  description = "EKS node security group ID"
-  value       = module.eks.node_security_group_id
-}
-
-output "self_managed_node_groups" {
-  description = "Self-managed node groups"
-  value       = module.eks.self_managed_node_groups
-}
