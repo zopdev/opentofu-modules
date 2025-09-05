@@ -39,21 +39,12 @@ resource "aws_kms_key" "eks" {
 # -------------------------------------------------------------------
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 21.0.0"
+  version = "~> 21.0"
 
   name               = local.cluster_name
   kubernetes_version = "1.33"
 
-  enable_irsa                              = true
-  vpc_id                                   = local.vpc_id
-  subnet_ids                               = local.private_subnet_ids
-  control_plane_subnet_ids                 = local.private_subnet_ids
-  enable_cluster_creator_admin_permissions = true
-
-  # Enable node security group creation
-  create_node_security_group = true
-
-  # EKS Addons (required for proper functionality)
+  # EKS Addons
   addons = {
     coredns = {}
     eks-pod-identity-agent = {
@@ -65,28 +56,22 @@ module "eks" {
     }
   }
 
-  # Enable Control Plane Logging
-  enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
-
-  # Enable cluster secrets encryption
-  encryption_config = {
-    provider_key_arn = aws_kms_key.eks.arn
-    resources        = ["secrets"]
-  }
-
-  # Endpoint access
-  endpoint_private_access = false
-  endpoint_public_access  = true
+  vpc_id     = local.vpc_id
+  subnet_ids = local.private_subnet_ids
 
   self_managed_node_groups = {
-    "${local.cluster_name}" = {
+    example = {
       ami_type      = "AL2023_x86_64_STANDARD"
       instance_type = var.node_config.node_type
-      desired_size  = var.node_config.min_count
-      min_size      = var.node_config.min_count
-      max_size      = var.node_config.max_count
 
-      # Use the official cloudinit_pre_nodeadm approach (exactly as per official docs)
+      min_size = var.node_config.min_count
+      max_size = var.node_config.max_count
+      # This value is ignored after the initial creation
+      # https://github.com/bryantbiggs/eks-desired-size-hack
+      desired_size = var.node_config.min_count
+
+      # This is not required - demonstrates how to pass additional configuration to nodeadm
+      # Ref https://awslabs.github.io/amazon-eks-ami/nodeadm/doc/api/
       cloudinit_pre_nodeadm = [
         {
           content_type = "application/node.eks.aws"
@@ -101,27 +86,6 @@ module "eks" {
           EOT
         }
       ]
-
-      launch_template = {
-        metadata_options = {
-          http_endpoint               = "enabled"
-          http_tokens                 = "optional"
-          http_put_response_hop_limit = 2
-        }
-      }
-
-      autoscaling_group_tags = {
-        "k8s.io/cluster-autoscaler/enabled"               = true
-        "k8s.io/cluster-autoscaler/${local.cluster_name}" = "owned"
-      }
-
-      # Node IAM policies (minimal set as per official docs)
-      iam_role_additional_policies = {
-        AmazonSSMManagedInstanceCore       = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-        AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-        AmazonEKSWorkerNodePolicy          = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-        AmazonEKS_CNI_Policy               = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-      }
     }
   }
 
