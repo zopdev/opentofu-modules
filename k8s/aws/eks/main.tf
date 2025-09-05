@@ -53,6 +53,18 @@ module "eks" {
   # Enable node security group creation
   create_node_security_group = true
 
+  # EKS Addons (required for proper functionality)
+  addons = {
+    coredns = {}
+    eks-pod-identity-agent = {
+      before_compute = true
+    }
+    kube-proxy = {}
+    vpc-cni = {
+      before_compute = true
+    }
+  }
+
   # Enable Control Plane Logging
   enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
@@ -68,36 +80,28 @@ module "eks" {
 
   self_managed_node_groups = {
     "${local.cluster_name}" = {
-      ami_id        = data.aws_ssm_parameter.eks_ami.value
+      ami_type      = "AL2023_x86_64_STANDARD"
       instance_type = var.node_config.node_type
       desired_size  = var.node_config.min_count
       min_size      = var.node_config.min_count
       max_size      = var.node_config.max_count
 
-      # Use module to create Access Entry but make it STANDARD (so policy assoc works)
-      create_access_entry = true
-
-      access_entry = {
-        # STANDARD type required to associate access policies
-        type = "STANDARD"
-        # do NOT include kubernetes_groups that start with "system:" - AWS blocks that
-        # If you include groups here they must NOT start with "system:"
-      }
-
-      access_policy_associations = {
-        worker_node_policy = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSWorkerNodePolicy"
-          access_scope = {
-            type = "cluster"
-          }
+      # Use the official cloudinit_pre_nodeadm approach
+      cloudinit_pre_nodeadm = [
+        {
+          content_type = "application/node.eks.aws"
+          content      = <<-EOT
+            ---
+            apiVersion: node.eks.aws/v1alpha1
+            kind: NodeConfig
+            spec:
+              kubelet:
+                config:
+                  clusterDNS: [10.100.0.10]
+                  shutdownGracePeriod: 30s
+          EOT
         }
-        worker_node_bootstrap_policy = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSNodeBootstrapPolicy"
-          access_scope = {
-            type = "cluster"
-          }
-        }
-      }
+      ]
 
       launch_template = {
         metadata_options = {
@@ -112,32 +116,12 @@ module "eks" {
         "k8s.io/cluster-autoscaler/${local.cluster_name}" = "owned"
       }
 
-      # AL2023 node bootstrap via nodeadm (recommended for AL2023 EKS-optimized AMIs)
-      user_data = base64encode(<<-EOT
-      #cloud-config
-      ---
-      nodeadm:
-        apiVersion: node.eks.aws/v1alpha1
-        kind: NodeConfig
-        cluster:
-          name: ${local.cluster_name}
-          apiServerEndpoint: ${module.eks.cluster_endpoint}
-          certificateAuthority: ${module.eks.cluster_certificate_authority_data}
-        kubelet:
-          config:
-            # ensure this matches your cluster service CIDR's DNS (default often 10.100.0.10)
-            clusterDNS: [10.100.0.10]
-    EOT
-      )
-
-      # Node IAM policies (attach to node role). Keep minimal and correct:
+      # Node IAM policies (minimal set as per official docs)
       iam_role_additional_policies = {
         AmazonSSMManagedInstanceCore       = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
         AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
         AmazonEKSWorkerNodePolicy          = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
         AmazonEKS_CNI_Policy               = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-        AmazonEBSCSIDriverPolicy           = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
-        # don't add AmazonEKSClusterPolicy to node role (that's control-plane usage)
       }
     }
   }
@@ -148,28 +132,8 @@ module "eks" {
 
 }
 
-# -------------------------------------------------------------------
-# VPC CNI Addon
-# -------------------------------------------------------------------
-data "aws_eks_addon_version" "vpc_cni" {
-  addon_name         = "vpc-cni"
-  kubernetes_version = module.eks.cluster_version
-  most_recent        = true
-}
+# VPC CNI addon is now handled by the main addons configuration
 
-resource "aws_eks_addon" "vpc_cni" {
-  cluster_name             = local.cluster_name
-  addon_name               = "vpc-cni"
-  addon_version            = data.aws_eks_addon_version.vpc_cni.version
-  resolve_conflicts_on_create = "OVERWRITE"
-  preserve                 = true
-}
-
-# -------------------------------------------------------------------
-# SSM Parameter for EKS AL2023 AMI
-# -------------------------------------------------------------------
-data "aws_ssm_parameter" "eks_ami" {
-  name = "/aws/service/eks/optimized-ami/1.33/amazon-linux-2023/x86_64/standard/recommended/image_id"
-}
+# AMI is now handled by ami_type in the node group configuration
 
 # Access entries are handled internally by the EKS module for self-managed node groups
