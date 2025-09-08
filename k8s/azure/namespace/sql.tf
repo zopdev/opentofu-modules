@@ -2,25 +2,31 @@ locals {
 
   enable_db = try(var.sql_db.enable, false)
   db_list = distinct(concat(distinct([for key, value in var.services: value.db_name]), distinct([for key, value in var.cron_jobs: value.db_name])))
-  
-  database_map = merge(
-  {
-    for service_key, service_value in var.services :
+
+  grouped_database_map = merge(
+    {
+      for service_key, service_value in var.services :
       service_value.datastore_configs.name => [
-        service_value.datastore_configs.databse
-      ]
+      service_value.datastore_configs.databse
+    ]...
       if try(service_value.datastore_configs.name, null) != null &&
-         try(service_value.datastore_configs.databse, null) != null
-  },
-  {
-    for cron_key, cron_value in var.cron_jobs :
+      try(service_value.datastore_configs.databse, null) != null
+    },
+    {
+      for cron_key, cron_value in var.cron_jobs :
       cron_value.datastore_configs.name => [
-        cron_value.datastore_configs.databse
-      ]
+      cron_value.datastore_configs.databse
+    ]...
       if try(cron_value.datastore_configs.name, null) != null &&
-         try(cron_value.datastore_configs.databse, null) != null
+      try(cron_value.datastore_configs.databse, null) != null
+    }
+  )
+
+  # Remove duplicates in each list
+  database_map = {
+    for k, v in local.grouped_database_map :
+    k => distinct(flatten(v))
   }
-)
 }
 
 module "mysql" {
