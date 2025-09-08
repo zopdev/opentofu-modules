@@ -1,8 +1,4 @@
 locals {
-
-  enable_db = try(var.sql_db.enable, false)
-  db_list = distinct(concat(distinct([for key, value in var.services: value.db_name]), distinct([for key, value in var.cron_jobs: value.db_name])))
-
   grouped_database_map = {
     for pair in concat(
       [for _, s in var.services : {
@@ -13,13 +9,14 @@ locals {
         name   = try(c.datastore_configs.name, null)
         dbname = try(c.datastore_configs.databse, null)
       }]
-    ) : pair.name => pair.dbname
+    ) : pair.name => pair.dbname...
     if pair.name != null && pair.dbname != null
   }
 
+  # optional: make db lists unique
   database_map = {
-    for k in distinct(keys(local.grouped_database_map)) :
-    k => distinct([for k2, v in local.grouped_database_map : v if k2 == k])
+    for k, v in local.grouped_database_map :
+    k => distinct(v)
   }
 }
 
