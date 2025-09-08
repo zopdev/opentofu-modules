@@ -3,29 +3,23 @@ locals {
   enable_db = try(var.sql_db.enable, false)
   db_list = distinct(concat(distinct([for key, value in var.services: value.db_name]), distinct([for key, value in var.cron_jobs: value.db_name])))
 
-  grouped_database_map = merge(
-    {
-      for service_key, service_value in var.services :
-      service_value.datastore_configs.name => [
-      service_value.datastore_configs.databse
-    ]...
-      if try(service_value.datastore_configs.name, null) != null &&
-      try(service_value.datastore_configs.databse, null) != null
-    },
-    {
-      for cron_key, cron_value in var.cron_jobs :
-      cron_value.datastore_configs.name => [
-      cron_value.datastore_configs.databse
-    ]...
-      if try(cron_value.datastore_configs.name, null) != null &&
-      try(cron_value.datastore_configs.databse, null) != null
-    }
-  )
+  grouped_database_map = {
+    for pair in concat(
+      [for _, s in var.services : {
+        name   = try(s.datastore_configs.name, null)
+        dbname = try(s.datastore_configs.databse, null)
+      }],
+      [for _, c in var.cron_jobs : {
+        name   = try(c.datastore_configs.name, null)
+        dbname = try(c.datastore_configs.databse, null)
+      }]
+    ) : pair.name => pair.dbname
+    if pair.name != null && pair.dbname != null
+  }
 
-  # Remove duplicates in each list
   database_map = {
-    for k, v in local.grouped_database_map :
-    k => distinct(flatten(v))
+    for k in distinct(keys(local.grouped_database_map)) :
+    k => distinct([for k2, v in local.grouped_database_map : v if k2 == k])
   }
 }
 
