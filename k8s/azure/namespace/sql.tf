@@ -1,4 +1,8 @@
 locals {
+
+  enable_db = try(var.sql_db.enable, false)
+  db_list = distinct(concat(distinct([for key, value in var.services: value.db_name]), distinct([for key, value in var.cron_jobs: value.db_name])))
+
   grouped_database_map = {
     for pair in concat(
       [for _, s in var.services : {
