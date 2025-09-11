@@ -21,7 +21,7 @@ locals {
   deployment_all_images = merge(local.deployment_existing_images, local.deployment_new_images)
 
   services_acr_name_map = {
-    for service_key, service_config in var.services : service_key => coalesce(service_config.acr_name, "")
+    for service_key, service_config in var.services : service_key => service_config.acr_name != null ? service_config.acr_name : ""
   }
 
   # Filter out services with empty ACR names for ACR-related resources

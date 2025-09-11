@@ -41,7 +41,7 @@ output "service_configs" {
       db_user                               = v.db_name != null ? var.sql_db.type == "mysql" ? module.mysql[0].db_user["${var.namespace}-${v.db_name}"] : (var.sql_db.type == "postgres" ?  module.postgresql[0].db_user["${var.namespace}-${v.db_name}"] : "" ) : ""
       custom_host_url                       = v.ingress_list != null ? (length(v.ingress_list) != 0 ? v.ingress_list : []) : []
       default_host_url                      = v.enable_default_ingress != null ? ( v.enable_default_ingress ? kubernetes_ingress_v1.default_service_ingress["${k}-${var.namespace}-${local.default_domain_list[k].ingress[0]}"].spec[0].rule[0].host : "") : ""
-      acr_login_server                      = data.azurerm_container_registry.acr[k].login_server
+      acr_login_server                      = contains(keys(data.azurerm_container_registry.acr), k) ? data.azurerm_container_registry.acr[k].login_server : ""
       basic_auth_user_name                  = (v.enable_basic_auth != null ? v.enable_basic_auth : false) ? "${k}-${random_string.basic_auth_user_name_suffix[k].result}" : ""
       basic_auth_password                   = (v.enable_basic_auth != null ? v.enable_basic_auth : false) ? random_password.basic_auth_password[k].result : ""
       deployment_service_account_key     = {
@@ -65,7 +65,7 @@ output "cron_jobs_configs" {
       db_secret_name                        = v.db_name != null ? "${local.cluster_name}-${var.namespace}-${v.db_name}-db-user-secret" : ""
       db_read_only_secret_name              = v.db_name != null ? "${local.cluster_name}-${var.namespace}-${v.db_name}-db-readonly-secret" : ""
       db_user                               = v.db_name != null ? var.sql_db.type == "mysql" ? module.mysql[0].db_user["${var.namespace}-${v.db_name}"] : (var.sql_db.type == "postgres" ?  module.postgresql[0].db_user["${var.namespace}-${v.db_name}"] : "" ) : ""
-      acr_login_server                      = data.azurerm_container_registry.cron_acr[k].login_server
+      acr_login_server                      = contains(keys(data.azurerm_container_registry.cron_acr), k) ? data.azurerm_container_registry.cron_acr[k].login_server : ""
       deployment_service_account_key       = {
         password       = azuread_service_principal_password.cron_acr_sp_pwd[k].value
         subscriptionId = data.azurerm_subscription.current.subscription_id

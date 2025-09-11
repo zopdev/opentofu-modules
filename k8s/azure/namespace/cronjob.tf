@@ -21,7 +21,7 @@ locals {
   cron_all_images = merge(local.cron_existing_images, local.cron_new_images)
 
   cron_jobs_acr_name_map = {
-    for service_key, service_config in var.cron_jobs : service_key => coalesce(service_config.acr_name, "")
+    for service_key, service_config in var.cron_jobs : service_key => service_config.acr_name != null ? service_config.acr_name : ""
   }
 
   # Filter out services with empty ACR names for ACR-related resources
