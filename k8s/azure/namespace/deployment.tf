@@ -21,7 +21,13 @@ locals {
   deployment_all_images = merge(local.deployment_existing_images, local.deployment_new_images)
 
   services_acr_name_map = {
-    for service_key, service_config in var.services : service_key => coalesce(service_config.acr_name, service_key)
+    for service_key, service_config in var.services : service_key => coalesce(service_config.acr_name, "")
+  }
+
+  # Filter out services with empty ACR names for ACR-related resources
+  services_with_acr = {
+    for service_key, service_config in var.services : service_key => service_config
+    if service_config.acr_name != null && service_config.acr_name != ""
   }
 }
 
@@ -118,13 +124,13 @@ resource "azuread_service_principal_password" "acr_sp_pwd" {
 }
 
 data "azurerm_container_registry" "acr" {
-  for_each            = local.services_acr_name_map
-  name                = each.value
-  resource_group_name = var.services[each.key].acr_resource_group != null ? var.services[each.key].acr_resource_group : var.resource_group_name
+  for_each            = local.services_with_acr
+  name                = each.value.acr_name
+  resource_group_name = each.value.acr_resource_group != null ? each.value.acr_resource_group : var.resource_group_name
 }
 
 resource "azurerm_role_assignment" "acr_access" {
-  for_each             = local.services_acr_name_map
+  for_each             = local.services_with_acr
   scope                = data.azurerm_container_registry.acr[each.key].id
   role_definition_name = "AcrPush"
   principal_id         = azuread_service_principal.acr_sp[each.key].id

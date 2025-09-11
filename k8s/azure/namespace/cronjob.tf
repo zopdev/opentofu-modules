@@ -21,7 +21,13 @@ locals {
   cron_all_images = merge(local.cron_existing_images, local.cron_new_images)
 
   cron_jobs_acr_name_map = {
-    for service_key, service_config in var.cron_jobs : service_key => coalesce(service_config.acr_name, service_key)
+    for service_key, service_config in var.cron_jobs : service_key => coalesce(service_config.acr_name, "")
+  }
+
+  # Filter out services with empty ACR names for ACR-related resources
+  cron_jobs_with_acr = {
+    for service_key, service_config in var.cron_jobs : service_key => service_config
+    if service_config.acr_name != null && service_config.acr_name != ""
   }
 
 }
@@ -103,13 +109,13 @@ resource "azuread_service_principal_password" "cron_acr_sp_pwd" {
 }
 
 data "azurerm_container_registry" "cron_acr" {
-  for_each            = local.cron_jobs_acr_name_map
-  name                = each.value
-  resource_group_name = var.cron_jobs[each.key].acr_resource_group != null ? var.cron_jobs[each.key].acr_resource_group : var.resource_group_name
+  for_each            = local.cron_jobs_with_acr
+  name                = each.value.acr_name
+  resource_group_name = each.value.acr_resource_group != null ? each.value.acr_resource_group : var.resource_group_name
 }
 
 resource "azurerm_role_assignment" "cron_acr_access" {
-  for_each             = local.cron_jobs_acr_name_map
+  for_each             = local.cron_jobs_with_acr
   scope                = data.azurerm_container_registry.cron_acr[each.key].id
   role_definition_name = "AcrPush"
   principal_id         = azuread_service_principal.cron_acr_sp[each.key].id
