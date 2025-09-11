@@ -24,24 +24,30 @@ locals {
   private_subnets_cidrs = var.shared_services.type == "aws" ? module.remote_state_aws_cluster[0].private_subnets : (var.shared_services.type == "gcp" ? module.remote_state_gcp_cluster[0].private_subnets : module.remote_state_azure_cluster[0].private_subnets)
   db_subnets_cidrs      = var.shared_services.type == "aws" ? module.remote_state_aws_cluster[0].db_subnets : (var.shared_services.type == "gcp" ? module.remote_state_gcp_cluster[0].db_subnets : module.remote_state_azure_cluster[0].db_subnets)
 
-  database_map = merge(
-  {
-    for service_key, service_value in var.services :
+  grouped_database_map = merge(
+    {
+      for service_key, service_value in var.services :
       service_value.datastore_configs.name => [
-        service_value.datastore_configs.databse
-      ]
+      service_value.datastore_configs.databse
+    ]...
       if try(service_value.datastore_configs.name, null) != null &&
-         try(service_value.datastore_configs.databse, null) != null
-  },
-  {
-    for cron_key, cron_value in var.cron_jobs :
+      try(service_value.datastore_configs.databse, null) != null
+    },
+    {
+      for cron_key, cron_value in var.cron_jobs :
       cron_value.datastore_configs.name => [
-        cron_value.datastore_configs.databse
-      ]
+      cron_value.datastore_configs.databse
+    ]...
       if try(cron_value.datastore_configs.name, null) != null &&
-         try(cron_value.datastore_configs.databse, null) != null
+      try(cron_value.datastore_configs.databse, null) != null
+    }
+  )
+
+  # Remove duplicates in each list
+  database_map = {
+    for k, v in local.grouped_database_map :
+    k => distinct(flatten(v))
   }
-)
 }
 
 data "aws_vpc" "vpc" {
