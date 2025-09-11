@@ -130,7 +130,7 @@ module "mysql_v2" {
   multi_ds                   = true
   key_vault_id               = data.azurerm_key_vault.secrets.id
   tags                       = local.common_tags
-  mysql_version              = each.value.version != null ? each.value.version == "" ? "8.0" : "8.0"
+  mysql_version              = each.value.version != null ? each.value.version == "" ? each.value.version : "8.0" : "8.0"
 }
 
 
