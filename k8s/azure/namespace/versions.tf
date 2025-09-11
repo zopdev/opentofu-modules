@@ -47,7 +47,7 @@ terraform {
 
     shell = {
       source  = "scottwinkler/shell"
-      version = "1.8.0"
+      version = "1.7.10"
     }
 
   }
