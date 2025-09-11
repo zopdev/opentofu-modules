@@ -360,6 +360,7 @@ variable "sql_list" {
     disk_autoresize         = optional(string)
     disk_size               = optional(string)
     enable_ssl              = optional(bool)
+    version                 = optional(bool)
   }))
   default = null
 }
