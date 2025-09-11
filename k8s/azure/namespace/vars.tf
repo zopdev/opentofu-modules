@@ -330,6 +330,10 @@ variable "shared_services" {
     storage_account = optional(string)
     container = optional(string)
     cluster_prefix = optional(string)
+    client_id = optional(string)
+    client_secret = optional(string)
+    tenant_id = optional(string)
+    subscription_id = optional(string)
   })
 }
 

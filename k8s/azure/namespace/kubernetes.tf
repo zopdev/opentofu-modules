@@ -25,6 +25,12 @@ module "remote_state_azure_cluster" {
   storage_account = var.shared_services.storage_account
   container       = var.shared_services.container
   bucket_prefix   = local.cluster_prefix
+  
+  # Service Principal Authentication from shared_services
+  client_id       = var.shared_services.client_id
+  client_secret   = var.shared_services.client_secret
+  tenant_id       = var.shared_services.tenant_id
+  subscription_id = var.shared_services.subscription_id
 }
 
 data "azurerm_kubernetes_cluster" "cluster" {
