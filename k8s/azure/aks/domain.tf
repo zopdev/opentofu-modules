@@ -3,6 +3,7 @@ locals {
 }
 
 data "azurerm_dns_zone" "dns_zone" {
+  count = local.domain_name != "" ? 1 : 0
   name                  = var.accessibility.domain_name
   resource_group_name   = var.resource_group_name
 }
@@ -16,9 +17,10 @@ resource "azurerm_public_ip" "app_public_ip" {
 }
 
 resource "azurerm_dns_a_record" "a_record" {
+  count = local.domain_name != "" ? 1 : 0
   name                  = "*"
-  zone_name             = data.azurerm_dns_zone.dns_zone.name
-  resource_group_name   = data.azurerm_dns_zone.dns_zone.resource_group_name
+  zone_name             = data.azurerm_dns_zone.dns_zone[0].name
+  resource_group_name   = data.azurerm_dns_zone.dns_zone[0].resource_group_name
   ttl                   = 60
   records               = [azurerm_public_ip.app_public_ip.ip_address]
 }

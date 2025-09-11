@@ -3,7 +3,8 @@ data "template_file" "cert_manager_template" {
 }
 
 resource "azurerm_role_assignment" "cert-manager" {
-  scope                = data.azurerm_dns_zone.dns_zone.id
+  count = local.domain_name != "" ? 1 : 0
+  scope                = data.azurerm_dns_zone.dns_zone[0].id
   role_definition_name = "DNS Zone Contributor"
   principal_id         = data.azurerm_kubernetes_cluster.cluster.kubelet_identity[0].object_id
 }
