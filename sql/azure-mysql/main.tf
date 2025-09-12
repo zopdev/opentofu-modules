@@ -32,8 +32,8 @@ resource "azurerm_mysql_flexible_database" "mysql_db" {
   name                         = each.value.db_name
   resource_group_name          = var.resource_group_name
   server_name                  = azurerm_mysql_flexible_server.mysql_server.name
-  charset                      = var.charset
-  collation                    = var.collation
+  charset                      = local.charset
+  collation                    = local.collation
 }
 
 resource "azurerm_mysql_flexible_server_configuration" "mysql_parameter_group" {

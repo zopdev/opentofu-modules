@@ -37,13 +37,13 @@ variable "mysql_version" {
 variable "collation" {
   description = "This is the collation type"
   type        = string
-  default     = "utf8_unicode_ci"
+  default     = null
 }
 
 variable "charset" {
   description = "Specific character set encoding"
   type        = string
-  default     = "utf8"
+  default     = null
 }
 
 variable "sku_name" {

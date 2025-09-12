@@ -6,6 +6,15 @@ locals {
       user = "${database}_${random_string.mysql_username[database].result}"
     } if database != null
   })
+
+  # Conditional charset and collation based on MySQL version
+  charset = var.charset != null ? var.charset : (
+    var.mysql_version == "5.7" ? "utf8" : "utf8mb3"
+  )
+  
+  collation = var.collation != null ? var.collation : (
+    var.mysql_version == "5.7" ? "utf8_unicode_ci" : "utf8mb3_unicode_ci"
+  )
 }
 
 resource "random_password" "mysql_db_password" {
