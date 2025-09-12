@@ -6,6 +6,7 @@ resource "azurerm_mysql_flexible_server" "mysql_server" {
   administrator_password    = azurerm_key_vault_secret.mysql_db_secret.value
   backup_retention_days     = var.backup_retention_days
   sku_name                  = var.sku_name
+  version                   = var.mysql_version
 
   storage {
     size_gb = var.storage
