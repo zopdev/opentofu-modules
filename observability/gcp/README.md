@@ -1,6 +1,6 @@
 # GCP Terraform  Module
 
-The `gcp` module contains all resources to setup `Loki for Logs`, `Cortex for Metrics` and `Tempo for Traces` in Google Cloud Provider.
+The `gcp` module contains all resources to setup `Loki for Logs`, `Cortex for Metrics`, `Tempo for Traces`, and `OpenObserve for Observability` in Google Cloud Provider.
 
 ## Variables
 
@@ -15,6 +15,7 @@ The `gcp` module contains all resources to setup `Loki for Logs`, `Cortex for Me
 | labels                      | map(string) | Required          | Common Labels on the resources                                                                                       | `null`  |
 | loki                        | object      | Required          | Loki configuration for observability setup                                                                       | `""`    |
 | mimir                       | object      | Required          | mimir configuration for observability setup                                                                      | `null`  |
+| openobserve                 | object      | Optional          | OpenObserve configuration for observability setup                                                                | `null`  |
 | observability_suffix        | string      | Required          | To add a suffix to Storage Buckets in Observability Cluster                                                          | `""`    |       
 | project_id                  | string      | Required          | Project ID                                                                                                           | `""`    |
 | service_account_name_prefix | string      | Required          | Prefix to be used for Service Account Names                                                                         |         |
@@ -270,4 +271,90 @@ The `gcp` module contains all resources to setup `Loki for Logs`, `Cortex for Me
 | tempo.metrics_generator.service_graphs_max_items       | number       | Optional          | Maximum items in service graphs                         | `30000` |
 | tempo.metrics_generator.service_graphs_wait            | string       | Optional          | Wait time for service graphs                            | `30s`   |
 | tempo.querier.replicas                                     | number       | Optional          | Number of replicas for the Querier.                        | `1`       |
-| tempo.queryfrontend.replicas                               | number       | Optional          | Number of replicas for the Query Frontend.                 | `1`       |
+
+### OpenObserve
+
+OpenObserve is a cloud-native observability platform built specifically for logs, metrics, traces, and analytics designed to work at petabyte scale.
+
+| <div style="width:150px">inputs</div>       | Type    | Required/Optional | <div style="width:200px">Description</div>                           | Default   |
+|:--------------------------------------------|:--------|:------------------|----------------------------------------------------------------------|:----------|
+| openobserve.enable                          | boolean | Required          | Enable OpenObserve for observability setup                           | `false`   |
+| openobserve.enable_ingress                  | boolean | Optional          | Enable ingress for OpenObserve instances                             | `false`   |
+| openobserve.instances                       | list    | Optional          | List of OpenObserve instances to deploy                              | `[]`      |
+| openobserve.instances[].name                | string  | Required          | Name of the OpenObserve instance                                     |           |
+| openobserve.instances[].replicaCount        | number  | Optional          | Number of replicas for the instance                                  | `2`       |
+| openobserve.instances[].resources.requests.cpu | string | Optional          | CPU request for the instance                                         | `"500m"`  |
+| openobserve.instances[].resources.requests.memory | string | Optional          | Memory request for the instance                                      | `"1Gi"`   |
+| openobserve.instances[].resources.limits.cpu | string | Optional          | CPU limit for the instance                                           | `"1"`     |
+| openobserve.instances[].resources.limits.memory | string | Optional          | Memory limit for the instance                                        | `"2Gi"`   |
+| openobserve.instances[].storage.provider    | string  | Optional          | Storage provider (gcs)                                               | `"gcs"`   |
+| openobserve.instances[].storage.bucket_name | string  | Required          | GCS bucket name for storage                                          |           |
+| openobserve.instances[].storage.region      | string  | Optional          | Storage region                                                       | `"auto"`  |
+| openobserve.instances[].storage.access_key_path | string | Optional          | Path to the access key file                                          | `"/app/key.json"` |
+| openobserve.instances[].storage.secret_name | string  | Required          | Kubernetes secret name for GCS credentials                           |           |
+| openobserve.instances[].env                 | list    | Optional          | Additional environment variables                                     | `[]`      |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| openobserve_host_urls | Map of OpenObserve instance names to their host URLs |
+| openobserve_bucket_names | Map of OpenObserve instance names to their GCS bucket names |
+| openobserve_service_accounts | Map of OpenObserve instance names to their service account emails |
+
+### Example Usage
+
+```hcl
+module "observability" {
+  source = "./observability/gcp"
+
+  app_name                      = "my-app"
+  app_env                      = "production"
+  app_region                   = "us-central1"
+  project_id                   = "my-gcp-project"
+  domain_name                  = "example.com"
+  hosted_zone                  = "example.com"
+  observability_suffix         = "prod"
+  service_account_name_prefix  = "my-app-sa"
+  
+  labels = {
+    environment = "production"
+    team        = "platform"
+  }
+
+  # Enable OpenObserve with multiple instances
+  openobserve = {
+    enable        = true
+    enable_ingress = true
+    instances = [
+      {
+        name = "logs"
+        replicaCount = 2
+        resources = {
+          requests = {
+            cpu    = "500m"
+            memory = "1Gi"
+          }
+          limits = {
+            cpu    = "1"
+            memory = "2Gi"
+          }
+        }
+        storage = {
+          provider        = "gcs"
+          bucket_name     = "my-logs-bucket"
+          region          = "auto"
+          access_key_path = "/app/key.json"
+          secret_name     = "openobserve-gcs-creds-logs"
+        }
+        env = [
+          {
+            name  = "ZO_LOG_LEVEL"
+            value = "info"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
