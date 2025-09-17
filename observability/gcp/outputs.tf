@@ -13,3 +13,13 @@ output "tempo_host_url" {
 output "cortex_host_url" {
   value = local.enable_cortex ? (local.enable_ingress_cortex ? kubernetes_ingress_v1.service_ingress["cortex-distributor:8080-cortex"].spec[0].rule[0].host : "cortex-distributor.cortex:8080") : ""
 }
+
+output "openobserve_host_urls" {
+  value = local.enable_openobserve ? {
+    for instance in var.openobserve : instance.name => (
+      instance.enable_ingress != false ? 
+      kubernetes_ingress_v1.service_ingress["${instance.name}:5080-openobserve"].spec[0].rule[0].host : 
+      "${instance.name}.openobserve:5080"
+    ) if instance.enable
+  } : {}
+}

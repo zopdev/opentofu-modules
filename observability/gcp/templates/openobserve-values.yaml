@@ -9,6 +9,8 @@ resources:
     memory: ${memory_limit}
 
 auth:
+  ZO_ROOT_USER_EMAIL: "${root_user_email}"
+  ZO_ROOT_USER_PASSWORD: "${root_user_password}"
   ZO_S3_ACCESS_KEY: "/app/key.json"
   ZO_S3_SECRET_KEY: "/app/key.json"
 

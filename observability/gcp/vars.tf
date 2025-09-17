@@ -408,7 +408,7 @@ variable "openobserve" {
     max_cpu = optional(string, "1")
     min_memory = optional(string, "512Mi")
     max_memory = optional(string, "1Gi")
-    enable_ingress = optional(bool, false)
+    enable_ingress = optional(bool, true)
     env = optional(list(object({
       name = string
       value = string

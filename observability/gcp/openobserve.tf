@@ -62,6 +62,17 @@ resource "kubernetes_secret" "openobserve-gcs-credentials" {
   type = "Opaque"
 }
 
+# Generate random password for OpenObserve
+resource "random_password" "openobserve_password" {
+  for_each = local.enable_openobserve ? { for instance in var.openobserve : instance.name => instance if instance.enable } : {}
+  
+  length  = 16
+  special = true
+  upper   = true
+  lower   = true
+  numeric = true
+}
+
 # Create template for OpenObserve values
 data "template_file" "openobserve_template" {
   for_each = local.enable_openobserve ? { for instance in var.openobserve : instance.name => instance if instance.enable } : {}
@@ -78,6 +89,8 @@ data "template_file" "openobserve_template" {
     storage_bucket_name = google_storage_bucket.openobserve_data[each.key].name
     storage_access_key_path = "/app/key.json"
     secret_name         = "openobserve-gcs-creds-${each.value.name}"
+    root_user_email     = "admin@zop.dev"
+    root_user_password  = random_password.openobserve_password[each.key].result
     additional_env_vars = length(try(each.value.env, [])) > 0 ? join("\n", [for env in each.value.env : "  - name: ${env.name}\n    value: \"${env.value}\""]) : ""
   }
 }
