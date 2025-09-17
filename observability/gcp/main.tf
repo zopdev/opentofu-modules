@@ -13,6 +13,7 @@ locals {
   enable_ingress_tempo = local.enable_tempo ? (var.tempo.enable_ingress != null ? var.tempo.enable_ingress : false ) : false
   enable_ingress_mimir = local.enable_mimir ? (var.mimir.enable_ingress != null ? var.mimir.enable_ingress : false ) : false
   enable_ingress_cortex = local.enable_cortex ? (var.cortex.enable_ingress != null ? var.cortex.enable_ingress : false ) : false
+  enable_ingress_openobserve = true
 
   app_namespaces = {
     loki = local.enable_loki ?  {
@@ -32,8 +33,8 @@ locals {
       ingress   = local.enable_ingress_mimir
     } : null
     openobserve = local.enable_openobserve ? {
-      services = [for instance in var.openobserve : "${instance.name}:5080" if instance.enable]
-      ingress  = local.enable_openobserve
+      services = [for instance in var.openobserve : "${instance.name}-openobserve-standalone:5080"]
+      ingress  = local.enable_ingress_openobserve
     } : null
   }
 
