@@ -91,3 +91,14 @@ output "custom_secrets_name_list" {
     for  secret_key in var.custom_namespace_secrets : secret_key =>
     "${local.cluster_name}-${var.namespace}-${secret_key}-secret" }
 }
+
+output "namespace_service_account_key" {
+  description = "Azure Service Principal credentials for the namespace, used by CI/CD pipelines to push to ACR and deploy to AKS"
+  value = {
+    password       = azuread_service_principal_password.namespace_sp_pwd.value
+    subscriptionId = data.azurerm_subscription.current.subscription_id
+    tenantId       = data.azurerm_subscription.current.tenant_id
+    appId          = azuread_application.namespace_sp.application_id
+  }
+  sensitive = true
+}

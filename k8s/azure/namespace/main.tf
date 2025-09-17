@@ -24,3 +24,28 @@ resource "kubernetes_namespace" "app_environments" {
     ]
   }
 }
+
+resource "azuread_application" "namespace_sp" {
+  display_name = "${local.cluster_name}-${var.namespace}"
+}
+
+resource "azuread_service_principal" "namespace_sp" {
+  application_id = azuread_application.namespace_sp.application_id
+}
+
+resource "azuread_service_principal_password" "namespace_sp_pwd" {
+  service_principal_id = azuread_service_principal.namespace_sp.id
+}
+
+resource "azurerm_role_assignment" "namespace_acr_access" {
+  for_each             = local.services_acr_name_map
+  scope                = data.azurerm_container_registry.acr[each.key].id
+  role_definition_name = "AcrPush"
+  principal_id         = azuread_service_principal.namespace_sp.id
+}
+
+resource "azurerm_role_assignment" "namespace_editor" {
+  scope                = "${data.azurerm_kubernetes_cluster.cluster.id}/namespace/${var.namespace}"
+  role_definition_name = "Azure Kubernetes Service RBAC Writer"
+  principal_id         = azuread_service_principal.namespace_sp.id
+}
