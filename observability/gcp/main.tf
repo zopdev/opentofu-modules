@@ -7,6 +7,7 @@ locals {
   enable_tempo  = try(var.tempo != null ? var.tempo.enable : false, false)
   enable_cortex = try(var.cortex != null ? var.cortex.enable : false, false)
   enable_mimir  = try(var.mimir != null ? var.mimir.enable : false,false)
+  enable_openobserve = length([for instance in var.openobserve : instance if instance.enable]) > 0
 
   enable_ingress_loki = local.enable_loki ? (var.loki.enable_ingress != null ? var.loki.enable_ingress : false ) : false
   enable_ingress_tempo = local.enable_tempo ? (var.tempo.enable_ingress != null ? var.tempo.enable_ingress : false ) : false
@@ -29,6 +30,10 @@ locals {
     mimir  = local.enable_mimir  ? {
       services  = ["mimir-distributor:8080"]
       ingress   = local.enable_ingress_mimir
+    } : null
+    openobserve = local.enable_openobserve ? {
+      services = [for instance in var.openobserve : "${instance.name}:5080" if instance.enable]
+      ingress  = local.enable_openobserve
     } : null
   }
 
