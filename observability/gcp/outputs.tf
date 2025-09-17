@@ -17,7 +17,7 @@ output "cortex_host_url" {
 output "openobserve_host_urls" {
   value = local.enable_openobserve ? {
     for instance in var.openobserve : instance.name => (
-      instance.enable_ingress != false ? 
+      (instance.enable_ingress == null || instance.enable_ingress == true) ? 
       kubernetes_ingress_v1.service_ingress["${instance.name}:5080-openobserve"].spec[0].rule[0].host : 
       "${instance.name}.openobserve:5080"
     ) if instance.enable
