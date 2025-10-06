@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   registry: docker.io
-  repository: bitnami/kubernetes-event-exporter
+  repository: bitnamilegacy/kubernetes-event-exporter
   tag: 1.6.1-debian-11-r1
 
 config:
