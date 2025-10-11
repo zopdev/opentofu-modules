@@ -36,12 +36,15 @@ output "os" {
 }
 
 output "node_configs" {
+  value = {
+    machine_type   = var.node_config.node_type
+    min_node_count = tostring(var.node_config.min_count)
+    max_node_count = tostring(var.node_config.max_count)
+  }
+}
+
+output "monitoring_node_configs" {
   value = [
-    {
-      machine_type   = var.node_config.node_type
-      min_node_count = tostring(var.node_config.min_count)
-      max_node_count = tostring(var.node_config.max_count)
-    },
     var.monitoring_node_config == null ? null : {
       machine_type   = var.monitoring_node_config.node_type
       min_node_count = tostring(var.monitoring_node_config.min_count)
