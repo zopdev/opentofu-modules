@@ -61,7 +61,25 @@ mimir:
     query_scheduler:
       max_outstanding_requests_per_tenant: ${limits_max_outstanding_requests_per_tenant}
     ruler:
+      enabled: true
+      replicas: 2
       rule_path: /data
+      alertmanager_url: http://alertmanager.monitoring:9093
+      external_url: http://mimir-ruler.mimir:8080
+      storage:
+        type: local
+        local:
+          directory: /data
+      persistence:
+        enabled: true
+        size: 10Gi
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
     ruler_storage:
       cache:
         backend: memcached
@@ -361,9 +379,24 @@ ruler:
     - name: ${cluster_name}-mimir-google-credentials
       secret:
         secretName: ${cluster_name}-mimir-google-credentials
+    - name: ${cluster_name}-mimir-rules
+      configMap:
+        name: ${cluster_name}-mimir-alerts
+    - name: ${cluster_name}-loki-rules
+      configMap:
+        name: ${cluster_name}-loki-alerts
+    - name: ${cluster_name}-tempo-rules
+      configMap:
+        name: ${cluster_name}-tempo-alerts
   extraVolumeMounts:
     - name: ${cluster_name}-mimir-google-credentials
       mountPath: /etc/mimir/google/
+    - name: ${cluster_name}-mimir-rules
+      mountPath: /data
+    - name: ${cluster_name}-loki-rules
+      mountPath: /data
+    - name: ${cluster_name}-tempo-rules
+      mountPath: /data
   env:
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: "/etc/mimir/google/gcs.json"

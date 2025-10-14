@@ -1,110 +1,106 @@
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  generation: 1
-  namespace: loki
-  labels:
-    app: kube-prometheus-stack
-    heritage: Helm
-    release: prometheus
   name: ${cluster_name}-loki-alerts
-spec:
-  groups:
-    - name: loki-alerts
-      rules:
-        # Alert if loki distributor lines exceeds the limit.
-        - alert: ${cluster_name}_loki_distributor_ingested_lines_exceeds_limit_${distributor_lines_received_threshold}
-          annotations:
-            description: "${cluster_name} loki distributor ingested lines exceeded the limit ${distributor_lines_received_threshold}"
-          expr: sum(irate(loki_distributor_lines_received_total[5m])) > ${distributor_lines_received_threshold}
-          labels:
-            severity: warning
-            servicealert: "true"
-            cluster: ${cluster_name}
+  namespace: loki
+data:
+  loki-alerts.yaml : |
+    groups:
+      - name: loki-alerts
+        rules:
+          # Alert if loki distributor lines exceeds the limit.
+          - alert: ${cluster_name}_loki_distributor_ingested_lines_exceeds_limit_${distributor_lines_received_threshold}
+            annotations:
+              description: "${cluster_name} loki distributor ingested lines exceeded the limit ${distributor_lines_received_threshold}"
+            expr: sum(irate(loki_distributor_lines_received_total[5m])) > ${distributor_lines_received_threshold}
+            labels:
+              severity: warning
+              servicealert: "true"
+              cluster: ${cluster_name}
 
-        # Alert if loki distributor bytes recieved is zero
-        - alert: ${cluster_name}_loki_distributor_bytes_recieved_is_zero
-          annotations:
-            description: "${cluster_name} loki distributor recieved bytes is zero"
-          expr: sum(rate(loki_distributor_bytes_received_total{namespace="loki",service="loki-distributor"}[5m])) < ${distributor_bytes_received_threshold}
-          labels:
-            severity: critical
-            servicealert: "true"
-            cluster: ${cluster_name}
+          # Alert if loki distributor bytes recieved is zero
+          - alert: ${cluster_name}_loki_distributor_bytes_recieved_is_zero
+            annotations:
+              description: "${cluster_name} loki distributor recieved bytes is zero"
+            expr: sum(rate(loki_distributor_bytes_received_total{namespace="loki",service="loki-distributor"}[5m])) < ${distributor_bytes_received_threshold}
+            labels:
+              severity: critical
+              servicealert: "true"
+              cluster: ${cluster_name}
 
-        # Alert if loki distributor ingester appended failure is above ${distributor_appended_failures_threshold}
-        - alert: ${cluster_name}_loki_distributor_appended_failure_is_${distributor_appended_failures_threshold}
-          annotations:
-            description: "${cluster_name} loki distributor appended failure is above ${distributor_appended_failures_threshold}"
-          expr: sum(loki_distributor_ingester_append_failures_total{service="loki-distributor"}) > ${distributor_appended_failures_threshold}
-          labels:
-            severity: critical
-            servicealert: "true"
-            cluster: ${cluster_name}
+          # Alert if loki distributor ingester appended failure is above ${distributor_appended_failures_threshold}
+          - alert: ${cluster_name}_loki_distributor_appended_failure_is_${distributor_appended_failures_threshold}
+            annotations:
+              description: "${cluster_name} loki distributor appended failure is above ${distributor_appended_failures_threshold}"
+            expr: sum(loki_distributor_ingester_append_failures_total{service="loki-distributor"}) > ${distributor_appended_failures_threshold}
+            labels:
+              severity: critical
+              servicealert: "true"
+              cluster: ${cluster_name}
 
-        - alert: ${cluster_name}_Loki_Request_Errors
-          annotations:
-            description: "${cluster_name} loki  is experiencing errors."
-          expr: 100 * sum(rate(loki_request_duration_seconds_count{status_code=~"5.."}[2m])) by (namespace, job, route)/sum(rate(loki_request_duration_seconds_count[2m])) by (namespace, job, route) > ${request_errors_threshold}
-          labels:
-            severity: warning
-            servicealert: "true"
-            cluster: ${cluster_name}
+          - alert: ${cluster_name}_Loki_Request_Errors
+            annotations:
+              description: "${cluster_name} loki  is experiencing errors."
+            expr: 100 * sum(rate(loki_request_duration_seconds_count{status_code=~"5.."}[2m])) by (namespace, job, route)/sum(rate(loki_request_duration_seconds_count[2m])) by (namespace, job, route) > ${request_errors_threshold}
+            labels:
+              severity: warning
+              servicealert: "true"
+              cluster: ${cluster_name}
 
-        - alert: ${cluster_name}_Loki_Request_Latency
-          annotations:
-            description: "${cluster_name} loki is experiencing 99th percentile latency."
-          expr: histogram_quantile(0.99, sum by(le, service) (rate(loki_request_duration_seconds_bucket{namespace="loki"}[5m]))) > ${request_latency_threshold}
-          labels:
-            severity: warning
-            servicealert: "true"
-            cluster: ${cluster_name}
+          - alert: ${cluster_name}_Loki_Request_Latency
+            annotations:
+              description: "${cluster_name} loki is experiencing 99th percentile latency."
+            expr: histogram_quantile(0.99, sum by(le, service) (rate(loki_request_duration_seconds_bucket{namespace="loki"}[5m]))) > ${request_latency_threshold}
+            labels:
+              severity: warning
+              servicealert: "true"
+              cluster: ${cluster_name}
 
-        # Alert if loki distributor replica is below the threshold
-        - alert: ${cluster_name}_loki_distributor_replica_below_${distributor_replica_threshold}
-          annotations:
-            description: "${cluster_name} loki distributor replica count is below ${distributor_replica_threshold} of the allocated replica."
-          expr: count by (service) (loki_distributor_replication_factor{container="distributor",namespace="loki",service="loki-distributor"}) < ${distributor_replica_threshold}
-          labels:
-            severity: critical
-            servicealert: "true"
-            cluster: ${cluster_name}
+          # Alert if loki distributor replica is below the threshold
+          - alert: ${cluster_name}_loki_distributor_replica_below_${distributor_replica_threshold}
+            annotations:
+              description: "${cluster_name} loki distributor replica count is below ${distributor_replica_threshold} of the allocated replica."
+            expr: count by (service) (loki_distributor_replication_factor{container="distributor",namespace="loki",service="loki-distributor"}) < ${distributor_replica_threshold}
+            labels:
+              severity: critical
+              servicealert: "true"
+              cluster: ${cluster_name}
 
-        - alert: ${cluster_name}_Loki_Request_Panics
-          annotations:
-            description: "${cluster_name} loki is experiencing increase of panics."
-          expr: sum(increase(loki_panic_total[10m])) by (namespace, job) > ${panics_threshold}
-          labels:
-            severity: critical
-            servicealert: "true"
-            cluster: ${cluster_name}
+          - alert: ${cluster_name}_Loki_Request_Panics
+            annotations:
+              description: "${cluster_name} loki is experiencing increase of panics."
+            expr: sum(increase(loki_panic_total[10m])) by (namespace, job) > ${panics_threshold}
+            labels:
+              severity: critical
+              servicealert: "true"
+              cluster: ${cluster_name}
 
-        # Alert if loki ingester replica is below the threshold
-        - alert: ${cluster_name}_loki_ingester_replica_below_${ingester_replica_threshold}
-          annotations:
-            description: "${cluster_name} loki ingester replica count is below ${ingester_replica_threshold} of the allocated replica."
-          expr: kube_statefulset_status_replicas_available{namespace="loki", statefulset="loki-ingester"} < ${ingester_replica_threshold}
-          labels:
-            severity: critical
-            servicealert: "true"
-            cluster: ${cluster_name}
+          # Alert if loki ingester replica is below the threshold
+          - alert: ${cluster_name}_loki_ingester_replica_below_${ingester_replica_threshold}
+            annotations:
+              description: "${cluster_name} loki ingester replica count is below ${ingester_replica_threshold} of the allocated replica."
+            expr: kube_statefulset_status_replicas_available{namespace="loki", statefulset="loki-ingester"} < ${ingester_replica_threshold}
+            labels:
+              severity: critical
+              servicealert: "true"
+              cluster: ${cluster_name}
 
-        # Alert if loki querier replica is below the threshold
-        - alert: ${cluster_name}_loki_querier_replica_below_${querier_replica_threshold}
-          annotations:
-            description: "${cluster_name} loki querier replica count is below ${querier_replica_threshold} of the allocated replica."
-          expr: kube_statefulset_status_replicas_available{namespace="loki", statefulset="loki-querier"} < ${querier_replica_threshold}
-          labels:
-            severity: critical
-            servicealert: "true"
-            cluster: ${cluster_name}
+          # Alert if loki querier replica is below the threshold
+          - alert: ${cluster_name}_loki_querier_replica_below_${querier_replica_threshold}
+            annotations:
+              description: "${cluster_name} loki querier replica count is below ${querier_replica_threshold} of the allocated replica."
+            expr: kube_statefulset_status_replicas_available{namespace="loki", statefulset="loki-querier"} < ${querier_replica_threshold}
+            labels:
+              severity: critical
+              servicealert: "true"
+              cluster: ${cluster_name}
 
-        # Alert if loki queryfrontend replica is below the threshold
-        - alert: ${cluster_name}_loki_queryfrontend_replica_below_${queryfrontend_replica_threshold}
-          annotations:
-            description: "${cluster_name} loki queryfrontend replica count is below ${queryfrontend_replica_threshold} of the allocated replica."
-          expr: kube_deployment_status_replicas_available{namespace="loki", deployment="loki-query-frontend"} < ${queryfrontend_replica_threshold}
-          labels:
-            severity: critical
-            servicealert: "true"
-            cluster: ${cluster_name}
+          # Alert if loki queryfrontend replica is below the threshold
+          - alert: ${cluster_name}_loki_queryfrontend_replica_below_${queryfrontend_replica_threshold}
+            annotations:
+              description: "${cluster_name} loki queryfrontend replica count is below ${queryfrontend_replica_threshold} of the allocated replica."
+            expr: kube_deployment_status_replicas_available{namespace="loki", deployment="loki-query-frontend"} < ${queryfrontend_replica_threshold}
+            labels:
+              severity: critical
+              servicealert: "true"
+              cluster: ${cluster_name}
