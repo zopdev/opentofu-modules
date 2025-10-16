@@ -20,7 +20,7 @@ locals {
 }
 
 data "template_file" "otel_template" {
-    count = local.otel_enable ? 1 : 0
+    count = local.enable_otel ? 1 : 0
     template = file("./templates/otel-collector-values.yaml")
     vars = {
         REMOTE_WRITE_CONFIGS   = jsonencode(local.remote_write_config)
@@ -39,7 +39,7 @@ data "template_file" "otel_template" {
 }
 
 resource "helm_release" "otel_collector" {
-    count = local.otel_enable ? 1 : 0
+    count = local.enable_otel ? 1 : 0
 
     chart            = "opentelemetry-collector"
     name             = "otel-collector"

@@ -416,3 +416,21 @@ variable "openobserve" {
   }))
   default = []
 }
+
+variable "otel" {
+  description = "Otel collector configuration"
+  type        = object({
+    enable = bool
+    scrape_interval        = optional(string)
+    batch_size             = optional(string)
+    timeout                = optional(string)
+    spike_limit_percentage = optional(string)
+    limit_percentage       = optional(string)
+    check_interval         = optional(string)
+    queue_size             = optional(string)
+    num_consumers          = optional(string)
+    initial_interval       = optional(string)
+    max_interval           = optional(string)
+    max_elapsed_time       = optional(string)
+  })
+}

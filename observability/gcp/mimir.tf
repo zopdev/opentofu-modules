@@ -119,3 +119,28 @@ resource "helm_release" "mimir" {
     kubernetes_secret.mimir-google-credentials,
   ]
 }
+
+data "template_file" "cluster_alerts" {
+  count      = local.enable_mimir ? 1 : 0
+  template = file("${path.module}/templates/cluster-level-alerts.yaml")
+  vars     = {
+    cluster_memory_usage_request_underutilisation_threshold = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.memory_underutilisation != null ? var.cluster_alert_thresholds.memory_underutilisation : 20)
+    cluster_cpu_usage_request_underutilisation_threshold = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.cpu_underutilisation != null ? var.cluster_alert_thresholds.cpu_underutilisation : 20)
+    cluster_node_count_max_value = local.enable_monitoring_node_pool ? var.monitoring_node_config.max_count : var.node_config.max_count
+    cluster_node_count_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.node_count != null ? var.cluster_alert_thresholds.node_count : 80)
+    cluster_pod_count_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.pod_count != null ? var.cluster_alert_thresholds.pod_count: 80)
+    cluster_total_cpu_utilization_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.cpu_utilisation != null ? var.cluster_alert_thresholds.cpu_utilisation: 80)
+    cluster_total_memory_utilization_threshold = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.memory_utilisation != null ? var.cluster_alert_thresholds.memory_utilisation: 20)
+    cluster_disk_utilization_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.disk_utilization != null ? var.cluster_alert_thresholds.disk_utilization: 80)
+    cluster_name   = local.cluster_name
+    cortex_enabled = try(var.observability_config.cortex == null ? false : var.observability_config.cortex.enable, false)
+    nginx_5xx_percentage_threshold = var.cluster_alert_thresholds == null ? 5 : (var.cluster_alert_thresholds.nginx_5xx_percentage_threshold != null ? var.cluster_alert_thresholds.nginx_5xx_percentage_threshold: 5)
+    cortex_disk_utilization_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.cortex_disk_utilization_threshold != null ? var.cluster_alert_thresholds.cortex_disk_utilization_threshold : 80)
+    prometheus_disk_utilization_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.prometheus_disk_utilization_threshold != null ? var.cluster_alert_thresholds.prometheus_disk_utilization_threshold : 80)
+  }
+}
+
+resource "kubectl_manifest" "cluster_alerts" {
+  yaml_body  = data.template_file.cluster_alerts[0].rendered
+  depends_on = [helm_release.mimir]
+}
