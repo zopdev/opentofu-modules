@@ -1,8 +1,4 @@
-resource "kubernetes_namespace" "monitoring" {
-    metadata {
-        name = "monitoring"
-    }
-}
+namespace = "monitoring"
 
 locals {
     ## this is otel remote write configs
@@ -57,4 +53,6 @@ resource "helm_release" "otel_collector" {
     values = [
         data.template_file.otel_template[count.index].rendered
     ]
+
+    depends_on = [helm_release.mimir]
 }

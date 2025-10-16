@@ -1,119 +1,122 @@
 apiVersion: monitoring.coreos.com/v1
-kind: ConfigMap
+kind: PrometheusRule
 metadata:
-  name: cluster-level-alerts
-  namespace: mimir
+  generation: 1
   labels:
-    mimir_rule_group: "true"
-data:
-  cluster-level-alerts.yaml: |
-    groups:
-      - name: cluster-level-alerts
-        rules:
+    app: kube-prometheus-stack
+    heritage: Helm
+    release: prometheus
+  name: ${cluster_name}
+spec:
+  groups:
+    - name: cluster-level-alerts
+      rules:
         # Alert if Overall  Memory utilisation as a percentage of allocation (requests) below threshold (20%).
-          - alert: ${cluster_name}_cluster_memory_utilisation_below_${cluster_memory_usage_request_underutilisation_threshold}%.
-            annotations:
-              description: "${cluster_name} cluster memory usage over request is below ${cluster_memory_usage_request_underutilisation_threshold}%."
-            expr: (((sum(kube_node_status_capacity{resource="memory",node!=""})))-sum(node_memory_MemAvailable_bytes{}))/ sum(kube_pod_container_resource_requests{resource="memory", node!=""}) * 100 <${cluster_memory_usage_request_underutilisation_threshold}
-            labels:
-              severity: warning
-              servicealert: "true"
-              cluster: ${cluster_name}
+         - alert: ${cluster_name}_cluster_memory_utilisation_below_${cluster_memory_usage_request_underutilisation_threshold}%.
+           annotations:
+             description: "${cluster_name} cluster memory usage over request is below ${cluster_memory_usage_request_underutilisation_threshold}%."
+           expr: (((sum(kube_node_status_capacity{resource="memory",node!=""})))-sum(node_memory_MemAvailable_bytes{}))/ sum(kube_pod_container_resource_requests{resource="memory", node!=""}) * 100 <${cluster_memory_usage_request_underutilisation_threshold}
+           labels:
+             severity: warning
+             servicealert: "true"
+             cluster: ${cluster_name}
                
-          # Alert if Overall CPU utilisation as a percentage of allocation (requests) below threshold (20%).
-          - alert: ${cluster_name}_cluster_cpu_utilisation_below_${cluster_cpu_usage_request_underutilisation_threshold}%.
-            annotations:
-              description: "${cluster_name} cluster CPU usage over request is below ${cluster_cpu_usage_request_underutilisation_threshold}%."
-            expr: sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal"}[5m]))/sum(kube_pod_container_resource_requests{resource="cpu",node!=""}) * 100 < ${cluster_cpu_usage_request_underutilisation_threshold}
-            labels:
-              severity: warning
-              servicealert: "true"
-              cluster: ${cluster_name}
+        # Alert if Overall CPU utilisation as a percentage of allocation (requests) below threshold (20%).
+         - alert: ${cluster_name}_cluster_cpu_utilisation_below_${cluster_cpu_usage_request_underutilisation_threshold}%.
+           annotations:
+             description: "${cluster_name} cluster CPU usage over request is below ${cluster_cpu_usage_request_underutilisation_threshold}%."
+           expr: sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal"}[5m]))/sum(kube_pod_container_resource_requests{resource="cpu",node!=""}) * 100 < ${cluster_cpu_usage_request_underutilisation_threshold}
+           labels:
+             severity: warning
+             servicealert: "true"
+             cluster: ${cluster_name}
              
-          # Alert if node nearing max node count.
-          - alert: ${cluster_name}_cluster_node_count_nearing_${cluster_node_count_threshold}%.
-            annotations:
-              description: "${cluster_name} cluster node count nearing ${cluster_node_count_threshold}%."
-            expr: sum(kube_node_info{})/${cluster_node_count_max_value} * 100 >  ${cluster_node_count_threshold}
-            labels:
-              severity: critical
-              servicealert: "true"
-              cluster: ${cluster_name}
+        # Alert if node nearing max node count.
+         - alert: ${cluster_name}_cluster_node_count_nearing_${cluster_node_count_threshold}%.
+           annotations:
+             description: "${cluster_name} cluster node count nearing ${cluster_node_count_threshold}%."
+           expr: sum(kube_node_info{})/${cluster_node_count_max_value} * 100 >  ${cluster_node_count_threshold}
+           labels:
+             severity: critical
+             servicealert: "true"
+             cluster: ${cluster_name}
              
-          # Alert if pods nearing max count  .
-          - alert: ${cluster_name}_cluster_pod_count_above_${cluster_pod_count_threshold}%.
-            annotations:
-              description: "${cluster_name} cluster pods count nearing ${cluster_pod_count_threshold}%."
-            expr: sum(kubelet_running_pods)/ (sum(kube_node_status_capacity{resource="pods"})) * 100 > ${cluster_pod_count_threshold}
-            labels:
-              severity: critical
-              servicealert: "true"
-              cluster: ${cluster_name}
+        # Alert if pods nearing max count  .
+         - alert: ${cluster_name}_cluster_pod_count_above_${cluster_pod_count_threshold}%.
+           annotations:
+             description: "${cluster_name} cluster pods count nearing ${cluster_pod_count_threshold}%."
+           expr: sum(kubelet_running_pods)/ (sum(kube_node_status_capacity{resource="pods"})) * 100 > ${cluster_pod_count_threshold}
+           labels:
+             severity: critical
+             servicealert: "true"
+             cluster: ${cluster_name}
 
-          # Alert if cluster CPU usage exceeds threshold.
-          - alert: ${cluster_name}_cluster_cpu_utilisation_above_${cluster_total_cpu_utilization_threshold}%.
-            annotations:
-              description: "${cluster_name} cluster overall cpu utilisation above ${cluster_total_cpu_utilization_threshold}%."
-            expr: sum(kube_pod_container_resource_requests{resource="cpu",node!=""}) / sum (machine_cpu_cores) * 100 > ${cluster_total_cpu_utilization_threshold}
-            labels:
-              severity: critical
-              servicealert: "true"
-              cluster: ${cluster_name}
+        # Alert if cluster CPU usage exceeds threshold.
+         - alert: ${cluster_name}_cluster_cpu_utilisation_above_${cluster_total_cpu_utilization_threshold}%.
+           annotations:
+             description: "${cluster_name} cluster overall cpu utilisation above ${cluster_total_cpu_utilization_threshold}%."
+           expr: sum(kube_pod_container_resource_requests{resource="cpu",node!=""}) / sum (machine_cpu_cores) * 100 > ${cluster_total_cpu_utilization_threshold}
+           labels:
+             severity: critical
+             servicealert: "true"
+             cluster: ${cluster_name}
+
           
-          # Alert if cluster memory usage above threshold.
-          - alert: ${cluster_name}_cluster_memory_utilisation_above_${cluster_total_memory_utilization_threshold}%.
-            annotations:
-              description: "${cluster_name} cluster overall memory utilisation above ${cluster_total_memory_utilization_threshold}%."
-            expr: (sum(kube_pod_container_resource_requests{resource="memory", node!=""})/sum(node_memory_MemTotal_bytes)) * 100  > ${cluster_total_memory_utilization_threshold}
-            labels:
-              severity: critical
-              servicealert: "true"
-              cluster: ${cluster_name}
+        # Alert if cluster memory usage above threshold.
+         - alert: ${cluster_name}_cluster_memory_utilisation_above_${cluster_total_memory_utilization_threshold}%.
+           annotations:
+             description: "${cluster_name} cluster overall memory utilisation above ${cluster_total_memory_utilization_threshold}%."
+           expr: (sum(kube_pod_container_resource_requests{resource="memory", node!=""})/sum(node_memory_MemTotal_bytes)) * 100  > ${cluster_total_memory_utilization_threshold}
+           labels:
+             severity: critical
+             servicealert: "true"
+             cluster: ${cluster_name}
 
-          # Alert if cluster disk usage above threshold.
-          - alert: ${cluster_name}_cluster_disk_usage_above_${cluster_disk_utilization_threshold}%.
-            annotations:
-              description: "${cluster_name} cluster disk usage above ${cluster_disk_utilization_threshold}%."
-            expr: sum(node_filesystem_free_bytes{mountpoint="/"} ) / sum(node_filesystem_size_bytes{mountpoint="/"} ) * 100 < 100-${cluster_disk_utilization_threshold}
-            labels:
-              severity: critical
-              servicealert: "true"
-              cluster: ${cluster_name}
 
-          # Alert if  given% of all nginx requests returned 5XX.
-          - alert: nginx_5xx_exceeds_${nginx_5xx_percentage_threshold}%.
-            annotations:
-              description: "More than ${nginx_5xx_percentage_threshold}% of all nginx requests returned 5XX"
-            expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"5.+"} ) / sum(nginx_ingress_controller_requests) ) > ${nginx_5xx_percentage_threshold}
-            for: 1m
-            labels:
-              servicealert: "true"
-              severity: warning
+        # Alert if cluster disk usage above threshold.
+         - alert: ${cluster_name}_cluster_disk_usage_above_${cluster_disk_utilization_threshold}%.
+           annotations:
+             description: "${cluster_name} cluster disk usage above ${cluster_disk_utilization_threshold}%."
+           expr: sum(node_filesystem_free_bytes{mountpoint="/"} ) / sum(node_filesystem_size_bytes{mountpoint="/"} ) * 100 < 100-${cluster_disk_utilization_threshold}
+           labels:
+             severity: critical
+             servicealert: "true"
+             cluster: ${cluster_name}
 
-          # Disk Usage alert if the cortex disk utilisation space reached 80% of the total
-          %{~ if cortex_enabled && cortex_disk_utilization_threshold != null ~}
-          - alert: cortex_disk_utilization_exceeds_${cortex_disk_utilization_threshold}%.
-            annotations:
-              description: "Cortex disk utilisation has reached to ${cortex_disk_utilization_threshold}% of the total"
-            expr: (100 * sum(kubelet_volume_stats_used_bytes{namespace="cortex"}) by (persistentvolumeclaim) / sum(kubelet_volume_stats_capacity_bytes{namespace="cortex"}) by (persistentvolumeclaim) > ${cortex_disk_utilization_threshold})
-            for: 1m
-            labels:
-              severity: warning
-              clusteralert: "true"
-              namespace: cortex
-              cluster: ${cluster_name}
-          %{~ endif ~}
+        # Alert if  given% of all nginx requests returned 5XX.
+         - alert: nginx_5xx_exceeds_${nginx_5xx_percentage_threshold}%.
+           annotations:
+             description: "More than ${nginx_5xx_percentage_threshold}% of all nginx requests returned 5XX"
+           expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"5.+"} ) / sum(nginx_ingress_controller_requests) ) > ${nginx_5xx_percentage_threshold}
+           for: 1m
+           labels:
+             servicealert: "true"
+             severity: warning
 
-          # Disk Usage alert if the prometheus disk utilisation space reached 80% of the total
-          %{~ if prometheus_disk_utilization_threshold != null ~}
-          - alert: prometheus_disk_utilization_exceeds_${prometheus_disk_utilization_threshold}%.
-            annotations:
-              description: "Prometheus disk utilisation has reached to ${prometheus_disk_utilization_threshold}% of the total"
-            expr: (100 * sum(kubelet_volume_stats_used_bytes{namespace="monitoring"}) by (persistentvolumeclaim) / sum(kubelet_volume_stats_capacity_bytes{namespace="monitoring"}) by (persistentvolumeclaim) > ${prometheus_disk_utilization_threshold})
-            for: 1m
-            labels:
-              severity: warning
-              clusteralert: "true"
-              namespace: monitoring
-              cluster: ${cluster_name}
-          %{~ endif ~}
+        # Disk Usage alert if the cortex disk utilisation space reached 80% of the total
+        %{~ if cortex_enabled && cortex_disk_utilization_threshold != null ~}
+         - alert: cortex_disk_utilization_exceeds_${cortex_disk_utilization_threshold}%.
+           annotations:
+             description: "Cortex disk utilisation has reached to ${cortex_disk_utilization_threshold}% of the total"
+           expr: (100 * sum(kubelet_volume_stats_used_bytes{namespace="cortex"}) by (persistentvolumeclaim) / sum(kubelet_volume_stats_capacity_bytes{namespace="cortex"}) by (persistentvolumeclaim) > ${cortex_disk_utilization_threshold})
+           for: 1m
+           labels:
+             severity: warning
+             clusteralert: "true"
+             namespace: cortex
+             cluster: ${cluster_name}
+        %{~ endif ~}
+
+        # Disk Usage alert if the prometheus disk utilisation space reached 80% of the total
+        %{~ if prometheus_disk_utilization_threshold != null ~}
+         - alert: prometheus_disk_utilization_exceeds_${prometheus_disk_utilization_threshold}%.
+           annotations:
+             description: "Prometheus disk utilisation has reached to ${prometheus_disk_utilization_threshold}% of the total"
+           expr: (100 * sum(kubelet_volume_stats_used_bytes{namespace="monitoring"}) by (persistentvolumeclaim) / sum(kubelet_volume_stats_capacity_bytes{namespace="monitoring"}) by (persistentvolumeclaim) > ${prometheus_disk_utilization_threshold})
+           for: 1m
+           labels:
+             severity: warning
+             clusteralert: "true"
+             namespace: monitoring
+             cluster: ${cluster_name}
+        %{~ endif ~}
