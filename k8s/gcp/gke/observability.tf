@@ -3,10 +3,11 @@ locals {
   enable_tempo  = try(var.observability_config.tempo != null ? var.observability_config.tempo.enable : false, false)
   enable_cortex = try(var.observability_config.cortex != null ? var.observability_config.cortex.enable : false, false)
   enable_mimir  = try(var.observability_config.mimir != null ? var.observability_config.mimir.enable : false,false)
+  enable_openobserve = length([for instance in try(var.observability_config.openobserve, []) : instance if instance.enable]) > 0
 }
 
 module "observability" {
-  count       =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir) ? 1: 0
+  count       =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir || local.enable_openobserve) ? 1: 0
 
   source = "../../../observability/gcp"
 
@@ -22,14 +23,11 @@ module "observability" {
   tempo                   = var.observability_config.tempo
   cortex                  = var.observability_config.cortex
   mimir                   = var.observability_config.mimir
+  openobserve             = try(var.observability_config.openobserve, [])
   service_account_name_prefix = local.cluster_service_account_name
 
   providers = {
     google  = google
     google.shared-services = google.shared-services
   }
-
-  depends_on = [helm_release.prometheus, helm_release.k8s_replicator]
 }
-
-

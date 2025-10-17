@@ -1,0 +1,67 @@
+replicaCount: ${replica_count}
+
+resources:
+  requests:
+    cpu: ${cpu_request}
+    memory: ${memory_request}
+  limits:
+    cpu: ${cpu_limit}
+    memory: ${memory_limit}
+
+auth:
+  ZO_ROOT_USER_EMAIL: "${root_user_email}"
+  ZO_ROOT_USER_PASSWORD: "${root_user_password}"
+  ZO_S3_ACCESS_KEY: "/app/key.json"
+  ZO_S3_SECRET_KEY: "/app/key.json"
+
+config:
+  ZO_S3_PROVIDER: "gcs"
+  ZO_S3_SERVER_URL: "https://storage.googleapis.com"
+  ZO_S3_REGION_NAME: "auto"
+  ZO_S3_BUCKET_NAME: "${storage_bucket_name}"
+  ZO_S3_ENDPOINT_URL: "https://storage.googleapis.com"
+  ZO_S3_BATCH_SIZE: "1000"
+  ZO_S3_BATCH_WAIT: "5s"
+  ZO_S3_FLUSH_INTERVAL: "30s"
+  ZO_S3_COMPRESSION: "gzip"
+  ZO_S3_STORAGE_CLASS: "STANDARD"
+  ZO_S3_DISABLE_SSL: "false"
+  ZO_S3_FORCE_PATH_STYLE: "false"
+  ZO_MEM_PERSIST_INTERVAL: "20"
+  ZO_FILE_PUSH_INTERVAL: "10"
+  ZO_MAX_FILE_SIZE_ON_DISK: "1048576"
+  ZO_MAX_FILE_RETENTION_TIME: "30"
+  ZO_COMPACT_MAX_FILE_SIZE: "1048576"
+  ZO_LOCAL_MODE_STORAGE: "s3"
+
+persistence:
+  enabled: false
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 5080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 5080
+  initialDelaySeconds: 5
+  periodSeconds: 5
+
+extraVolumeMounts:
+  - name: gcs-creds
+    mountPath: /app/key.json
+    subPath: key.json
+    readOnly: true
+
+extraVolumes:
+  - name: gcs-creds
+    secret:
+      secretName: ${secret_name}
+
+extraEnv:
+  - name: GOOGLE_APPLICATION_CREDENTIALS
+    value: /app/key.json
