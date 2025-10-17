@@ -255,6 +255,28 @@ variable "observability_config" {
                 }))
             })))
         }))
+        otel = optional(object({
+            version       = optional(string)
+            enable        = bool
+            remote_write  = optional(list(object({
+                host      = optional(string)
+                header    = optional(object({
+                    key   = optional(string)
+                    value = optional(string)
+                }))
+            })))
+            scrape_interval        = optional(string)
+            batch_size             = optional(string)
+            timeout                = optional(string)
+            spike_limit_percentage = optional(string)
+            limit_percentage       = optional(string)
+            check_interval         = optional(string)
+            queue_size             = optional(string)
+            num_consumers          = optional(string)
+            initial_interval       = optional(string)
+            max_interval           = optional(string)
+            max_elapsed_time       = optional(string)
+        }))
         grafana = optional(object({
             version           = optional(string)
             enable           = bool

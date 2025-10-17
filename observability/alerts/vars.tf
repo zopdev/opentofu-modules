@@ -79,3 +79,43 @@ variable "mimir" {
   })
   default = null
 }
+
+variable "cluster_alert_thresholds" {
+    description = "Cluster alerts threshold configuration."
+    type = object({
+        cpu_utilisation = optional(number)
+        cpu_underutilisation = optional(number)
+        node_count = optional(number)
+        memory_utilisation = optional(number)
+        memory_underutilisation = optional(number)
+        pod_count = optional(number)
+        nginx_5xx_percentage_threshold = optional(number)
+        disk_utilization = optional(number)
+        cortex_disk_utilization_threshold = optional(number)
+        prometheus_disk_utilization_threshold = optional(number)
+    })
+    default =  {
+        cpu_utilisation = 80
+        cpu_underutilisation = 20
+        node_count = 80
+        memory_utilisation = 80
+        memory_underutilisation = 20
+        pod_count = 80
+        nginx_5xx_percentage_threshold = 5
+        disk_utilization = 20
+        cortex_disk_utilization_threshold = 80
+        prometheus_disk_utilization_threshold = 80
+    }
+}
+
+variable "monitoring_node_config" {
+    description = "List of values for the node configuration of kubernetes cluster"
+    type        = object({
+        enable_monitoring_node_pool = optional(bool)
+        node_type       = optional(string)
+        min_count       = optional(number)
+        max_count       = optional(number)
+        availability_zones = optional(list(string))
+    })
+    default = null
+}

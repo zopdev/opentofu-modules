@@ -1,0 +1,78 @@
+mode: deployment
+
+replicaCount: 2
+
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+
+# Node placement for monitoring workloads
+%{~ if USE_MONITORING_NODE_POOL ~}
+nodeSelector:
+  role: "monitoring"
+tolerations:
+  - key: "workload"
+    operator: "Equal"
+    value: "monitoring"
+    effect: "NoSchedule"
+%{~ endif ~}
+
+config:
+  receivers:
+    prometheus:
+      config:
+        global:
+          scrape_interval: ${SCRAPE_INTERVAL}
+        scrape_configs:
+          - job_name: "kubernetes-nodes"
+            kubernetes_sd_configs:
+              - role: node
+          - job_name: "kubernetes-pods"
+            kubernetes_sd_configs:
+              - role: pod
+            relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                action: keep
+                regex: true
+              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                action: replace
+                target_label: __metrics_path__
+              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+                action: replace
+                regex: (.+)
+                replacement: $1
+                target_label: __address__
+
+  processors:
+    memory_limiter:
+      check_interval: ${CHECK_INTERVAL}
+      limit_percentage: ${LIMIT_PERCENTAGE}
+      spike_limit_percentage: ${SPIKE_LIMIT_PERCENTAGE}
+    batch:
+      send_batch_size: ${BATCH_SIZE}
+      timeout: ${TIMEOUT}
+
+  exporters:
+    prometheusremotewrite:
+      endpoint: ${REMOTE_WRITE_CONFIGS[0].host}
+      headers:
+        ${REMOTE_WRITE_CONFIGS[0].key}: ${REMOTE_WRITE_CONFIGS[0].value}
+      sending_queue:
+        enabled: true
+        num_consumers: ${NUM_CONSUMERS}
+        queue_size: ${QUEUE_SIZE}
+      retry_on_failure:
+        enabled: true
+        initial_interval: ${INITIAL_INTERVAL}
+        max_interval: ${MAX_INTERVAL}
+        max_elapsed_time: ${MAX_ELAPSED_TIME}
+
+  service:
+    telemetry:
+      logs:
+        level: info
+    pipelines:
+      metrics:
+        receivers: [prometheus]
+        processors: [memory_limiter, batch]
+        exporters: [prometheusremotewrite]
