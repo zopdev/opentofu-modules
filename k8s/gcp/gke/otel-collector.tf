@@ -1,5 +1,3 @@
-namespace = "monitoring"
-
 locals {
     ## this is otel remote write configs
     remote_write_config_list = try([
@@ -44,7 +42,6 @@ resource "helm_release" "otel_collector" {
     chart            = "opentelemetry-collector"
     name             = "otel-collector"
     namespace        = kubernetes_namespace.monitoring.metadata.0.name
-    create_namespace = true
     version          = try(var.observability_config.otel.version != null ? var.observability_config.otel.version : "0.136.1", "0.136.1") 
     timeout          = 1200
 
