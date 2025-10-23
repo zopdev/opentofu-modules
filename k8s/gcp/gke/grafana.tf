@@ -4,7 +4,6 @@ locals {
   grafana_datasource_list   = try(var.observability_config.grafana.configs != null ? (var.observability_config.grafana.configs.datasource_list != null ? var.observability_config.grafana.configs.datasource_list : {}) : {}, {})
   grafana_allowed_domains   = try(var.observability_config.grafana.configs != null ? (var.observability_config.grafana.configs.domains != null  ?  join(",", var.observability_config.grafana.configs.domains) : "") : "", "")
   prometheus_enable         = try(var.observability_config.prometheus != null ? var.observability_config.prometheus.enable : true, true)
-  otel_enable               = try(var.observability_config.otel != null ? var.observability_config.otel.enable : false, false)
   grafana_enable            = try(var.observability_config.grafana != null ? var.observability_config.grafana.enable : false, false)
   grafana_host              = try(var.observability_config.grafana.url != null ? var.observability_config.grafana.url : (local.domain_name != "" ? "grafana.${local.domain_name}" : ""), "")
 
