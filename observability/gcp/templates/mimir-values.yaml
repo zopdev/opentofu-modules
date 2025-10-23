@@ -61,9 +61,10 @@ mimir:
     query_scheduler:
       max_outstanding_requests_per_tenant: ${limits_max_outstanding_requests_per_tenant}
     ruler:
-      renabled: true
+      rule_path: /etc/mimir/rules
+      enabled: ${enable_otel}
+      %{~ if enable_otel == "true" ~}
       replicas: 2
-      rule_path: /data
       alertmanager_url: http://alertmanager.monitoring:9093
       external_url: http://mimir-ruler.mimir:8080
       storage:
@@ -80,6 +81,7 @@ mimir:
         limits:
           cpu: 500m
           memory: 512Mi
+      %{~ endif ~}
     ruler_storage:
       cache:
         backend: memcached
@@ -380,6 +382,7 @@ ruler:
     - name: ${cluster_name}-mimir-google-credentials
       secret:
         secretName: ${cluster_name}-mimir-google-credentials
+    %{~ if enable_otel ~}
     - name: ${cluster_name}-cluster-level-alerts
       configMap:
         name: ${cluster_name}-cluster-level-alerts
@@ -392,9 +395,11 @@ ruler:
     - name: ${cluster_name}-tempo-alerts
       configMap:
         name: ${cluster_name}-tempo-alerts
+    %{~ endif ~}
   extraVolumeMounts:
     - name: ${cluster_name}-mimir-google-credentials
       mountPath: /etc/mimir/google/
+    %{~ if enable_otel ~}
     - name: ${cluster_name}-cluster-alerts
       mountPath: /etc/mimir/rules
     - name: ${cluster_name}-mimir-alerts
@@ -403,6 +408,7 @@ ruler:
       mountPath: /etc/mimir/rules
     - name: ${cluster_name}-tempo-alerts
       mountPath: /etc/mimir/rules
+    %{~ endif ~}
   env:
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: "/etc/mimir/google/gcs.json"
