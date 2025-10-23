@@ -61,7 +61,27 @@ mimir:
     query_scheduler:
       max_outstanding_requests_per_tenant: ${limits_max_outstanding_requests_per_tenant}
     ruler:
-      rule_path: /data
+      rule_path: /etc/mimir/rules
+      enabled: ${enable_otel}
+      %{~ if enable_otel == "true" ~}
+      replicas: 2
+      alertmanager_url: http://alertmanager.monitoring:9093
+      external_url: http://mimir-ruler.mimir:8080
+      storage:
+        type: local
+        local:
+          directory: /data
+      persistence:
+        enabled: true
+        size: 10Gi
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+      %{~ endif ~}
     ruler_storage:
       cache:
         backend: memcached
@@ -352,6 +372,7 @@ gr-metricname-cache:
 # Alerting Components
 ruler:
   enabled: true
+  rulePath: /etc/mimir/rules
   replicas: 1
   resources:
     requests:
@@ -361,9 +382,33 @@ ruler:
     - name: ${cluster_name}-mimir-google-credentials
       secret:
         secretName: ${cluster_name}-mimir-google-credentials
+    %{~ if enable_otel ~}
+    - name: ${cluster_name}-cluster-level-alerts
+      configMap:
+        name: ${cluster_name}-cluster-level-alerts
+    - name: ${cluster_name}-mimir-alerts
+      configMap:
+        name: ${cluster_name}-mimir-alerts
+    - name: ${cluster_name}-loki-alerts
+      configMap:
+        name: ${cluster_name}-loki-alerts
+    - name: ${cluster_name}-tempo-alerts
+      configMap:
+        name: ${cluster_name}-tempo-alerts
+    %{~ endif ~}
   extraVolumeMounts:
     - name: ${cluster_name}-mimir-google-credentials
       mountPath: /etc/mimir/google/
+    %{~ if enable_otel ~}
+    - name: ${cluster_name}-cluster-alerts
+      mountPath: /etc/mimir/rules
+    - name: ${cluster_name}-mimir-alerts
+      mountPath: /etc/mimir/rules
+    - name: ${cluster_name}-loki-alerts
+      mountPath: /etc/mimir/rules
+    - name: ${cluster_name}-tempo-alerts
+      mountPath: /etc/mimir/rules
+    %{~ endif ~}
   env:
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: "/etc/mimir/google/gcs.json"

@@ -50,6 +50,7 @@ data "template_file" "mimir_template" {
   vars = {
     data_bucket_name                            = google_storage_bucket.mimir_data[0].id
     cluster_name                                = local.cluster_name
+    enable_otel                                 = local.enable_otel
     limits_ingestion_rate                       = try(var.mimir.limits.ingestion_rate != null ? var.mimir.limits.ingestion_rate : "500000", "500000")
     limits_ingestion_burst_size                 = try(var.mimir.limits.ingestion_burst_size != null ? var.mimir.limits.ingestion_burst_size : "1000000", "1000000")
     limits_max_fetched_chunks_per_query         = try(var.mimir.limits.max_fetched_chunks_per_query != null ? var.mimir.limits.max_fetched_chunks_per_query : "5000000", "5000000")
