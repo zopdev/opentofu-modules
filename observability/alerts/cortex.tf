@@ -16,6 +16,7 @@ resource "kubectl_manifest" "cortex_alerts" {
 }
 
 data "template_file" "cortex_alerts_configmap" {
+  count = local.enable_otel ? 1 : 0
   template = file("${path.module}/templates/configmaps/cortex-alerts.yaml")
   vars = {
     cluster_name = var.cluster_name

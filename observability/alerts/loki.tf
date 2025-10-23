@@ -22,6 +22,7 @@ resource "kubectl_manifest" "loki_alerts" {
 }
 
 data "template_file" "loki_alerts_configmap" {
+  count = local.enable_otel ? 1 : 0
   template = file("${path.module}/templates/configmaps/loki-alerts.yaml")
   vars = {
     cluster_name = var.cluster_name

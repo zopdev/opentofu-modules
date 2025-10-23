@@ -16,6 +16,7 @@ resource "kubectl_manifest" "mimir_alerts" {
 }
 
 data "template_file" "mimir_alerts_configmap" {
+  count      = local.enable_otel ? 1 : 0
   template = file("${path.module}/templates/configmaps/mimir-alerts.yaml")
   vars     = {
     cluster_name = var.cluster_name
@@ -34,6 +35,7 @@ resource "kubectl_manifest" "mimir_alerts_configmap" {
 
 # Cluster-level alerts as ConfigMaps (used by Mimir Ruler)
 data "template_file" "cluster_alerts" {
+  count = local.enable_otel ? 1 : 0
   template = file("${path.module}/templates/configmaps/cluster-level-alerts.yaml")
   vars = {
     cluster_memory_usage_request_underutilisation_threshold = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.memory_underutilisation != null ? var.cluster_alert_thresholds.memory_underutilisation : 20)

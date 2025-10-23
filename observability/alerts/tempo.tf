@@ -24,6 +24,7 @@ resource "kubectl_manifest" "tempo_alerts" {
 }
 
 data "template_file" "tempo_alerts_configmap" {
+  count = local.enable_otel ? 1 : 0
   template = file("${path.module}/templates/configmaps/tempo-alerts.yaml")
   vars     = {
     cluster_name = var.cluster_name
