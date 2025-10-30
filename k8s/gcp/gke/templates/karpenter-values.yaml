@@ -1,0 +1,9 @@
+controller:
+  settings:
+    projectID: "${PROJECT_ID}"
+    location: "${REGION}"
+    clusterName: "${CLUSTER_NAME}"
+
+credentials:
+  secretName: "${SECRET_NAME}"
+  secretKey: "key.json"
