@@ -80,10 +80,10 @@ data "template_file" "openobserve_template" {
   template = file("${path.module}/templates/openobserve-values.yaml")
   vars = {
     replica_count        = try(each.value.replicaCount, 1)
-    cpu_request          = try(each.value.min_cpu, "250m")
-    memory_request       = try(each.value.min_memory, "512Mi")
-    cpu_limit           = try(each.value.max_cpu, "1")
-    memory_limit        = try(each.value.max_memory, "1Gi")
+    cpu_request          = "250m"
+    memory_request       = "1Gi"
+    cpu_limit           = "1"
+    memory_limit        = "2Gi"
     storage_provider    = "gcs"
     storage_region      = "auto"
     storage_bucket_name = google_storage_bucket.openobserve_data[each.key].name
