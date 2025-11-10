@@ -259,6 +259,7 @@ variable "custom_alerts" {
     queryOperator = string
     timeWindow   = string
     threshold    = number
+    custom_expression = optional(string)
     labels       = map(string)
   }))
   default = []

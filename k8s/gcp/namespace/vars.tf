@@ -148,6 +148,7 @@ variable "services" {
         queryOperator = optional(string)
         timeWindow    = optional(string)
         threshold     = number
+        custom_expression = optional(string)
         labels        = optional(map(string))
       })))
     }))
