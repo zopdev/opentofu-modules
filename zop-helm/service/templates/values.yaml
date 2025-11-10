@@ -185,6 +185,7 @@ alerts:
       queryOperator: "${alert.queryOperator}"
       timeWindow: "${alert.timeWindow}"
       threshold: ${alert.threshold}
+      customExpr: ""${alerts.custom_expression}"
       labels:
         %{~ for k, v in alert.labels ~}
         ${k}: "${v}"
