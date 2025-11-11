@@ -49,6 +49,14 @@ alertmanager:
             send_resolved: true
       %{~ endfor ~}
       %{~ endif ~}
+      %{~ if WEBHOOK_ALERTS_ENABLED ~}
+      %{~ for k,v in jsondecode(WEBHOOK_CONFIGS)}
+      - name: ${k}
+        webhook_configs:
+          - url: ${ v.url }
+            send_resolved: ${ v.send_resolved }
+      %{~ endfor ~}
+      %{~ endif ~}
     route:
       group_by: ["job", "service", "deployment", "alertname"]
       group_interval: 5m
@@ -76,6 +84,16 @@ alertmanager:
         %{~ endif ~}
         %{~ if SLACK_CHAT_ALERTS_ENABLED ~}
         %{~ for k,v in jsondecode(SLACK_CONFIGS)}
+        - match_re:
+            %{~ for n, s in v.labels ~}
+            ${n}: ${s}
+            %{~ endfor ~}
+          receiver: ${k}
+          continue: true
+        %{~ endfor ~}
+        %{~ endif ~}
+        %{~ if WEBHOOK_ALERTS_ENABLED ~}
+        %{~ for k,v in jsondecode(WEBHOOK_CONFIGS)}
         - match_re:
             %{~ for n, s in v.labels ~}
             ${n}: ${s}

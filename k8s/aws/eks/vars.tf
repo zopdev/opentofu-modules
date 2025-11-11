@@ -811,6 +811,16 @@ variable "slack_alerts_configs" {
   default = []
 }
 
+variable "webhook_alerts_configs" {
+  type = list(object({
+    name         = string
+    url          = string
+    send_resolved = optional(bool, true)
+    labels       = optional(map(string))
+  }))
+  default = []
+}
+
 variable "velero_schedule" {
   description = "The backup schedule for velero"
   type        = string

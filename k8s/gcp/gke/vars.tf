@@ -722,6 +722,16 @@ variable "slack_alerts_configs" {
     default = []
 }
 
+variable "webhook_alerts_configs" {
+    type = list(object({
+        name         = string
+        url          = string
+        send_resolved = optional(bool, true)
+        labels       = optional(map(string))
+    }))
+    default = []
+}
+
 variable "karpenter_configs" {
     description = "Inputs for karpenter - enabling flag, GCP machine types, and capacity types ('on-demand' or 'spot')"
 
