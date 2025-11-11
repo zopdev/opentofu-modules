@@ -18,6 +18,7 @@ locals{
   cluster_slack_alerts      = jsonencode(var.slack_alerts_configs) == "" ? {} : { for key, val in var.slack_alerts_configs : "slack-alert-${val.name}" => {url = val.url, channel = val.channel,labels = val.labels == null ? {severity = "critical", servicealert = "true"} : val.labels, }}
   cluster_alerts            = merge(local.namespace_teams_webhook,  local.cluster_teams_alerts)
   cluster_alerts_webhook    = merge(local.cluster_alerts, local.cluster_moogsoft_alerts, local.cluster_pagerduty_alerts)
+  cluster_webhook_alerts    = jsonencode(var.webhook_alerts_configs) == "" ? {} : { for key, val in var.webhook_alerts_configs : "webhook-alert-${val.name}" => {url = val.url, send_resolved = val.send_resolved, labels = val.labels == null ? {severity = "critical", servicealert = "true"} : val.labels, }}
   google_chat_alerts        = merge(local.cluster_google_chat_alerts, local.namespace_google_chat_alerts)
 
   ### This is list of grafana datasources
@@ -55,7 +56,7 @@ data "template_file" "prom_template" {
     CLUSTER_NAME                      = var.app_name
     DOMAIN_NAME                       = var.accessibility.domain_name
     REMOTE_WRITE_CONFIGS              = jsonencode(local.remote_write_config)
-    ALERTS_ENABLED                    = jsonencode(local.cluster_moogsoft_alerts) != "" || jsonencode(local.namespace_teams_webhook) != "" || jsonencode(local.cluster_teams_alerts) != "" || jsonencode(local.google_chat_alerts) != ""  ? true : false
+    ALERTS_ENABLED                    = jsonencode(local.cluster_moogsoft_alerts) != "" || jsonencode(local.namespace_teams_webhook) != "" || jsonencode(local.cluster_teams_alerts) != "" || jsonencode(local.google_chat_alerts) != "" || jsonencode(local.cluster_slack_alerts) != "" || jsonencode(local.cluster_webhook_alerts) != "" ? true : false
     MOOGSOFT_ALERTS_ENABLED           = local.cluster_moogsoft_alerts == {} ? false : true
     MS_TEAMS_ALERT_ENABLED            = jsonencode(local.namespace_teams_webhook) == "" && jsonencode(local.cluster_teams_alerts) == ""  ? false : true
     MOOGSOFT_ENDPOINT_URL             = jsonencode(local.cluster_moogsoft_alerts)
@@ -71,7 +72,9 @@ data "template_file" "prom_template" {
     PAGER_DUTY_ENDPOINT_URL           = jsonencode(local.cluster_pagerduty_alerts)
     GRAFANA_HOST                      = local.grafana_host
     SLACK_CHAT_ALERTS_ENABLED         = local.cluster_slack_alerts == "" ? false : true
+    WEBHOOK_ALERTS_ENABLED            = local.cluster_webhook_alerts == "" ? false : true
     SLACK_CONFIGS                     = jsonencode(local.cluster_slack_alerts)
+    WEBHOOK_CONFIGS                   = jsonencode(local.cluster_webhook_alerts)
   }
 }
 
