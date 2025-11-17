@@ -7,27 +7,6 @@ resource "azurerm_storage_container" "openobserve_data" {
   container_access_type = "private"
 }
 
-# Create Kubernetes secret for Azure credentials (auto-generated secret names)
-resource "kubernetes_secret" "openobserve-azure-credentials" {
-  for_each = local.enable_openobserve ? { for instance in var.openobserve : instance.name => instance if instance.enable } : {}
-  
-  metadata {
-    name      = "openobserve-azure-creds-${each.value.name}"
-    namespace = kubernetes_namespace.app_environments["openobserve"].metadata[0].name
-    labels    = { app = var.app_name }
-    annotations = {
-      "kubernetes.io/service-account.name" = "${local.cluster_name}-openobserve-${each.key}-azure-credentials"
-    }
-  }
-
-  data = {
-    "AZURE_STORAGE_ACCOUNT_NAME" = var.storage_account
-    "AZURE_STORAGE_ACCOUNT_KEY"  = var.account_access_key
-  }
-
-  type = "Opaque"
-}
-
 # Generate random password for OpenObserve
 resource "random_password" "openobserve_password" {
   for_each = local.enable_openobserve ? { for instance in var.openobserve : instance.name => instance if instance.enable } : {}
@@ -53,11 +32,10 @@ data "template_file" "openobserve_template" {
     storage_provider    = "azure"
     storage_region      = "auto"
     storage_bucket_name = azurerm_storage_container.openobserve_data[each.key].name
-    storage_access_key_path = "/app/key.json"
-    secret_name         = "openobserve-azure-creds-${each.value.name}"
     root_user_email     = "admin@zop.dev"
     root_user_password  = random_password.openobserve_password[each.key].result
     storage_account     = var.storage_account
+    account_key         = var.account_access_key
     additional_env_vars = length(try(each.value.env, [])) > 0 ? join("\n", [for env in each.value.env : "  - name: ${env.name}\n    value: \"${env.value}\""]) : ""
   }
 }
@@ -76,7 +54,4 @@ resource "helm_release" "openobserve" {
     data.template_file.openobserve_template[each.key].rendered
   ]
 
-  depends_on = [
-    kubernetes_secret.openobserve-azure-credentials,
-  ]
 }

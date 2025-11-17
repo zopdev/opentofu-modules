@@ -11,6 +11,11 @@ resources:
 auth:
   ZO_ROOT_USER_EMAIL: "${root_user_email}"
   ZO_ROOT_USER_PASSWORD: "${root_user_password}"
+  ZO_ROOT_USER_TOKEN: ""
+  ZO_S3_ACCESS_KEY: ""
+  ZO_S3_SECRET_KEY: ""
+  AZURE_STORAGE_ACCOUNT_KEY: "${account_key}"
+  AZURE_STORAGE_ACCOUNT_NAME: "${storage_account}"
 
 config:
   ZO_S3_PROVIDER: "azure"
@@ -47,10 +52,6 @@ readinessProbe:
   initialDelaySeconds: 5
   periodSeconds: 5
 
-extraEnvFrom:
-  - secretRef:
-      name: ${secret_name}
 %{~ if additional_env_vars != "" ~}
-extraEnv:
 ${additional_env_vars}
 %{~ endif ~}
