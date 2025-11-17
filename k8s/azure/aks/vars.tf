@@ -578,6 +578,20 @@ variable "observability_config" {
         metrics_ingestion_time_range_slack = optional(string)
       }))
     }))
+    openobserve = optional(list(object({
+      enable = bool
+      name = string
+      replicaCount = optional(number, 2)
+      min_cpu = optional(string, "500m")
+      max_cpu = optional(string, "1")
+      min_memory = optional(string, "512Mi")
+      max_memory = optional(string, "1Gi")
+      enable_ingress = optional(bool, true)
+      env = optional(list(object({
+        name = string
+        value = string
+      })), [])
+    })), [])
   })
   default = null
 }
