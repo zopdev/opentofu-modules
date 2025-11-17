@@ -2,7 +2,7 @@ resource "helm_release" "redis" {
   name       = "redis-master"
   namespace  = var.namespace
   chart      = "oci://registry-1.docker.io/bitnamicharts/redis"
-  version    = "23.0.4"
+  version    = "23.2.12"
   timeout    = 120
   values     = [templatefile("${path.module}/templates/values.yaml", {
     redis_name    = "redis-master"
