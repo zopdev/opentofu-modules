@@ -47,17 +47,10 @@ readinessProbe:
   initialDelaySeconds: 5
   periodSeconds: 5
 
-extraEnv:
-  - name: AZURE_STORAGE_ACCOUNT_NAME
-    valueFrom:
-      secretKeyRef:
-        name: ${secret_name}
-        key: accountName
-  - name: AZURE_STORAGE_ACCOUNT_KEY
-    valueFrom:
-      secretKeyRef:
-        name: ${secret_name}
-        key: accountKey
+extraEnvFrom:
+  - secretRef:
+      name: ${secret_name}
 %{~ if additional_env_vars != "" ~}
+extraEnv:
 ${additional_env_vars}
 %{~ endif ~}
