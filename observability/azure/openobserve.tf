@@ -21,10 +21,8 @@ resource "kubernetes_secret" "openobserve-azure-credentials" {
   }
 
   data = {
-    "key.json" = jsonencode({
-      accountName = var.storage_account
-      accountKey  = var.account_access_key
-    })
+    "accountName" = base64encode(var.storage_account)
+    "accountKey"  = base64encode(var.account_access_key)
   }
 
   type = "Opaque"
