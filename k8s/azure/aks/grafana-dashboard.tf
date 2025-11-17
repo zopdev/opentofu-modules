@@ -44,64 +44,6 @@ locals {
   }
 }
 
-resource "null_resource" "wait_for_grafana" {
-  provisioner "local-exec" {
-    command = <<-EOT
-      #!/bin/bash
-      
-      DOMAIN_NAME="${var.accessibility.domain_name}"
-      
-      echo "Checking Grafana readiness for domain: $DOMAIN_NAME"
-      
-      for i in {1..30}; do
-        echo "Checking Grafana login page..."
-        RESPONSE=$(curl -sk https://grafana.$DOMAIN_NAME/login || true)
-        
-        if echo "$RESPONSE" | grep -q '<title>Grafana</title>'; then
-          echo "Grafana login page is reachable."
-          break
-        else
-          echo "Grafana UI not ready yet."
-        fi
-        
-        if [ $i -eq 30 ]; then
-          echo "Grafana UI was not ready after 30 attempts."
-          exit 1
-        fi
-        
-        echo "Waiting 10s before retrying..."
-        sleep 10
-      done
-      
-      echo "Validating TLS certificate..."
-      for j in {1..60}; do
-        echo "Certificate check attempt $j..."
-        
-        if curl -s --head -o /dev/null -w "%%{http_code}" https://grafana.$DOMAIN_NAME --connect-timeout 5 | grep -q "200\|302"; then
-          echo "TLS certificate verified successfully!"
-          exit 0
-        else
-          echo "Valid certificate not detected yet, retrying..."
-        fi
-        
-        echo "Waiting 10s before retrying certificate check..."
-        sleep 10
-      done
-      
-      echo "TLS certificate validation failed after waiting."
-      exit 1
-    EOT
-    interpreter = ["/bin/bash", "-c"]
-  }
-
-  depends_on = [
-    helm_release.grafana,
-    module.nginx,
-    kubectl_manifest.cluster_wildcard_certificate,
-    kubernetes_secret_v1.certificate_replicator,
-    helm_release.k8s_replicator,
-  ]
-}
 
 resource "random_password" "admin_passwords" {
   for_each = coalesce(toset(var.grafana_access.grafana_admins), toset([]))
@@ -122,39 +64,6 @@ resource "random_password" "viewer_passwords" {
   length   = 12
   special  = true
   override_special = "$"
-}
-
-resource "grafana_user" "admins" {
-  for_each = coalesce(toset(var.grafana_access.grafana_admins), toset([]))
-  name     = split("@", each.key)[0]
-  email    = each.key
-  login    = split("@", each.key)[0]
-  password = random_password.admin_passwords[each.key].result
-  is_admin = true
-
-  depends_on = [ null_resource.wait_for_grafana ]
-}
-
-resource "grafana_user" "editors" {
-  for_each = coalesce(toset(var.grafana_access.grafana_editors), toset([]))
-  name     = split("@", each.key)[0]
-  email    = each.key
-  login    = split("@", each.key)[0]
-  password = random_password.editor_passwords[each.key].result
-  is_admin = false
-
-  depends_on = [ null_resource.wait_for_grafana ]
-}
-
-resource "grafana_user" "viewers" {
-  for_each = coalesce(toset(var.grafana_access.grafana_viewers), toset([]))
-  name     = split("@", each.key)[0]
-  email    = each.key
-  login    = split("@", each.key)[0]
-  password = random_password.viewer_passwords[each.key].result
-  is_admin = false
-
-  depends_on = [ null_resource.wait_for_grafana ]
 }
 
 resource "grafana_folder" "dashboard_folder" {
