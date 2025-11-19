@@ -67,15 +67,15 @@ resource "azurerm_role_assignment" "aks_aad_cluster_viewers" {
   principal_id         = azuread_group.aks_aad_cluster_viewers.object_id
 }
 
-data "azurerm_container_registry" "cluster_acr" {
-  for_each = { for v in var.acr_list : v => v }
-  name                = each.value
-  resource_group_name = var.resource_group_name
-}
+# data "azurerm_container_registry" "cluster_acr" {
+#   for_each = { for v in var.acr_list : v => v }
+#   name                = each.value
+#   resource_group_name = var.resource_group_name
+# }
 
-resource "azurerm_role_assignment" "cluster_to_acr" {
-  for_each = { for v in var.acr_list : v => v }
-  scope                = data.azurerm_container_registry.cluster_acr[each.key].id
-  role_definition_name = "AcrPull"
-  principal_id         = data.azurerm_kubernetes_cluster.cluster.kubelet_identity[0].object_id
-}
+# resource "azurerm_role_assignment" "cluster_to_acr" {
+#   for_each = { for v in var.acr_list : v => v }
+#   scope                = data.azurerm_container_registry.cluster_acr[each.key].id
+#   role_definition_name = "AcrPull"
+#   principal_id         = data.azurerm_kubernetes_cluster.cluster.kubelet_identity[0].object_id
+# }
