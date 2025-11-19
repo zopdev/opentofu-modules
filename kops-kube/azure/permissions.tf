@@ -72,45 +72,45 @@ resource "kubernetes_secret_v1" "image_pull_secrets" {
     })
   }
 }
-#
-# resource "kubernetes_cluster_role" "kops_kube_reader" {
-#   metadata {
-#     name = "kops-kube-reader"
-#   }
-#
-#   rule {
-#     api_groups = ["apps"]
-#     resources  = ["deployments"]
-#     verbs      = ["get", "list", "watch"]
-#   }
-#
-#   rule {
-#     api_groups = ["batch"]
-#     resources  = ["cronjobs"]
-#     verbs      = ["get", "list", "watch"]
-#   }
-#
-#   rule {
-#     api_groups = [""]
-#     resources  = ["pods"]
-#     verbs      = ["get", "list", "watch"]
-#   }
-# }
-#
-# resource "kubernetes_cluster_role_binding" "kops_kube_default_binding" {
-#   metadata {
-#     name = "kops-kube-default-binding"
-#   }
-#
-#   role_ref {
-#     api_group = "rbac.authorization.k8s.io"
-#     kind      = "ClusterRole"
-#     name      = kubernetes_cluster_role.kops_kube_reader.metadata[0].name
-#   }
-#
-#   subject {
-#     kind      = "ServiceAccount"
-#     name      = "default"
-#     namespace = "kube-system"
-#   }
-# }
+
+resource "kubernetes_cluster_role" "kops_kube_reader" {
+  metadata {
+    name = "kops-kube-reader"
+  }
+
+  rule {
+    api_groups = ["apps"]
+    resources  = ["deployments"]
+    verbs      = ["get", "list", "watch"]
+  }
+
+  rule {
+    api_groups = ["batch"]
+    resources  = ["cronjobs"]
+    verbs      = ["get", "list", "watch"]
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["pods"]
+    verbs      = ["get", "list", "watch"]
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "kops_kube_default_binding" {
+  metadata {
+    name = "kops-kube-default-binding"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = kubernetes_cluster_role.kops_kube_reader.metadata[0].name
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = "default"
+    namespace = "kube-system"
+  }
+}
