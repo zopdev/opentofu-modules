@@ -21,11 +21,11 @@ resource "azuread_group" "aks_aad_cluster_viewers" {
 #  user_principal_name = each.value
 #}
 
-resource "azuread_group_member" "aks_aad_cluster_admins" {
-  for_each         = var.user_access.app_admins != null ? toset(var.user_access.app_admins) : []
-  group_object_id  = azuread_group.aks_aad_cluster_admins.object_id
-  member_object_id = each.value
-}
+# resource "azuread_group_member" "aks_aad_cluster_admins" {
+#   for_each         = var.user_access.app_admins != null ? toset(var.user_access.app_admins) : []
+#   group_object_id  = azuread_group.aks_aad_cluster_admins.object_id
+#   member_object_id = each.value
+# }
 
 #data "azuread_user"  "aks_aad_cluster_editors" {
 #  for_each            = var.user_access.app_editors != null ? toset(var.user_access.app_editors) : []
