@@ -77,11 +77,3 @@ resource "google_dns_record_set" "global_load_balancer_sub_domain" {
   rrdatas      = ["${local.domain_name}."]
 }
 
-resource "google_dns_record_set" "global_load_balancer_top_level_domain" {
-  count        =  0
-  provider     = google.shared-services
-  managed_zone = data.google_dns_managed_zone.zone[0].name
-  name         = "${local.domain_name}."
-  type         = "A"
-  rrdatas      = [google_compute_address.lb_ip_address.address]
-}
