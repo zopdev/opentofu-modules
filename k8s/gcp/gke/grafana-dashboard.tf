@@ -93,9 +93,7 @@ resource "null_resource" "wait_for_grafana" {
       exit 1
     EOT
     interpreter = ["/bin/bash", "-c"]
-    lifecycle {
-      ignore_errors = true
-    }
+
   }
 
   depends_on = [
@@ -144,9 +142,7 @@ resource "grafana_user" "admins" {
   is_admin = true
 
   depends_on = [ null_resource.wait_for_grafana ]
-  lifecycle {
-    ignore_errors = true
-  }
+
 }
 
 resource "grafana_user" "editors" {
@@ -158,9 +154,7 @@ resource "grafana_user" "editors" {
   is_admin = false
 
   depends_on = [ null_resource.wait_for_grafana ]
-  lifecycle {
-    ignore_errors = true
-  }
+
 }
 
 resource "grafana_user" "viewers" {
@@ -172,9 +166,7 @@ resource "grafana_user" "viewers" {
   is_admin = false
 
   depends_on = [ null_resource.wait_for_grafana ]
-  lifecycle {
-    ignore_errors = true
-  }
+
 }
 
 resource "grafana_folder" "dashboard_folder" {
