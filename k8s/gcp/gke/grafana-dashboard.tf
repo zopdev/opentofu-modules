@@ -1,6 +1,7 @@
 locals {
   grafana_auth    = local.prometheus_enable && local.grafana_enable ? "grafana-admin:${random_password.observability_admin[0].result}" : ""
   folder_creation = false
+  grafana_enabled_users = local.grafana_enable && try(var.observability_config.grafana.enabled_users, true)
 
   grafana_dashboard_folder = local.folder_creation ? {
     Kong                        = ["kong-official"]
@@ -111,28 +112,28 @@ resource "null_resource" "wait_for_grafana" {
 }
 
 resource "random_password" "admin_passwords" {
-  for_each = coalesce(toset(var.user_access.app_admins), toset([]))
+  for_each = local.grafana_enabled_users ? coalesce(toset(var.user_access.app_admins), toset([])) : toset([])
   length   = 12
   special  = true
   override_special = "$"
 }
 
 resource "random_password" "editor_passwords" {
-  for_each = coalesce(toset(var.user_access.app_editors), toset([]))
+  for_each = local.grafana_enabled_users ? coalesce(toset(var.user_access.app_editors), toset([])) : toset([])
   length   = 12
   special  = true
   override_special = "$"
 }
 
 resource "random_password" "viewer_passwords" {
-  for_each = coalesce(toset(var.user_access.app_viewers), toset([]))
+  for_each = local.grafana_enabled_users ? coalesce(toset(var.user_access.app_viewers), toset([])) : toset([])
   length   = 12
   special  = true
   override_special = "$"
 }
 
 resource "grafana_user" "admins" {
-  for_each = coalesce(toset(var.user_access.app_admins), toset([]))
+  for_each = local.grafana_enabled_users ? coalesce(toset(var.user_access.app_admins), toset([])) : toset([])
   name     = split("@", each.key)[0]
   email    = each.key
   login    = split("@", each.key)[0]
@@ -143,7 +144,7 @@ resource "grafana_user" "admins" {
 }
 
 resource "grafana_user" "editors" {
-  for_each = coalesce(toset(var.user_access.app_editors), toset([]))
+  for_each = local.grafana_enabled_users ? coalesce(toset(var.user_access.app_editors), toset([])) : toset([])
   name     = split("@", each.key)[0]
   email    = each.key
   login    = split("@", each.key)[0]
@@ -154,7 +155,7 @@ resource "grafana_user" "editors" {
 }
 
 resource "grafana_user" "viewers" {
-  for_each = coalesce(toset(var.user_access.app_viewers), toset([]))
+  for_each = local.grafana_enabled_users ? coalesce(toset(var.user_access.app_viewers), toset([])) : toset([])
   name     = split("@", each.key)[0]
   email    = each.key
   login    = split("@", each.key)[0]
@@ -178,23 +179,24 @@ resource "grafana_dashboard" "dashboard" {
 }
 
 resource "grafana_api_key" "admin_token" {
+  count = local.grafana_enable ? 1 : 0
   name = "terraform-admin-token"
   role = "Admin"
 
-  depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers ]
+  depends_on = [ null_resource.wait_for_grafana ]
 }
 
 resource "null_resource" "update_user_roles" {
-  for_each = {
+  for_each = local.grafana_enabled_users ? {
     for user in local.users_with_roles : "${user.email}-${user.role}" => user
-  }
+  } : {}
 
   provisioner "local-exec" {
     command = <<EOT
       email="${each.value.email}"
       role="${each.value.role}"
       domain="${local.domain_name}"
-      token="${grafana_api_key.admin_token.key}"
+      token="${grafana_api_key.admin_token[0].key}"
 
       response=$(curl -s -H "Authorization: Bearer $token" \
               "https://grafana.$domain/api/org/users")
@@ -217,7 +219,7 @@ resource "null_resource" "update_user_roles" {
     interpreter = ["/bin/bash", "-c"]
   }
 
-  depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers ]
+  depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers, grafana_api_key.admin_token ]
 }
 
 provider "grafana" {
