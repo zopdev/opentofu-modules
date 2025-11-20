@@ -5,8 +5,15 @@ resource "google_service_account" "wildcard_dns_solver" {
 }
 
 resource "google_project_iam_member" "wildcard_dns01_solver_dns_admin" {
+  count = 0
   provider    = google.shared-services
   project     =  var.shared_service_provider
+  role        = "roles/dns.admin"
+  member      = "serviceAccount:${google_service_account.wildcard_dns_solver.email}"
+}
+
+resource "google_project_iam_member" "wildcard_dns01_solver_dns_zone_admin" {
+  project     =  var.provider_id
   role        = "roles/dns.admin"
   member      = "serviceAccount:${google_service_account.wildcard_dns_solver.email}"
 }
@@ -59,7 +66,7 @@ data "template_file" "cluster_wildcard_issuer" {
   template = file("./templates/cluster-issuer.yaml")
   vars     = {
     email           = var.cert_issuer_config.email
-    provider        = var.shared_service_provider
+    provider        = var.provider_id
     dns             = local.domain_name
     cert_issuer_url = try(var.cert_issuer_config.env == "stage" ? "https://acme-staging-v02.api.letsencrypt.org/directory" : "https://acme-v02.api.letsencrypt.org/directory","https://acme-staging-v02.api.letsencrypt.org/directory")
   }

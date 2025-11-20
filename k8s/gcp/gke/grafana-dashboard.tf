@@ -47,6 +47,7 @@ locals {
 
 resource "null_resource" "wait_for_grafana" {
   provisioner "local-exec" {
+    on_failure = "continue"
     command = <<-EOT
       #!/bin/bash
       
@@ -93,6 +94,7 @@ resource "null_resource" "wait_for_grafana" {
       exit 1
     EOT
     interpreter = ["/bin/bash", "-c"]
+
   }
 
   depends_on = [
@@ -102,8 +104,8 @@ resource "null_resource" "wait_for_grafana" {
     google_certificate_manager_certificate_map_entry.wildcard_entry,
     helm_release.k8s_replicator,
     kubernetes_secret_v1.certificate_replicator,
-    google_dns_record_set.global_load_balancer_sub_domain,
-    google_dns_record_set.global_load_balancer_top_level_domain,
+    google_dns_record_set.global_load_balancer_sub_domain_cname,
+    google_dns_record_set.global_load_balancer_top_level_domain_a,
     google_project_iam_member.wildcard_dns_solver,
     google_project_iam_member.wildcard_dns01_solver_dns_admin,
     google_project_iam_member.wildcard_dns_solver_workloadIdentity,
@@ -204,7 +206,7 @@ resource "null_resource" "update_user_roles" {
       email_escaped=$(echo "$email" | sed 's/\./\\./g')
 
       user_id=$(echo "$response" | grep -o "{[^}]*\"email\":\"$email_escaped\"[^}]*}" | grep -o "\"userId\":[0-9]*" | grep -o "[0-9]*")
-          
+
       if [ -z "$user_id" ]; then
         echo "User $email not found. You may want to add them first."
         exit 1
