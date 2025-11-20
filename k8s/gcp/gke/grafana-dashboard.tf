@@ -179,7 +179,7 @@ resource "grafana_dashboard" "dashboard" {
 }
 
 resource "grafana_api_key" "admin_token" {
-  count = local.grafana_enable ? 1 : 0
+  count =  local.grafana_enabled_users ? local.grafana_enable ? 1 : 0 : 0
   name = "terraform-admin-token"
   role = "Admin"
 
