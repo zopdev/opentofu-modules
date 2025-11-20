@@ -5,6 +5,14 @@ resource "google_service_account" "wildcard_dns_solver" {
 }
 
 resource "google_project_iam_member" "wildcard_dns01_solver_dns_admin" {
+  count = 0
+  provider    = google.shared-services
+  project     =  var.shared_service_provider
+  role        = "roles/dns.admin"
+  member      = "serviceAccount:${google_service_account.wildcard_dns_solver.email}"
+}
+
+resource "google_project_iam_member" "wildcard_dns01_solver_dns_zone_admin" {
   project     =  var.provider_id
   role        = "roles/dns.admin"
   member      = "serviceAccount:${google_service_account.wildcard_dns_solver.email}"
