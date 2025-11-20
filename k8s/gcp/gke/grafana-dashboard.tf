@@ -177,12 +177,12 @@ resource "grafana_dashboard" "dashboard" {
   depends_on  = [grafana_folder.dashboard_folder]
 }
 
-resource "grafana_api_key" "admin_token" {
-  name = "terraform-admin-token"
-  role = "Admin"
-
-  depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers ]
-}
+# resource "grafana_api_key" "admin_token" {
+#   name = "terraform-admin-token"
+#   role = "Admin"
+#
+#   depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers ]
+# }
 
 # resource "null_resource" "update_user_roles" {
 #   for_each = {
