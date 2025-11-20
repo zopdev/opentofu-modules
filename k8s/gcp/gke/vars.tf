@@ -286,6 +286,7 @@ variable "observability_config" {
                 enable_sso      = optional(bool)
             }))
             gcloud_monitoring   = optional(bool)
+            enabled_users       = optional(bool)
         }))
         kubernetes_event_exporter = optional(object({
             enable               = bool
