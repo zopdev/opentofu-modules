@@ -144,7 +144,7 @@ resource "grafana_user" "admins" {
   depends_on = [ null_resource.wait_for_grafana ]
   lifecycle {
     postcondition {
-      condition     = true
+      condition     = can(self.id)
       error_message = "ignore refresh errors"
     }
   }
@@ -162,7 +162,7 @@ resource "grafana_user" "editors" {
   depends_on = [ null_resource.wait_for_grafana ]
   lifecycle {
     postcondition {
-      condition     = true
+      condition     = can(self.id)
       error_message = "ignore refresh errors"
     }
   }
@@ -180,7 +180,7 @@ resource "grafana_user" "viewers" {
   depends_on = [ null_resource.wait_for_grafana ]
   lifecycle {
     postcondition {
-      condition     = true
+      condition     = can(self.id)
       error_message = "ignore refresh errors"
     }
   }
@@ -207,7 +207,7 @@ resource "grafana_api_key" "admin_token" {
   depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers ]
   lifecycle {
     postcondition {
-      condition     = true
+      condition     = can(self.id)
       error_message = "ignore refresh errors"
     }
   }
