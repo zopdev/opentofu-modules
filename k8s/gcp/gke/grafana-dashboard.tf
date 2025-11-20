@@ -1,7 +1,7 @@
 locals {
   grafana_auth    = local.prometheus_enable && local.grafana_enable ? "grafana-admin:${random_password.observability_admin[0].result}" : ""
   folder_creation = false
-  grafana_enabled_users = local.grafana_enable && try(var.observability_config.grafana.enabled_users, true)
+  grafana_enabled_users = local.grafana_enable && try(var.observability_config.grafana != null ? (var.observability_config.grafana.enabled_users != null ? var.observability_config.grafana.enabled_users : false) : false, false)
 
   grafana_dashboard_folder = local.folder_creation ? {
     Kong                        = ["kong-official"]
