@@ -69,7 +69,8 @@ resource "google_compute_address" "lb_ip_address" {
 
 # Global load balancer DNS records
 resource "google_dns_record_set" "global_load_balancer_sub_domain_cname" {
-  count        =  0
+  count        = local.hosted_zone != "" ? 1 : 0
+  provider     = google.shared-services
   managed_zone = data.google_dns_managed_zone.zone[0].name
   name         = "*.${local.domain_name}."
   type         = "CNAME"
@@ -77,7 +78,8 @@ resource "google_dns_record_set" "global_load_balancer_sub_domain_cname" {
 }
 
 resource "google_dns_record_set" "global_load_balancer_top_level_domain_a" {
-  count        =  0
+  count        = local.hosted_zone != "" ? 1 : 0
+  provider     = google.shared-services
   managed_zone = data.google_dns_managed_zone.zone[0].name
   name         = "${local.domain_name}."
   type         = "A"
