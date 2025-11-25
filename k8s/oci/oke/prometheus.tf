@@ -53,21 +53,21 @@ locals{
   google_chat_alerts        = merge( local.cluster_google_chat_alerts, local.namespace_google_chat_alerts)
 
   # Create secrets for user-provided remote write configs with basic auth
-  prometheus_remote_write_secrets = {
-    for idx, remote in try(var.observability_config.prometheus.remote_write, []) :
+  prometheus_remote_write_secrets = try(var.observability_config.prometheus.remote_write, null) != null ? {
+    for idx, remote in var.observability_config.prometheus.remote_write :
     idx => remote
     if try(remote.username, null) != null && try(remote.password, null) != null
-  }
+  } : {}
 
   ## this is prometheus remote write configs
-  remote_write_config_list = try([
+  remote_write_config_list = try(var.observability_config.prometheus.remote_write, null) != null ? [
     for idx, remote in var.observability_config.prometheus.remote_write : {
       host        = remote.host
       key         = remote.header.key
       value       = remote.header.value
       secret_name = try(remote.username, null) != null && try(remote.password, null) != null ? "prometheus-remote-write-auth-${idx}" : null
     }
-  ], [])
+  ] : []
 
   default_remote_write_config = local.enable_mimir && local.prometheus_enable ? [{
     host       = "http://mimir-distributor.mimir:8080/api/v1/push"
