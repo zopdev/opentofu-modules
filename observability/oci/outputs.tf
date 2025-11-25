@@ -11,7 +11,7 @@ output "mimir_basic_auth_password" {
 }
 
 output "mimir_host_url" {
-  value = local.enable_mimir ? ( local.enable_ingress_mimir ? kubernetes_ingress_v1.service_ingress["mimir-nginx-gateway:80-mimir"].spec[0].rule[0].host : "mimir-nginx-gateway.mimir:80") : ""
+  value = local.enable_mimir ? ( local.enable_ingress_mimir ? kubernetes_ingress_v1.service_ingress["mimir-nginx:80-mimir"].spec[0].rule[0].host : "mimir-nginx.mimir:80") : ""
 }
 
 output "loki_host_url" {
