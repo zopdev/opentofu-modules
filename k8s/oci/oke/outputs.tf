@@ -102,3 +102,19 @@ output "grafana_user_credentials" {
   )
   sensitive = true
 }
+
+output "mimir_host_url" {
+  value = try(module.observability[0].mimir_host_url,"")
+}
+
+output "mimir_basic_auth_username" {
+  description = "Mimir basic auth username"
+  value       = try(module.observability[0].mimir_basic_auth_username, null)
+  sensitive   = true
+}
+
+output "mimir_basic_auth_password" {
+  description = "Mimir basic auth password"
+  value       = try(module.observability[0].mimir_basic_auth_password, null)
+  sensitive   = true
+}
