@@ -46,7 +46,7 @@ mimir:
         replication_factor: ${store_gateway_replication_factor}
 
 nginx:
-  enabled: false
+  enabled: true
 minio:
   enabled: false
 

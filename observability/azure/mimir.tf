@@ -118,5 +118,8 @@ resource "helm_release" "mimir" {
     data.template_file.mimir_template[0].rendered
   ]
 
-  depends_on = [azurerm_storage_container.mimir_container]
+  depends_on = [
+    azurerm_storage_container.mimir_container,
+    kubernetes_secret.mimir-basic-auth
+  ]
 }

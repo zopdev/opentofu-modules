@@ -115,4 +115,8 @@ resource "helm_release" "mimir" {
   values = [
     data.template_file.mimir_template[0].rendered
   ]
+
+  depends_on = [
+    kubernetes_secret.mimir-basic-auth
+  ]
 }

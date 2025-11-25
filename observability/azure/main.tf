@@ -27,7 +27,7 @@ locals {
       ingress  = local.enable_ingress_cortex
     } : null
     mimir  = local.enable_mimir  ? {
-      services  = ["mimir-distributor:8080"]
+      services  = ["mimir-nginx-gateway:80"]
       ingress   = local.enable_ingress_mimir
     } : null
   }

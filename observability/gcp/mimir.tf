@@ -152,5 +152,6 @@ resource "helm_release" "mimir" {
 
   depends_on = [
     kubernetes_secret.mimir-google-credentials,
+    kubernetes_secret.mimir-basic-auth,
   ]
 }

@@ -406,7 +406,7 @@ memcachedExporter:
 
 # Disabled Components
 nginx:
-  enabled: false
+  enabled: true
 
 minio:
   enabled: false
