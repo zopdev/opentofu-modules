@@ -6,6 +6,36 @@ resource "kubernetes_namespace" "monitoring" {
   depends_on = [ module.oke ]
 }
 
+resource "kubernetes_secret" "mimir_basic_auth_prometheus" {
+  count = local.prometheus_enable && local.enable_mimir && length(module.observability) > 0 ? 1 : 0
+  metadata {
+    name      = "mimir-basic-auth-prometheus"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+  }
+
+  data = {
+    username = module.observability[0].mimir_basic_auth_username
+    password = module.observability[0].mimir_basic_auth_password
+  }
+
+  type = "Opaque"
+}
+
+resource "kubernetes_secret" "prometheus_remote_write_auth" {
+  for_each = local.prometheus_enable ? local.prometheus_remote_write_secrets : {}
+  metadata {
+    name      = "prometheus-remote-write-auth-${each.key}"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+  }
+
+  data = {
+    username = each.value.username
+    password = each.value.password
+  }
+
+  type = "Opaque"
+}
+
 locals{
   ### this app namespace level alerts:
   namespace_teams_webhook   =  merge([for n, s in var.app_namespaces : { for k, v in s.alert_webhooks : "namespace-webhook-${n}-${k}" => { data   = substr(v.data, 8, length(v.data)), labels = v.labels == null ? merge(v.labels, {severity = "critical", servicealert = "true",namespace = n}) : merge(v.labels, {namespace = n}), } if v.type == "teams"}if s.alert_webhooks != null]...)
@@ -22,23 +52,28 @@ locals{
   cluster_webhook_alerts    = jsonencode(var.webhook_alerts_configs) == "" ? {} : { for key, val in var.webhook_alerts_configs : "webhook-alert-${val.name}" => {url = val.url, send_resolved = val.send_resolved, labels = val.labels == null ? {severity = "critical", servicealert = "true"} : val.labels, }}
   google_chat_alerts        = merge( local.cluster_google_chat_alerts, local.namespace_google_chat_alerts)
 
+  # Create secrets for user-provided remote write configs with basic auth
+  prometheus_remote_write_secrets = {
+    for idx, remote in try(var.observability_config.prometheus.remote_write, []) :
+    idx => remote
+    if try(remote.username, null) != null && try(remote.password, null) != null
+  }
+
   ## this is prometheus remote write configs
   remote_write_config_list = try([
-    for remote in var.observability_config.prometheus.remote_write : {
-      host     = remote.host
-      key      = remote.header.key
-      value    = remote.header.value
-      username = try(remote.username, null)
-      password = try(remote.password, null)
+    for idx, remote in var.observability_config.prometheus.remote_write : {
+      host        = remote.host
+      key         = remote.header.key
+      value       = remote.header.value
+      secret_name = try(remote.username, null) != null && try(remote.password, null) != null ? "prometheus-remote-write-auth-${idx}" : null
     }
   ], [])
 
-  default_remote_write_config = local.enable_mimir ? [{
-    host     = "http://mimir-distributor.mimir:8080/api/v1/push"
-    key      = "X-Scope-OrgID"
-    value    = random_uuid.grafana_standard_datasource_header_value.result
-    username = local.enable_mimir && length(module.observability) > 0 ? module.observability[0].mimir_basic_auth_username : null
-    password = local.enable_mimir && length(module.observability) > 0 ? module.observability[0].mimir_basic_auth_password : null
+  default_remote_write_config = local.enable_mimir && local.prometheus_enable ? [{
+    host       = "http://mimir-distributor.mimir:8080/api/v1/push"
+    key        = "X-Scope-OrgID"
+    value      = random_uuid.grafana_standard_datasource_header_value.result
+    secret_name = local.enable_mimir && length(module.observability) > 0 ? kubernetes_secret.mimir_basic_auth_prometheus[0].metadata[0].name : null
   }] : []
 
   remote_write_config = concat(local.remote_write_config_list, local.default_remote_write_config)
