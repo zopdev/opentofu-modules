@@ -149,4 +149,9 @@ prometheus:
       - url: ${v.host}
         headers:
           ${v.key}: ${v.value}
+        %{~ if v.username != null && v.password != null ~}
+        basicAuth:
+          username: ${v.username}
+          password: ${v.password}
+        %{~ endif ~}
       %{~ endfor ~}

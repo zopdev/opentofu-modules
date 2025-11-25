@@ -25,6 +25,39 @@ resource "google_storage_bucket_iam_member" "mimir_svc_acc" {
   member      = "serviceAccount:${google_service_account.mimir_svc_acc[0].email}"
 }
 
+resource "random_password" "mimir_basic_auth_username" {
+  count   = local.enable_mimir ? 1 : 0
+  length  = 16
+  special = false
+  upper   = true
+  lower   = true
+  numeric = true
+}
+
+resource "random_password" "mimir_basic_auth_password" {
+  count   = local.enable_mimir ? 1 : 0
+  length  = 32
+  special = true
+  upper   = true
+  lower   = true
+  numeric = true
+}
+
+resource "kubernetes_secret" "mimir-basic-auth" {
+  count = local.enable_mimir ? 1 : 0
+  metadata {
+    name      = "mimir-basic-auth"
+    namespace = kubernetes_namespace.app_environments["mimir"].metadata[0].name
+    labels    = { app = var.app_name }
+  }
+
+  data = {
+    username = random_password.mimir_basic_auth_username[0].result
+    password = random_password.mimir_basic_auth_password[0].result
+  }
+  type = "Opaque"
+}
+
 resource "kubernetes_secret" "mimir-google-credentials" {
   count = local.enable_mimir ? 1 : 0
   metadata {
@@ -101,6 +134,8 @@ data "template_file" "mimir_template" {
     metadata_cache_max_item_memory              = try(var.mimir.caches.metadata.max_item_memory != null ? var.mimir.caches.metadata.max_item_memory : 1, 1)
     metadata_cache_max_item_memory_mb           = try(var.mimir.caches.metadata.max_item_memory != null ? var.mimir.caches.metadata.max_item_memory * 1024 * 1024 : 1048576, 1048576)
     metadata_cache_connection_limit             = try(var.mimir.caches.metadata.connection_limit != null ? var.mimir.caches.metadata.connection_limit : 16384, 16384)
+    mimir_basic_auth_username                    = random_password.mimir_basic_auth_username[0].result
+    mimir_basic_auth_password                    = random_password.mimir_basic_auth_password[0].result
   }
 }
 

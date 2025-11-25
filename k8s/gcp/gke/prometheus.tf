@@ -23,16 +23,20 @@ locals{
   ## this is prometheus remote write configs
   remote_write_config_list = try([
     for remote in var.observability_config.prometheus.remote_write : {
-      host  = remote.host
-      key   = remote.header.key
-      value = remote.header.value
+      host     = remote.host
+      key      = remote.header.key
+      value    = remote.header.value
+      username = try(remote.username, null)
+      password = try(remote.password, null)
     }
   ], [])
 
   default_remote_write_config = local.enable_mimir ? [{
-    host  = "http://mimir-distributor.mimir:8080/api/v1/push"
-    key   = "X-Scope-OrgID"
-    value = random_uuid.grafana_standard_datasource_header_value.result
+    host     = "http://mimir-distributor.mimir:8080/api/v1/push"
+    key      = "X-Scope-OrgID"
+    value    = random_uuid.grafana_standard_datasource_header_value.result
+    username = local.enable_mimir && length(module.observability) > 0 ? module.observability[0].mimir_basic_auth_username : null
+    password = local.enable_mimir && length(module.observability) > 0 ? module.observability[0].mimir_basic_auth_password : null
   }] : []
 
   remote_write_config = concat(local.remote_write_config_list, local.default_remote_write_config)
