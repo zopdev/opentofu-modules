@@ -80,7 +80,7 @@ datasources:
     type: prometheus
     access: proxy
     url: http://mimir-query-frontend.mimir:8080/prometheus
-    basicAuth: ${mimir_basic_auth_username != null && mimir_basic_auth_password != null ? true : false}
+    basicAuth: false
     editable: false
     isDefault: false
     jsonData:
@@ -89,8 +89,4 @@ datasources:
       httpHeaderName1: 'X-Scope-OrgID'
     secureJsonData:
       httpHeaderValue1: '${datasource_header_value}'
-      %{~ if mimir_basic_auth_username != null && mimir_basic_auth_password != null ~}
-      basicAuthUser: '${mimir_basic_auth_username}'
-      basicAuthPassword: '${mimir_basic_auth_password}'
-      %{~ endif ~}
   %{~ endif ~}

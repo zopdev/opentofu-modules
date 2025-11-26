@@ -88,8 +88,6 @@ resource "kubernetes_config_map" "grafana_custom_datasource" {
         mimir_datasource = local.enable_mimir
         datasource_name  = each.key
         datasource_header_value = each.value
-        mimir_basic_auth_username = local.enable_mimir && length(module.observability) > 0 ? module.observability[0].mimir_basic_auth_username : null
-        mimir_basic_auth_password = local.enable_mimir && length(module.observability) > 0 ? module.observability[0].mimir_basic_auth_password : null
       }
     )
   }
@@ -118,8 +116,6 @@ resource "kubernetes_config_map" "grafana_standard_datasource" {
         tempo_create      = local.enable_tempo
         cortex_create     = local.enable_cortex
         prometheus_create = local.prometheus_enable
-        mimir_basic_auth_username = local.enable_mimir && length(module.observability) > 0 ? module.observability[0].mimir_basic_auth_username : null
-        mimir_basic_auth_password = local.enable_mimir && length(module.observability) > 0 ? module.observability[0].mimir_basic_auth_password : null
       })
   }
 }
