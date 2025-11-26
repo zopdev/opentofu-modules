@@ -406,11 +406,7 @@ memcachedExporter:
 
 # Disabled Components
 nginx:
-  enabled: true
-  basicAuth:
-    enabled: true
-    existingSecret: mimir-basic-auth
-    # Do NOT add usernameKey or passwordKey here.
+  enabled: false
 
 minio:
   enabled: false

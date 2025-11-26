@@ -29,7 +29,7 @@ locals {
       ingress  = local.enable_ingress_cortex
     } : null
     mimir  = local.enable_mimir  ? {
-      services  = ["mimir-nginx:80"]
+      services  = ["mimir-distributor:8080"]
       ingress   = local.enable_ingress_mimir
     } : null
   }
@@ -70,9 +70,16 @@ resource "kubernetes_ingress_v1" "service_ingress" {
   metadata {
     name      = each.value.ingress_name
     namespace = each.value.ns
-    annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-    }
+    annotations = merge(
+      {
+        "kubernetes.io/ingress.class" = "nginx"
+      },
+      each.value.ns == "mimir" && local.enable_mimir ? {
+        "nginx.ingress.kubernetes.io/auth-type"   = "basic"
+        "nginx.ingress.kubernetes.io/auth-secret"  = "mimir-basic-auth"
+        "nginx.ingress.kubernetes.io/auth-realm"  = "Authentication Required"
+      } : {}
+    )
   }
   spec {
     rule {
