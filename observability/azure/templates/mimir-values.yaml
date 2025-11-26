@@ -50,8 +50,7 @@ nginx:
   basicAuth:
     enabled: true
     existingSecret: mimir-basic-auth
-    usernameKey: username
-    passwordKey: password
+    # Do NOT add usernameKey or passwordKey here.
 minio:
   enabled: false
 
