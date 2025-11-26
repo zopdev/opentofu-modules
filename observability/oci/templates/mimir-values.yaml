@@ -48,6 +48,11 @@ mimir:
 
 nginx:
   enabled: true
+  basicAuth:
+    enabled: true
+    existingSecret: mimir-basic-auth
+    usernameKey: username
+    passwordKey: password
 minio:
   enabled: false
 
@@ -208,13 +213,4 @@ distributor:
 alertmanager:
   enabled: true
 
-authentication:
-  enabled: true
-  authModes: ["basic", "tenant-id"]
-  secretTargetRef:
-    - key: username
-      name: mimir-basic-auth
-      parameter: username
-    - key: password
-      name: mimir-basic-auth
-      parameter: password
+

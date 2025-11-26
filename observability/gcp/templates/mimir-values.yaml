@@ -407,6 +407,11 @@ memcachedExporter:
 # Disabled Components
 nginx:
   enabled: true
+  basicAuth:
+    enabled: true
+    existingSecret: mimir-basic-auth
+    usernameKey: username
+    passwordKey: password
 
 minio:
   enabled: false
@@ -430,15 +435,3 @@ serviceAccount:
 # External Config
 useExternalConfig: false
 configStorageType: ConfigMap
-
-# Authentication Configuration
-authentication:
-  enabled: true
-  authModes: ["basic", "tenant-id"]
-  secretTargetRef:
-    - key: username
-      name: mimir-basic-auth
-      parameter: username
-    - key: password
-      name: mimir-basic-auth
-      parameter: password
