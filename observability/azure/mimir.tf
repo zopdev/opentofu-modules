@@ -33,10 +33,8 @@ resource "kubernetes_secret" "mimir-basic-auth" {
   }
 
   data = {
-    # NGINX expects a file content like: "username:hashed_password"
-    # The key must usually be 'auth' or '.htpasswd' depending on the chart version.
-    # 'auth' is the safest default for NGINX basic auth.
-    auth = "${random_password.mimir_basic_auth_username[0].result}:${bcrypt(random_password.mimir_basic_auth_password[0].result)}"
+    # Changed from 'auth' to '.htpasswd' to match the Mimir NGINX config
+    ".htpasswd" = "${random_password.mimir_basic_auth_username[0].result}:${bcrypt(random_password.mimir_basic_auth_password[0].result)}"
   }
 
   type = "Opaque"
