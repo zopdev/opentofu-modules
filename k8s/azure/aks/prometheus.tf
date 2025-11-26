@@ -4,6 +4,21 @@ resource "kubernetes_namespace" "monitoring" {
   }
 }
 
+resource "kubernetes_secret" "prometheus_remote_write_auth" {
+  for_each = local.prometheus_enable ? local.prometheus_remote_write_secrets : {}
+  metadata {
+    name      = "prometheus-remote-write-auth-${each.key}"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+  }
+
+  data = {
+    username = each.value.username
+    password = each.value.password
+  }
+
+  type = "Opaque"
+}
+
 locals{
 
   ### this app namespace level alerts:
@@ -26,19 +41,28 @@ locals{
   prometheus_enable         = try(var.observability_config.prometheus != null ? var.observability_config.prometheus.enable : true, true)
   grafana_version           = try(var.observability_config.grafana.version != null ? var.observability_config.grafana.version : "7.0.8", "7.0.8")
 
-  ## this is prometheus remote write configs
-  remote_write_config_list = try([
-    for remote in var.observability_config.prometheus.remote_write : {
-      host  = remote.host
-      key   = remote.header.key
-      value = remote.header.value
-    }
-  ], [])
+  # Create secrets for user-provided remote write configs with basic auth
+  prometheus_remote_write_secrets = try(var.observability_config.prometheus.remote_write, null) != null ? {
+    for idx, remote in var.observability_config.prometheus.remote_write :
+    idx => remote
+    if try(remote.username, null) != null && try(remote.password, null) != null
+  } : {}
 
-  default_remote_write_config = local.enable_mimir ? [{
-    host  = "http://mimir-distributor.mimir:8080/api/v1/push"
-    key   = "X-Scope-OrgID"
-    value = random_uuid.grafana_standard_datasource_header_value.result
+  ## this is prometheus remote write configs
+  remote_write_config_list = try(var.observability_config.prometheus.remote_write, null) != null ? [
+    for idx, remote in var.observability_config.prometheus.remote_write : {
+      host        = remote.host
+      key         = remote.header.key
+      value       = remote.header.value
+      secret_name = try(remote.username, null) != null && try(remote.password, null) != null ? "prometheus-remote-write-auth-${idx}" : null
+    }
+  ] : []
+
+  default_remote_write_config = local.enable_mimir && local.prometheus_enable ? [{
+    host       = "http://mimir-distributor.mimir:8080/api/v1/push"
+    key        = "X-Scope-OrgID"
+    value      = random_uuid.grafana_standard_datasource_header_value.result
+    secret_name = null
   }] : []
 
   remote_write_config = concat(local.remote_write_config_list, local.default_remote_write_config)

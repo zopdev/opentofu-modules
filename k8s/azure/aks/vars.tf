@@ -210,6 +210,8 @@ variable "observability_config" {
           key   = optional(string)
           value = optional(string)
         }))
+        username = optional(string)
+        password = optional(string)
       })))
     }))
     grafana = optional(object({

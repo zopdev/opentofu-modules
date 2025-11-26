@@ -207,3 +207,4 @@ distributor:
 
 alertmanager:
   enabled: true
+

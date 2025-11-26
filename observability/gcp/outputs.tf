@@ -1,3 +1,15 @@
+output "mimir_basic_auth_username" {
+  description = "Mimir basic auth username"
+  value       = local.enable_mimir ? random_password.mimir_basic_auth_username[0].result : null
+  sensitive   = true
+}
+
+output "mimir_basic_auth_password" {
+  description = "Mimir basic auth password"
+  value       = local.enable_mimir ? random_password.mimir_basic_auth_password[0].result : null
+  sensitive   = true
+}
+
 output "mimir_host_url" {
   value = local.enable_mimir ? ( local.enable_ingress_mimir ? kubernetes_ingress_v1.service_ingress["mimir-distributor:8080-mimir"].spec[0].rule[0].host : "mimir-distributor.mimir:8080") : ""
 }
@@ -18,8 +30,9 @@ output "openobserve_host_urls" {
   value = local.enable_openobserve ? {
     for instance in var.openobserve : instance.name => (
       (instance.enable_ingress == null || instance.enable_ingress == true) ? 
-      kubernetes_ingress_v1.service_ingress["${instance.name}:5080-openobserve"].spec[0].rule[0].host : 
+      kubernetes_ingress_v1.service_ingress["${instance.name}-openobserve-standalone:5080-openobserve"].spec[0].rule[0].host : 
       "${instance.name}.openobserve:5080"
     ) if instance.enable
   } : {}
 }
+

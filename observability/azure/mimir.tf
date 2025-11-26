@@ -6,6 +6,40 @@ resource "azurerm_storage_container" "mimir_container" {
 }
 
 
+resource "random_password" "mimir_basic_auth_username" {
+  count   = local.enable_mimir ? 1 : 0
+  length  = 16
+  special = false
+  upper   = true
+  lower   = true
+  numeric = true
+}
+
+resource "random_password" "mimir_basic_auth_password" {
+  count   = local.enable_mimir ? 1 : 0
+  length  = 32
+  special = true
+  upper   = true
+  lower   = true
+  numeric = true
+}
+
+resource "kubernetes_secret" "mimir-basic-auth" {
+  count = local.enable_mimir ? 1 : 0
+  metadata {
+    name      = "mimir-basic-auth"
+    namespace = "mimir"
+    labels    = { app = var.app_name }
+  }
+
+  data = {
+    # NGINX Ingress Controller expects the key to be 'auth' for basic auth
+    auth = "${random_password.mimir_basic_auth_username[0].result}:${bcrypt(random_password.mimir_basic_auth_password[0].result)}"
+  }
+
+  type = "Opaque"
+}
+
 resource "kubernetes_secret" "mimir-azure-credentials" {
   count   = local.enable_mimir ? 1 : 0
   metadata {
@@ -69,6 +103,8 @@ data "template_file" "mimir_template" {
     distributor_min_cpu                         = try(var.mimir.distributor.min_cpu != null ? var.mimir.distributor.min_cpu : "null", "null")
     distributor_max_memory                      = try(var.mimir.distributor.max_memory != null ? var.mimir.distributor.max_memory : "null", "null")
     distributor_max_cpu                         = try(var.mimir.distributor.max_cpu != null ? var.mimir.distributor.max_cpu : "null", "null")
+    mimir_basic_auth_username                    = random_password.mimir_basic_auth_username[0].result
+    mimir_basic_auth_password                    = random_password.mimir_basic_auth_password[0].result
   }
 }
 
@@ -83,5 +119,8 @@ resource "helm_release" "mimir" {
     data.template_file.mimir_template[0].rendered
   ]
 
-  depends_on = [azurerm_storage_container.mimir_container]
+  depends_on = [
+    azurerm_storage_container.mimir_container,
+    kubernetes_secret.mimir-basic-auth
+  ]
 }
