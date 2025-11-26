@@ -33,8 +33,8 @@ resource "kubernetes_secret" "mimir-basic-auth" {
   }
 
   data = {
-    # Changed from 'auth' to '.htpasswd' to match the Mimir NGINX config
-    ".htpasswd" = "${random_password.mimir_basic_auth_username[0].result}:${bcrypt(random_password.mimir_basic_auth_password[0].result)}"
+    # NGINX Ingress Controller expects the key to be 'auth' for basic auth
+    auth = "${random_password.mimir_basic_auth_username[0].result}:${bcrypt(random_password.mimir_basic_auth_password[0].result)}"
   }
 
   type = "Opaque"

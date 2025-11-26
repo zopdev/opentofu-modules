@@ -4,21 +4,6 @@ resource "kubernetes_namespace" "monitoring" {
   }
 }
 
-resource "kubernetes_secret" "mimir_basic_auth_prometheus" {
-  count = local.prometheus_enable && local.enable_mimir && length(module.observability) > 0 ? 1 : 0
-  metadata {
-    name      = "mimir-basic-auth-prometheus"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
-  }
-
-  data = {
-    username = module.observability[0].mimir_basic_auth_username
-    password = module.observability[0].mimir_basic_auth_password
-  }
-
-  type = "Opaque"
-}
-
 resource "kubernetes_secret" "prometheus_remote_write_auth" {
   for_each = local.prometheus_enable ? local.prometheus_remote_write_secrets : {}
   metadata {
@@ -71,7 +56,7 @@ locals{
     host       = "http://mimir-distributor.mimir:8080/api/v1/push"
     key        = "X-Scope-OrgID"
     value      = random_uuid.grafana_standard_datasource_header_value.result
-    secret_name = local.enable_mimir && length(module.observability) > 0 ? kubernetes_secret.mimir_basic_auth_prometheus[0].metadata[0].name : null
+    secret_name = null
   }] : []
 
   remote_write_config = concat(local.remote_write_config_list, local.default_remote_write_config)

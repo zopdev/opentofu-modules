@@ -72,7 +72,7 @@ resource "kubernetes_ingress_v1" "service_ingress" {
     namespace = each.value.ns
     annotations = merge(
       {
-        "kubernetes.io/ingress.class" = "nginx"
+      "kubernetes.io/ingress.class" = "nginx"
       },
       each.value.ns == "mimir" && local.enable_mimir ? {
         "nginx.ingress.kubernetes.io/auth-type"   = "basic"
