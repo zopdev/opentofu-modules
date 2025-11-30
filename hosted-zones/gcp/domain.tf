@@ -46,6 +46,19 @@ resource "google_dns_record_set" "aws_ns" {
   rrdatas = google_dns_managed_zone.dns_zone[each.key].name_servers
 }
 
-terraform {
-  backend "gcs" {}
+resource "google_dns_record_set" "caa_records" {
+  provider = google.shared-services
+  for_each = { for k , v in var.zones : k => v if v.add_ns_records }
+  name = google_dns_managed_zone.dns_zone[each.key].dns_name
+  type        = "CAA"
+  ttl         = 300
+  managed_zone = data.google_dns_managed_zone.zone[0].name
+  rrdatas = google_dns_managed_zone.dns_zone[each.key].name_servers
 }
+
+terraform {
+  backend "local" {
+    path = "terraform.tfstate"
+  }
+}
+

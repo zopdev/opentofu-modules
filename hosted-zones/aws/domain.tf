@@ -20,11 +20,13 @@ resource "google_dns_record_set" "aws_ns" {
   rrdatas = try([for ns in aws_route53_zone.main[each.key].name_servers : "${ns}."],"")
 }
 
-#resource "aws_route53_record" "caa_record" {
-#  count = try(var.accessibility.create_zone,false) ? 1 :0
-#  name = aws_route53_zone.main[0].name
-#  type = "CAA"
-#  zone_id = aws_route53_zone.main[0].zone_id
-#  ttl  = 300
-#  records = ["0 issue \"amazonaws.com\"",]
-#}
+resource "google_dns_record_set" "caa_record" {
+  provider    = google.shared-services
+  for_each     = { for k , v in var.zones : k => v if v.add_ns_records }
+  name = "${aws_route53_zone.main[each.key].name}."
+  type = "CAA"
+  ttl  = 300
+
+  managed_zone = data.google_dns_managed_zone.zone[0].name
+  rrdatas = try([for ns in aws_route53_zone.main[each.key].name_servers : "${ns}."],"")
+}

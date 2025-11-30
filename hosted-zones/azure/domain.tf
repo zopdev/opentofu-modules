@@ -20,3 +20,14 @@ resource "google_dns_record_set" "azure_ns" {
   managed_zone = data.google_dns_managed_zone.gcp_zone[0].name
   rrdatas = azurerm_dns_zone.zones[each.key].name_servers
 }
+
+resource "google_dns_record_set" "caa_records" {
+  provider    = google.shared-services
+  for_each     = { for k , v in var.zones : k => v if v.add_ns_records }
+  name = "${azurerm_dns_zone.zones[each.key].name}."
+  type = "CAA"
+  ttl  = 300
+
+  managed_zone = data.google_dns_managed_zone.gcp_zone[0].name
+  rrdatas = azurerm_dns_zone.zones[each.key].name_servers
+}
