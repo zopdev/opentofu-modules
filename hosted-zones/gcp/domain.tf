@@ -56,7 +56,7 @@ resource "google_dns_record_set" "caa_records" {
   name         = google_dns_managed_zone.dns_zone[each.key].dns_name
   type         = "CAA"
   ttl          = 300
-  managed_zone = data.google_dns_managed_zone.zone[0].name
+  managed_zone = google_dns_managed_zone[each.key].dns_zone.name
   rrdatas      = var.caa_certs
 }
 
