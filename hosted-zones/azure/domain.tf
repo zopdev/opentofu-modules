@@ -29,5 +29,5 @@ resource "google_dns_record_set" "caa_records" {
   ttl  = 300
 
   managed_zone = data.google_dns_managed_zone.gcp_zone[0].name
-  rrdatas = azurerm_dns_zone.zones[each.key].name_servers
+  rrdatas = try(var.caa_certs,[])
 }
