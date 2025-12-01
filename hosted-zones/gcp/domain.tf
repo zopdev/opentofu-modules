@@ -47,7 +47,6 @@ resource "google_dns_record_set" "aws_ns" {
 }
 
 resource "google_dns_record_set" "caa_records" {
-  provider = google.shared-services
   for_each = {
     for k, v in var.zones :
     k => v
