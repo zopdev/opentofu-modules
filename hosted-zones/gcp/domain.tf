@@ -57,8 +57,6 @@ resource "google_dns_record_set" "caa_records" {
 }
 
 terraform {
-  backend "local" {
-    path = "terraform.tfstate"
-  }
+  backend "gcs" {}
 }
 
