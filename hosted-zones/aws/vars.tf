@@ -26,3 +26,9 @@ variable "master_zone" {
   type = string
   default = ""
 }
+
+variable "caa_certs" {
+  type        = list(string)
+  description = "The caa records to prevent cert issue"
+  default     = []
+}

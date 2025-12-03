@@ -31,3 +31,9 @@ variable "resource_group_name" {
   description = "azure resource group name"
   type = string
 }
+
+variable "caa_certs" {
+  type        = list(string)
+  description = "The caa records to prevent cert issue"
+  default     = []
+}

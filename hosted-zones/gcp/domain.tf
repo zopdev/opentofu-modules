@@ -46,6 +46,20 @@ resource "google_dns_record_set" "aws_ns" {
   rrdatas = google_dns_managed_zone.dns_zone[each.key].name_servers
 }
 
+resource "google_dns_record_set" "caa_records" {
+  for_each = {
+    for k, v in var.zones :
+    k => v
+    if v.add_ns_records && length(var.caa_certs) > 0
+  }
+  name         = google_dns_managed_zone.dns_zone[each.key].dns_name
+  type         = "CAA"
+  ttl          = 300
+  managed_zone = google_dns_managed_zone.dns_zone[each.key].name
+  rrdatas      = var.caa_certs
+}
+
 terraform {
   backend "gcs" {}
 }
+
