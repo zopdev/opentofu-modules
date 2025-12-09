@@ -1,0 +1,50 @@
+name: IaC Security Scan
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  # Pull Request Scan (soft-fail)
+  checkov_pr:
+    name: Checkov Scan on Pull Request
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Run Checkov (SARIF, soft fail)
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          output_format: sarif
+          output_file_path: checkov.sarif
+          soft_fail: true
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov.sarif
+
+  # Main Branch Scan (strict fail)
+  checkov_main:
+    name: Checkov Scan on Main (Strict)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && contains(github.ref, 'main')
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Run Checkov (strict)
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          soft_fail: false  # fail CI if issues found
