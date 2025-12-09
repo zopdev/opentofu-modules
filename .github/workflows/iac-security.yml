@@ -1,5 +1,10 @@
 name: IaC Security Scan
 
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
 on:
   pull_request:
   push:
@@ -42,4 +47,4 @@ jobs:
         uses: bridgecrewio/checkov-action@v12
         with:
           directory: .
-          soft_fail: false  # ❌ fail CI if issues found
+          soft_fail: false  # fail CI if issues found
