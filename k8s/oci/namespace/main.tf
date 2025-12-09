@@ -1,15 +1,5 @@
 locals {
 
-  service_oar_name_map = {
-    for key, config in var.services : key => coalesce(config.oar_name, key)
-  }
-
-  cronjob_oar_name_map = {
-    for key, config in var.cron_jobs : key => coalesce(config.oar_name, key)
-  }
-  
-  oar_name_map = merge(local.service_oar_name_map, local.cronjob_oar_name_map)
-
   artifact_users_map = {
     for user in data.oci_identity_users.all_users.users :
     user.email => user.id
@@ -21,11 +11,11 @@ locals {
     if lookup(local.artifact_users_map, email, null) != null
   ]
 
-  common_tags        = merge(var.common_tags,
+  common_tags = merge(var.common_tags,
     tomap({
-      "zop.project"     = try(var.standard_tags.project != null ? var.standard_tags.project : local.cluster_name ,local.cluster_name)
+      "zop.project"     = try(var.standard_tags.project != null ? var.standard_tags.project : local.cluster_name, local.cluster_name)
       "zop.provisioner" = try(var.standard_tags.provisioner != null ? var.standard_tags.provisioner : "zop-dev", "zop-dev")
-    }))
+  }))
 }
 
 data "oci_identity_users" "all_users" {
@@ -46,7 +36,7 @@ resource "kubernetes_namespace" "app_environments" {
 }
 
 resource "oci_identity_dynamic_group" "artifact_users_group" {
-  count          = length(local.artifact_users) > 0 ? 1 : 0
+  count = length(local.artifact_users) > 0 ? 1 : 0
 
   name           = "artifact-users-group"
   description    = "Dynamic group for artifact registry users"
@@ -63,11 +53,11 @@ data "oci_identity_compartment" "current" {
 }
 
 resource "oci_identity_policy" "artifact_access_policy" {
-  count          = length(local.artifact_users) > 0 ? 1 : 0
+  count = length(local.artifact_users) > 0 ? 1 : 0
 
   name           = "artifact-access-policy"
   description    = "Allows access to artifact registries for dynamic group"
   compartment_id = data.oci_identity_compartment.current.id
-  
+
   statements = ["Allow dynamic-group ${oci_identity_dynamic_group.artifact_users_group[0].name} to manage repos in compartment id ${data.oci_identity_compartment.current.id}"]
 }

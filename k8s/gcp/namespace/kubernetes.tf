@@ -2,10 +2,10 @@ locals {
   cluster_prefix = var.cluster_prefix != "" ? var.cluster_prefix : "${var.provider_id}/${var.app_env}/${var.app_name}"
 }
 data "terraform_remote_state" "infra_output" {
-  backend  = "gcs"
+  backend = "gcs"
   config = {
-    bucket   = var.bucket_name
-    prefix   = "${local.cluster_prefix}/terraform.tfstate"
+    bucket = var.bucket_name
+    prefix = "${local.cluster_prefix}/terraform.tfstate"
   }
 }
 
@@ -24,8 +24,8 @@ data "google_container_cluster" "gke" {
 provider "kubernetes" {
   host                   = "https://${data.terraform_remote_state.infra_output.outputs.kubernetes_endpoint}"
   token                  = data.google_client_config.default.access_token
-  client_certificate     = data.google_container_cluster.gke.master_auth.0.client_certificate
-  client_key             = data.google_container_cluster.gke.master_auth.0.client_key
+  client_certificate     = data.google_container_cluster.gke.master_auth[0].client_certificate
+  client_key             = data.google_container_cluster.gke.master_auth[0].client_key
   cluster_ca_certificate = base64decode(data.terraform_remote_state.infra_output.outputs.ca_certificate)
 }
 
@@ -33,8 +33,8 @@ provider "kubectl" {
   load_config_file       = false
   host                   = "https://${data.terraform_remote_state.infra_output.outputs.kubernetes_endpoint}"
   token                  = data.google_client_config.default.access_token
-  client_certificate     = data.google_container_cluster.gke.master_auth.0.client_certificate
-  client_key             = data.google_container_cluster.gke.master_auth.0.client_key
+  client_certificate     = data.google_container_cluster.gke.master_auth[0].client_certificate
+  client_key             = data.google_container_cluster.gke.master_auth[0].client_key
   cluster_ca_certificate = base64decode(data.terraform_remote_state.infra_output.outputs.ca_certificate)
 }
 
@@ -42,8 +42,8 @@ provider "helm" {
   kubernetes {
     host                   = "https://${data.terraform_remote_state.infra_output.outputs.kubernetes_endpoint}"
     token                  = data.google_client_config.default.access_token
-    client_certificate     = data.google_container_cluster.gke.master_auth.0.client_certificate
-    client_key             = data.google_container_cluster.gke.master_auth.0.client_key
+    client_certificate     = data.google_container_cluster.gke.master_auth[0].client_certificate
+    client_key             = data.google_container_cluster.gke.master_auth[0].client_key
     cluster_ca_certificate = base64decode(data.terraform_remote_state.infra_output.outputs.ca_certificate)
   }
 }

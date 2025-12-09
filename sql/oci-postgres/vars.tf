@@ -24,11 +24,6 @@ variable "administrator_login" {
   default     = "postgresadmin"
 }
 
-variable "cluster_name" {
-  description = "Name of the OKE cluster"
-  type        = string
-}
-
 variable "namespace" {
   description = "Namespace for the PostgreSQL service"
   type        = string
@@ -49,11 +44,6 @@ variable "postgres_db_system_name" {
   type        = string
 }
 
-variable "tags" {
-  description = "Tags for OCI resources"
-  type        = map(any)
-}
-
 variable "databases" {
   description = "Specifies the name of the PostgreSQL Database"
   type        = list(string)
@@ -71,23 +61,23 @@ variable "iops" {
   type        = number
   default     = 75000
   validation {
-    condition = (var.iops >= 75000 )
+    condition     = (var.iops >= 75000)
     error_message = "IOPS value must be greater than or equal to 75000."
   }
   validation {
-    condition = (var.iops <= 750000 )
+    condition     = (var.iops <= 750000)
     error_message = "IOPS value must be less than or equal to 750000."
   }
 }
 
 variable "system_type" {
-  description  = "System type of the Postgres database"
-  type         = string
-  default      = "OCI_OPTIMIZED_STORAGE"
+  description = "System type of the Postgres database"
+  type        = string
+  default     = "OCI_OPTIMIZED_STORAGE"
 }
 
 variable "instance_count" {
-  description  = "Count of the instance"
-  type         = number
-  default      = 1
+  description = "Count of the instance"
+  type        = number
+  default     = 1
 }

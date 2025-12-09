@@ -42,15 +42,15 @@ output "node_configs" {
 }
 
 output "k8s_ca" {
-  value = data.azurerm_kubernetes_cluster.cluster.kube_admin_config.0.cluster_ca_certificate
+  value     = data.azurerm_kubernetes_cluster.cluster.kube_admin_config[0].cluster_ca_certificate
   sensitive = true
 }
 
 output "custom_secrets_name_list" {
-  value ={
-  for k, v in var.custom_secrets_name_list :  k => {
-  for  secret_key in v.secrets : "${secret_key}" =>
-  "${local.cluster_name}-${k}-${secret_key}-secret" }
+  value = {
+    for k, v in var.custom_secrets_name_list : k => {
+      for secret_key in v.secrets : secret_key =>
+    "${local.cluster_name}-${k}-${secret_key}-secret" }
   }
 }
 
@@ -72,7 +72,7 @@ output "lbip" {
 
 output "grafana_password" {
   sensitive = true
-  value = try(random_password.observability_admin[0].result,"")
+  value     = try(random_password.observability_admin[0].result, "")
 }
 
 output "grafana_admin" {
@@ -80,16 +80,16 @@ output "grafana_admin" {
 }
 
 output "grafana_host" {
-  value = try(local.grafana_host,"")
+  value = try(local.grafana_host, "")
 }
 
 output "grafana_datasources" {
-  value = local.grafana_datasource_list
+  value     = local.grafana_datasource_list
   sensitive = true
 }
 
 output "mimir_host_url" {
-  value = try(module.observability[0].mimir_host_url,"")
+  value = try(module.observability[0].mimir_host_url, "")
 }
 
 output "mimir_basic_auth_username" {
@@ -105,7 +105,7 @@ output "mimir_basic_auth_password" {
 }
 
 output "loki_host_url" {
-  value = try(module.observability[0].loki_host_url,"")
+  value = try(module.observability[0].loki_host_url, "")
 }
 
 output "cluster_uid" {
@@ -113,11 +113,11 @@ output "cluster_uid" {
 }
 
 output "tempo_host_url" {
-  value =try( module.observability[0].tempo_host_url,"")
+  value = try(module.observability[0].tempo_host_url, "")
 }
 
 output "cortex_host_url" {
-  value = try(module.observability[0].cortex_host_url,"")
+  value = try(module.observability[0].cortex_host_url, "")
 }
 
 output "grafana_user_credentials" {
@@ -125,15 +125,15 @@ output "grafana_user_credentials" {
     { for key, pwd in random_password.admin_passwords : key => {
       email    = key
       password = pwd.result
-    }},
+    } },
     { for key, pwd in random_password.editor_passwords : key => {
       email    = key
       password = pwd.result
-    }},
+    } },
     { for key, pwd in random_password.viewer_passwords : key => {
       email    = key
       password = pwd.result
-    }}
+    } }
   )
   sensitive = true
 }

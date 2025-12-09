@@ -1,5 +1,5 @@
 data "aws_subnet" "app_subnet" {
-  id = var.kafka_subnets.0
+  id = var.kafka_subnets[0]
 }
 
 locals {

@@ -30,60 +30,46 @@ variable "subnets" {
   })
 }
 
-variable "user_access" {
-  description = "List of users who will have access to clusters"
-  type = object({
-    app_admins = optional(list(string))
-    app_viewers = optional(list(string))
-    app_editors = optional(list(string))
-  })
-  default = {
-    app_admins =  []
-    app_viewers = []
-    app_editors = []
-  }
-}
-
 variable "app_namespaces" {
   description = "List of envs and respective users who will have access to edit non system resources in this cluster"
-  type                 = map(object({
-    alert_webhooks     = optional(list(object({
-      type             = string
-      data             = string
-      labels           = optional(map(string))
+  type = map(object({
+    alert_webhooks = optional(list(object({
+      type   = string
+      data   = string
+      labels = optional(map(string))
     })))
-    admins             = optional(list(string))
-    editors            = optional(list(string))
-    viewers            = optional(list(string))
+    admins  = optional(list(string))
+    editors = optional(list(string))
+    viewers = optional(list(string))
   }))
-  default     = {}
+  default = {}
 }
 
 variable "node_config" {
   description = "List of values for the node configuration of kubernetes cluster"
-  type        = object({
-    node_type       = string
-    min_count       = number
-    max_count       = number
+  type = object({
+    node_type = string
+    min_count = number
+    max_count = number
   })
   validation {
-    condition = (var.node_config.min_count > 0)
+    condition     = (var.node_config.min_count > 0)
     error_message = "The variable kube_node_count_min must be greater than 0."
   }
   validation {
-    condition = (var.node_config.max_count < 30)
+    condition     = (var.node_config.max_count < 30)
     error_message = "The variable kube_node_count_max value must less than 30."
   }
 }
 
 variable "cluster_alert_webhooks" {
   description = "details for setting up of different types of alerts."
-  type        = list(object({
-    type             = string
-    data             = string
+  type = list(object({
+    type   = string
+    data   = string
     labels = optional(map(string))
   }))
-  default     =  []
+  default = []
 
   # example variable
   # cluster_alert_webhooks = [
@@ -155,34 +141,10 @@ variable "moogsoft_username" {
   default     = ""
 }
 
-variable "Kong_enterprise_enabled" {
-  description = "kong enterprise enabled. Default false"
-  type        = bool
-  default     = false
-}
-
-variable "kong_whitelist_cidr" {
-  description = "Whitelist cidr address for kong manager,Grafana and admin api."
-  type        = string
-  default     = "103.245.47.20/32"
-}
-
 variable "custom_inbound_ip_range" {
   description = "list of custom ip range that are allowed access to services on EKS cluster"
   type        = list
   default     = []
-}
-
-variable "kafka" {
-  description = "Map for kafka input"
-  type        = map(
-    object(
-      {
-        topics = list(string)
-      }
-    )
-  )
-  default     = {}
 }
 
 variable "public_app" {
@@ -197,77 +159,43 @@ variable "public_app" {
 #  default     = true
 #}
 
-variable "kong_config" {
-  description = "Map for consumers"
-  type        = any
-  default     = {}
-#  kong_config = {
-#      consumer_list = {
-#        default = [
-#          {
-#            name       = "test1001"
-#            custom_id  = "1001"
-#            group_list = ["partner-group"]
-#          }
-#        ]
-#      }
-#      acl_allow_list = {
-#        default = [
-#          {
-#            name       = "partner-acl"
-#            allow_list = ["partner-group"]
-#          }
-#        ]
-#      }
-#      custom_domains = [
-#        {
-#          url         = ""  (required)
-#          hosted_zone_id         = ""  (required)
-#          create_acm_cert =  optional (true)
-#          update_route53_record = false (optional Default : true)
-#          acm_cert_arn          = ""  (optional Default : "")
-#          subject_alternative_names= [] (optional Default : [])
-#        }
-#      ]
-#    }
-}
 
 variable "worker_ami_config" {
   description = "Object of worker_ami_config inputs"
-  type        = object({
+  type = object({
     owner_id = string
     name     = string
   })
   default = {
-    owner_id          = "amazon"
-    name              = "amazon-eks-node-1.32-v20250804"
+    owner_id = "amazon"
+    name     = "amazon-eks-node-1.32-v20250804"
   }
 }
 
 variable "cluster_alert_thresholds" {
   description = "Cluster related configuration."
   type = object({
-    cpu_utilisation = optional(number)
-    cpu_underutilisation = optional(number)
-    node_count = optional(number)
-    memory_utilisation = optional(number)
-    memory_underutilisation = optional(number)
-    pod_count = optional(number)
-    nginx_5xx_percentage_threshold = optional(number)
-    disk_utilization = optional(number)
-    cortex_disk_utilization_threshold = optional(number)
+    cpu_utilisation                       = optional(number)
+    cpu_underutilisation                  = optional(number)
+    node_count                            = optional(number)
+    memory_utilisation                    = optional(number)
+    memory_underutilisation               = optional(number)
+    pod_count                             = optional(number)
+    nginx_5xx_percentage_threshold        = optional(number)
+    disk_utilization                      = optional(number)
+    cortex_disk_utilization_threshold     = optional(number)
     prometheus_disk_utilization_threshold = optional(number)
   })
-  default =  {
-    cpu_utilisation = 80
-    cpu_underutilisation = 20
-    node_count = 80
-    memory_utilisation = 80
-    memory_underutilisation = 20
-    pod_count = 80
-    nginx_5xx_percentage_threshold = 5
-    disk_utilization = 20
-    cortex_disk_utilization_threshold = 80
+  default = {
+    cpu_utilisation                       = 80
+    cpu_underutilisation                  = 20
+    node_count                            = 80
+    memory_utilisation                    = 80
+    memory_underutilisation               = 20
+    pod_count                             = 80
+    nginx_5xx_percentage_threshold        = 5
+    disk_utilization                      = 20
+    cortex_disk_utilization_threshold     = 80
     prometheus_disk_utilization_threshold = 80
   }
 }
@@ -278,76 +206,27 @@ variable "ext_rds_sg_cidr_block" {
   default     = ["10.0.0.0/8"]
 }
 
-variable "rds_local_access" {
-  description = "whether RDS needs to be allowed to access from local"
-  type        = bool
-  default     = false
-}
-
-variable "custom_secrets_name_list" {
-  description = " list of aws secrets that were manually created by prefixing cluster name and environment "
-  type        = map(
-    object(
-      {
-        secrets = list(string)
-      }
-    )
-  )
-  default = {}
-}
-
-variable "ingress_custom_domain" {
-  description = "Map for k8 ingress for custom domain."
-  type        = map(any)
-  default     = {}
-  # below is example value
-  # ingress_custom_domain  =  {
-  #  acme = [{ ---> namespace
-  #       service =  "acme-challenge"     ---> service name
-  #       domain  =  "*.test1.shgw.link"  ---> custom domain name
-  #       name    =  "shgw.link"          ---> this should be unique name
-  #     }]
-  #   }
-}
-
 variable "pagerduty_integration_key" {
   description = "Pagerduty Integration key to send data to Pagerduty"
   type        = string
   default     = ""
 }
 
-variable "cluster_config" {
-  description = "Configurations on Cluster"
-  type        = map(any)
-  default     = {}
-}
-
-variable "provider_id" {
-  description = "profile name"
-  type        = string
-}
-
-variable "location" {
-  description = "location"
-  type        = string
-  default     = "us-west-2"
-}
-
 variable "observability_config" {
   description = "All the configuration related to observability(e.g prometheus, grafana, loki, tempo and cortex)"
-  type        = object({
-    suffix     = optional(string)
+  type = object({
+    suffix = optional(string)
     prometheus = optional(object({
-      version      = optional(string)
-      enable      = bool
-      persistence  = optional(object({
+      version = optional(string)
+      enable  = bool
+      persistence = optional(object({
         disk_size          = optional(string)
         retention_size     = optional(string)
         retention_duration = optional(string)
       }))
       remote_write = optional(list(object({
-        host    = optional(string)
-        header  = optional(object({
+        host = optional(string)
+        header = optional(object({
           key   = optional(string)
           value = optional(string)
         }))
@@ -356,14 +235,14 @@ variable "observability_config" {
       })))
     }))
     grafana = optional(object({
-      version           = optional(string)
-      enable            = bool
-      url               = optional(string)
-      min_replica       = optional(number)
-      max_replica       = optional(number)
-      request_memory    = optional(string)
-      request_cpu       = optional(string)
-      dashboard  = optional(object({
+      version        = optional(string)
+      enable         = bool
+      url            = optional(string)
+      min_replica    = optional(number)
+      max_replica    = optional(number)
+      request_memory = optional(string)
+      request_cpu    = optional(string)
+      dashboard = optional(object({
         limit_memory   = optional(string)
         limit_cpu      = optional(string)
         request_memory = optional(string)
@@ -376,8 +255,8 @@ variable "observability_config" {
         request_cpu    = optional(string)
       }))
       persistence = optional(object({
-        type       = optional(string)
-        disk_size  = optional(string)
+        type                = optional(string)
+        disk_size           = optional(string)
         deletion_protection = optional(string)
       }))
       configs = optional(object({
@@ -390,19 +269,19 @@ variable "observability_config" {
       enable               = bool
       log_level            = optional(string)
       max_event_age_second = optional(string)
-      loki_receivers  = optional(list(object({
-        name   = string
-        url    = string
+      loki_receivers = optional(list(object({
+        name = string
+        url  = string
         header = optional(object({
           key   = string
           value = string
         }))
         cluster_id = optional(string)
       })))
-      webhook_receivers  = optional(list(object({
-        name   = string
-        type   = string
-        url    = string
+      webhook_receivers = optional(list(object({
+        name = string
+        type = string
+        url  = string
         header = optional(object({
           key   = string
           value = string
@@ -416,20 +295,20 @@ variable "observability_config" {
       }))
     }))
     loki = optional(object({
-      enable = bool
+      enable         = bool
       enable_ingress = optional(bool)
       alerts = optional(object({
-        distributor_lines_received = optional(string)
-        distributor_bytes_received= optional(number)
+        distributor_lines_received    = optional(string)
+        distributor_bytes_received    = optional(number)
         distributor_appended_failures = optional(number)
-        request_errors = optional(number)
-        panics = optional(number)
-        request_latency = optional(number)
-        distributor_replica = optional(number)
-        ingester_replica  = optional(number)
-        querier_replica = optional(number)
-        query_frontend_replica = optional(number)
-        compactor_replica = optional(number)
+        request_errors                = optional(number)
+        panics                        = optional(number)
+        request_latency               = optional(number)
+        distributor_replica           = optional(number)
+        ingester_replica              = optional(number)
+        querier_replica               = optional(number)
+        query_frontend_replica        = optional(number)
+        compactor_replica             = optional(number)
       }))
       ingester = optional(object({
         replicas           = optional(number)
@@ -482,21 +361,21 @@ variable "observability_config" {
       }))
     }))
     cortex = optional(object({
-      enable = bool
+      enable         = bool
       enable_ingress = optional(bool)
       limits = optional(object({
-        ingestion_rate        = optional(number)
-        ingestion_burst_size  = optional(number)
-        max_series_per_metric = optional(number)
-        max_series_per_user = optional(number)
+        ingestion_rate               = optional(number)
+        ingestion_burst_size         = optional(number)
+        max_series_per_metric        = optional(number)
+        max_series_per_user          = optional(number)
         max_fetched_chunks_per_query = optional(number)
       }))
       query_range = optional(object({
         memcached_client_timeout = optional(string)
       }))
       compactor = optional(object({
-        enable             = optional(bool)
-        replicas           = optional(number)
+        enable   = optional(bool)
+        replicas = optional(number)
         persistence_volume = optional(object({
           enable = optional(bool)
           size   = optional(string)
@@ -506,8 +385,8 @@ variable "observability_config" {
         min_memory = optional(string)
         max_memory = optional(string)
       }))
-      ingester               = optional(object({
-        replicas           =  optional(number)
+      ingester = optional(object({
+        replicas = optional(number)
         persistence_volume = optional(object({
           size = optional(string)
         }))
@@ -534,7 +413,7 @@ variable "observability_config" {
       }))
       query_frontend = optional(object({
         replicas = optional(number)
-        enable  = optional(bool)
+        enable   = optional(bool)
       }))
       store_gateway = optional(object({
         replication_factor = optional(number)
@@ -590,14 +469,14 @@ variable "observability_config" {
       }))
     }))
     mimir = optional(object({
-      enable = bool
+      enable         = bool
       enable_ingress = optional(bool)
       alerts = optional(object({
-        distributor_replica = optional(number)
-        ingester_replica  = optional(number)
-        querier_replica = optional(number)
+        distributor_replica    = optional(number)
+        ingester_replica       = optional(number)
+        querier_replica        = optional(number)
         query_frontend_replica = optional(number)
-        compactor_replica = optional(number)
+        compactor_replica      = optional(number)
       }))
       limits = optional(object({
         ingestion_rate                      = optional(number)
@@ -607,7 +486,7 @@ variable "observability_config" {
         max_outstanding_requests_per_tenant = optional(number)
       }))
       compactor = optional(object({
-        replicas           = optional(number)
+        replicas = optional(number)
         persistence_volume = optional(object({
           enable = optional(bool)
           size   = optional(string)
@@ -617,22 +496,22 @@ variable "observability_config" {
         min_memory = optional(string)
         max_memory = optional(string)
       }))
-      ingester               = optional(object({
-        replicas           =  optional(number)
+      ingester = optional(object({
+        replicas = optional(number)
         persistence_volume = optional(object({
           size = optional(string)
         }))
-        min_memory         = optional(string)
-        max_memory         = optional(string)
-        min_cpu            = optional(string)
-        max_cpu            = optional(string)
+        min_memory = optional(string)
+        max_memory = optional(string)
+        min_cpu    = optional(string)
+        max_cpu    = optional(string)
       }))
       querier = optional(object({
-        replicas           = optional(number)
-        min_memory         = optional(string)
-        max_memory         = optional(string)
-        min_cpu            = optional(string)
-        max_cpu            = optional(string)
+        replicas   = optional(number)
+        min_memory = optional(string)
+        max_memory = optional(string)
+        min_cpu    = optional(string)
+        max_cpu    = optional(string)
       }))
       query_frontend = optional(object({
         replicas = optional(number)
@@ -649,30 +528,30 @@ variable "observability_config" {
         max_memory = optional(string)
       }))
       distributor = optional(object({
-        replicas           = optional(number)
-        min_memory         = optional(string)
-        min_cpu            = optional(string)
-        max_cpu            = optional(string)
-        max_memory         = optional(string)
+        replicas   = optional(number)
+        min_memory = optional(string)
+        min_cpu    = optional(string)
+        max_cpu    = optional(string)
+        max_memory = optional(string)
       }))
     }))
     tempo = optional(object({
-      enable = bool
+      enable         = bool
       enable_ingress = optional(bool)
       alerts = optional(object({
-        ingester_bytes_received = optional(number)
-        distributor_ingester_appends = optional(number)
+        ingester_bytes_received              = optional(number)
+        distributor_ingester_appends         = optional(number)
         distributor_ingester_append_failures = optional(number)
-        ingester_live_traces = optional(number)
-        distributor_spans_received = optional(number)
-        distributor_bytes_received = optional(number)
-        ingester_blocks_flushed = optional(number)
-        tempodb_blocklist = optional(number)
-        distributor_replica = optional(number)
-        ingester_replica  = optional(number)
-        querier_replica = optional(number)
-        query_frontend_replica = optional(number)
-        compactor_replica = optional(number)
+        ingester_live_traces                 = optional(number)
+        distributor_spans_received           = optional(number)
+        distributor_bytes_received           = optional(number)
+        ingester_blocks_flushed              = optional(number)
+        tempodb_blocklist                    = optional(number)
+        distributor_replica                  = optional(number)
+        ingester_replica                     = optional(number)
+        querier_replica                      = optional(number)
+        query_frontend_replica               = optional(number)
+        compactor_replica                    = optional(number)
       }))
       max_receiver_msg_size = optional(number)
       ingester = optional(object({
@@ -701,10 +580,10 @@ variable "observability_config" {
 
       }))
       querier = optional(object({
-        replicas           = optional(number)
+        replicas = optional(number)
       }))
       query_frontend = optional(object({
-        replicas           = optional(number)
+        replicas = optional(number)
       }))
       metrics_generator = optional(object({
         enable                      = optional(bool)
@@ -712,9 +591,9 @@ variable "observability_config" {
         service_graphs_max_items    = optional(number)
         service_graphs_wait         = optional(string)
         remote_write_flush_deadline = optional(string)
-        remote_write                = optional(list(object({
-          host    = optional(string)
-          header  = optional(object({
+        remote_write = optional(list(object({
+          host = optional(string)
+          header = optional(object({
             key   = optional(string)
             value = optional(string)
           }))
@@ -728,19 +607,13 @@ variable "observability_config" {
 
 variable "namespace_folder_list" {
   description = "List of Namespaces configured in the cluster"
-  type = list(string)
-  default = []
-}
-
-variable "provisioner" {
-  description = "Provisioner being used to setup Infra"
-  type        = string
-  default     = "zop-dev"
+  type        = list(string)
+  default     = []
 }
 
 variable "standard_tags" {
   description = "standard tags for resources"
-  type        = object ({
+  type = object({
     project     = optional(string)
     provisioner = optional(string)
   })
@@ -749,10 +622,10 @@ variable "standard_tags" {
 
 variable "fluent_bit" {
   description = "Inputs for Fluent Bit configurations"
-  type        = object({
-    enable = string
+  type = object({
+    enable             = string
     cloud_watch_enable = string
-    loki   = optional(list(object({
+    loki = optional(list(object({
       host      = string
       tenant_id = optional(string)
       labels    = string
@@ -760,9 +633,9 @@ variable "fluent_bit" {
       tls       = optional(string)
     })))
     http = optional(list(object({
-      host    = string
-      port    = optional(number)
-      uri     = optional(string)
+      host = string
+      port = optional(number)
+      uri  = optional(string)
       headers = optional(list(object({
         key   = string
         value = string
@@ -778,24 +651,24 @@ variable "fluent_bit" {
       tls_verify = optional(string)
     })))
     datadog = optional(list(object({
-      host       = string
-      api_key    = string
-      tls        = optional(string)
-      compress   = optional(string)
+      host     = string
+      api_key  = string
+      tls      = optional(string)
+      compress = optional(string)
     })))
     new_relic = optional(list(object({
-      host       = optional(string)
-      api_key    = string
-      compress   = optional(string)
+      host     = optional(string)
+      api_key  = string
+      compress = optional(string)
     })))
-    slack  = optional(list(object({
-      webhook    = string
+    slack = optional(list(object({
+      webhook = string
     })))
   })
   default = null
 }
 
-variable "cert_issuer_config"{
+variable "cert_issuer_config" {
   description = "email to be added as cert-manager issuer"
   type = object({
     env   = optional(string)
@@ -815,10 +688,10 @@ variable "slack_alerts_configs" {
 
 variable "webhook_alerts_configs" {
   type = list(object({
-    name         = string
-    url          = string
+    name          = string
+    url           = string
     send_resolved = optional(bool, true)
-    labels       = optional(map(string))
+    labels        = optional(map(string))
   }))
   default = []
 }
@@ -839,13 +712,13 @@ variable "karpenter_configs" {
   description = "Inputs for karpenter - enabling flag, GCP machine types, and capacity types ('on-demand' or 'spot')"
 
   type = object({
-    enable = bool
-    machine_types = list(string)
+    enable         = bool
+    machine_types  = list(string)
     capacity_types = list(string)
   })
   default = {
-    enable = false
-    machine_types = []
+    enable         = false
+    machine_types  = []
     capacity_types = []
   }
 

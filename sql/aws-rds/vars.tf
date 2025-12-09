@@ -16,12 +16,6 @@ variable "db_subnets" {
   default     = []
 }
 
-variable "aws_region" {
-  description = "The AWS region to deploy to (e.g. us-east-1)"
-  type        = string
-  default     = ""
-}
-
 variable "cluster_name" {
   description = "Name of the cluster to which RDS instance is attached with"
   type        = string
@@ -95,12 +89,6 @@ variable "max_allocated_storage" {
   description = "When configured, the upper limit to which Amazon RDS can automatically scale the storage of the DB instance. Must be greater than or equal to allocated_storage,0 to disable Storage Autoscaling."
   type        = number
   default     = 0
-}
-
-variable "monitoring_interval" {
-  description = "The interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 5. Valid Values: 0, 1, 5, 10, 15, 30, 60."
-  default     = 0
-  type        = number
 }
 
 variable "log_min_duration_statement" {

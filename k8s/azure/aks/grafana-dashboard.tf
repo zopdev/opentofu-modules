@@ -3,13 +3,13 @@ locals {
   folder_creation = false
 
   grafana_dashboard_folder = local.folder_creation ? {
-    Kong                        = ["kong-official"]
-    Partner_Standard_API        = ["partner-standard-api"]
-    Disk_Utilization            = ["cortex-disk-utilization", "prometheus-disk-utilization"]
+    Kong                 = ["kong-official"]
+    Partner_Standard_API = ["partner-standard-api"]
+    Disk_Utilization     = ["cortex-disk-utilization", "prometheus-disk-utilization"]
   } : {}
 
   folder_map = [
-    for key, value in local.grafana_dashboard_folder :  {
+    for key, value in local.grafana_dashboard_folder : {
       folder     = key
       dashboards = value
     }
@@ -17,7 +17,7 @@ locals {
 
   dashboard_map = merge([
     for key, value in local.folder_map : {
-      for dashboard in value.dashboards : "${value.folder}-${dashboard}" =>  {
+      for dashboard in value.dashboards : "${value.folder}-${dashboard}" => {
         folder    = value.folder
         dashboard = dashboard
       }
@@ -25,13 +25,13 @@ locals {
   ]...)
 
   role_map = {
-    grafana_admins =  "Admin"
+    grafana_admins  = "Admin"
     grafana_viewers = "Editor"
     grafana_editors = "Viewer"
   }
 
   users_with_roles = flatten([
-    for role, emails in var.grafana_access: [
+    for role, emails in var.grafana_access : [
       for email in emails : {
         email = email
         role  = local.role_map[role]
@@ -39,14 +39,11 @@ locals {
     ]
   ])
 
-  users_with_roles_map = {
-    for user in local.users_with_roles : user.email => user
-  }
 }
 
 resource "null_resource" "wait_for_grafana" {
   provisioner "local-exec" {
-    command = <<-EOT
+    command     = <<-EOT
       #!/bin/bash
       
       DOMAIN_NAME="${var.accessibility.domain_name}"
@@ -104,23 +101,23 @@ resource "null_resource" "wait_for_grafana" {
 }
 
 resource "random_password" "admin_passwords" {
-  for_each = coalesce(toset(var.grafana_access.grafana_admins), toset([]))
-  length   = 12
-  special  = true
+  for_each         = coalesce(toset(var.grafana_access.grafana_admins), toset([]))
+  length           = 12
+  special          = true
   override_special = "$"
 }
 
 resource "random_password" "editor_passwords" {
-  for_each = coalesce(toset(var.grafana_access.grafana_editors), toset([]))
-  length   = 12
-  special  = true
+  for_each         = coalesce(toset(var.grafana_access.grafana_editors), toset([]))
+  length           = 12
+  special          = true
   override_special = "$"
 }
 
 resource "random_password" "viewer_passwords" {
-  for_each = coalesce(toset(var.grafana_access.grafana_viewers), toset([]))
-  length   = 12
-  special  = true
+  for_each         = coalesce(toset(var.grafana_access.grafana_viewers), toset([]))
+  length           = 12
+  special          = true
   override_special = "$"
 }
 
@@ -132,7 +129,7 @@ resource "grafana_user" "admins" {
   password = random_password.admin_passwords[each.key].result
   is_admin = true
 
-  depends_on = [ null_resource.wait_for_grafana ]
+  depends_on = [null_resource.wait_for_grafana]
 }
 
 resource "grafana_user" "editors" {
@@ -143,7 +140,7 @@ resource "grafana_user" "editors" {
   password = random_password.editor_passwords[each.key].result
   is_admin = false
 
-  depends_on = [ null_resource.wait_for_grafana ]
+  depends_on = [null_resource.wait_for_grafana]
 }
 
 resource "grafana_user" "viewers" {
@@ -154,7 +151,7 @@ resource "grafana_user" "viewers" {
   password = random_password.viewer_passwords[each.key].result
   is_admin = false
 
-  depends_on = [ null_resource.wait_for_grafana ]
+  depends_on = [null_resource.wait_for_grafana]
 }
 
 resource "grafana_folder" "dashboard_folder" {
@@ -174,7 +171,7 @@ resource "grafana_api_key" "admin_token" {
   name = "terraform-admin-token"
   role = "Admin"
 
-  depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers ]
+  depends_on = [grafana_user.admins, grafana_user.editors, grafana_user.viewers]
 }
 
 resource "null_resource" "update_user_roles" {
@@ -183,7 +180,7 @@ resource "null_resource" "update_user_roles" {
   }
 
   provisioner "local-exec" {
-    command = <<EOT
+    command     = <<EOT
       email="${each.value.email}"
       role="${each.value.role}"
       domain="${var.accessibility.domain_name}"
@@ -210,10 +207,10 @@ resource "null_resource" "update_user_roles" {
     interpreter = ["/bin/bash", "-c"]
   }
 
-  depends_on = [ grafana_user.admins, grafana_user.editors, grafana_user.viewers ]
+  depends_on = [grafana_user.admins, grafana_user.editors, grafana_user.viewers]
 }
 
 provider "grafana" {
-  url   = "https://grafana.${var.accessibility.domain_name}"
-  auth  = local.grafana_auth
+  url  = "https://grafana.${var.accessibility.domain_name}"
+  auth = local.grafana_auth
 }
