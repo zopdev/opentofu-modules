@@ -4,27 +4,15 @@ variable "resource_group_name" {
   default     = ""
 }
 
-variable "storage_account_name" {
-  description = "Name of the storage account"
-  type = string
-  default = ""
-}
-
-variable "container_name" {
-  description = "Name of the container which store tfstate files"
-  type = string
-  default = ""
-}
-
 variable "app_name" {
-    description = "This is the name of the cluster. This name is also used to namespace all the other resources created by this module."
-    type        = string
+  description = "This is the name of the cluster. This name is also used to namespace all the other resources created by this module."
+  type        = string
 }
 
 variable "app_env" {
-    description = "Application deployment environment."
-    type        = string
-    default     = ""
+  description = "Application deployment environment."
+  type        = string
+  default     = ""
 }
 
 variable "namespace" {
@@ -34,20 +22,20 @@ variable "namespace" {
 }
 
 variable "app_region" {
-  type = string
+  type        = string
   description = "Location where the resources to be created"
-  default = ""
+  default     = ""
 }
 
 variable "user_access" {
   description = "List of users who will have access to clusters"
   type = object({
-    admins = optional(list(string))
+    admins  = optional(list(string))
     viewers = optional(list(string))
     editors = optional(list(string))
   })
   default = {
-    admins =  []
+    admins  = []
     viewers = []
     editors = []
   }
@@ -60,63 +48,57 @@ variable "accessibility" {
   })
 }
 
-variable "public_ingress" {
-  description = "Whether ingress is public or not."
-  type        = string
-  default     = false
-}
-
 variable "cron_jobs" {
   description = "Map of cron jobs to be executed within the namespace"
-  type        = map(object({
-    repo_name          = optional(string)
-    acr_name           = optional(string)
-    acr_resource_group = optional(string)
-    db_name        = optional(string)
-    redis          = optional(bool)
-    local_redis    = optional(bool)
-    service_account= optional(string)
-    custom_secrets = optional(list(string))
-    ingress_list   = optional(list(string))
+  type = map(object({
+    repo_name              = optional(string)
+    acr_name               = optional(string)
+    acr_resource_group     = optional(string)
+    db_name                = optional(string)
+    redis                  = optional(bool)
+    local_redis            = optional(bool)
+    service_account        = optional(string)
+    custom_secrets         = optional(list(string))
+    ingress_list           = optional(list(string))
     enable_basic_auth      = optional(bool)
     enable_default_ingress = optional(bool)
-    badger_db          = optional(bool)
+    badger_db              = optional(bool)
     datastore_configs = optional(object({
-      name = optional(string)
+      name    = optional(string)
       databse = optional(string)
-      type = optional(string)
+      type    = optional(string)
     }))
     redis_configs = optional(object({
       name = optional(string)
       port = optional(number)
     }))
-    helm_configs       = optional(object({
+    helm_configs = optional(object({
       image_pull_secrets = optional(list(string))
       image              = optional(string)
       schedule           = string
       suspend            = optional(bool)
       concurrency_policy = optional(string)
-      http_port        = optional(string)
-      metrics_port     = optional(string)
-      min_cpu          = optional(string)
-      min_memory       = optional(string)
-      max_cpu          = optional(string)
-      max_memory       = optional(string)
-      env              = optional(map(any))
-      env_list          = optional(list(object({
+      http_port          = optional(string)
+      metrics_port       = optional(string)
+      min_cpu            = optional(string)
+      min_memory         = optional(string)
+      max_cpu            = optional(string)
+      max_memory         = optional(string)
+      env                = optional(map(any))
+      env_list = optional(list(object({
         name  = string
         value = string
       })))
-      command = optional(list(string))
-      configmaps_list  = optional(list(string))
-      secrets_list     = optional(list(string))
-      volume_mounts  = optional(object({
-        configmaps   = optional(map(object({
+      command         = optional(list(string))
+      configmaps_list = optional(list(string))
+      secrets_list    = optional(list(string))
+      volume_mounts = optional(object({
+        configmaps = optional(map(object({
           mount_path = string
           sub_path   = optional(string)
           read_only  = optional(bool)
         })))
-        secrets      = optional(map(object({
+        secrets = optional(map(object({
           mount_path = string
           sub_path   = optional(string)
           read_only  = optional(bool)
@@ -127,87 +109,87 @@ variable "cron_jobs" {
       }))
     }))
   }))
-  default     = {}
+  default = {}
 }
 
 variable "services" {
   description = "Map of services to be deployed within the namespace"
-  type      = map(object({
-    repo_name          = optional(string)
-    acr_name           = optional(string)
-    acr_resource_group = optional(string)
-    db_name            = optional(string)
-    redis              = optional(bool)
-    local_redis    = optional(bool)
+  type = map(object({
+    repo_name              = optional(string)
+    acr_name               = optional(string)
+    acr_resource_group     = optional(string)
+    db_name                = optional(string)
+    redis                  = optional(bool)
+    local_redis            = optional(bool)
     enable_default_ingress = optional(bool)
-    ingress_list       = optional(list(string))
-    custom_secrets     = optional(list(string))
+    ingress_list           = optional(list(string))
+    custom_secrets         = optional(list(string))
     enable_basic_auth      = optional(bool)
-    badger_db          = optional(bool)
+    badger_db              = optional(bool)
     datastore_configs = optional(object({
-      name = optional(string)
+      name    = optional(string)
       databse = optional(string)
-      type = optional(string)
+      type    = optional(string)
     }))
     redis_configs = optional(object({
       name = optional(string)
       port = optional(number)
     }))
-    helm_configs       = optional(object({
+    helm_configs = optional(object({
       image_pull_secrets = optional(list(string))
       image              = optional(string)
-      replica_count    = optional(number)
-      cli_service      = optional(bool)
-      http_port        = optional(string)
-      metrics_port     = optional(string)
-      ports            = optional(map(any))
-      min_cpu          = optional(string)
-      min_memory       = optional(string)
-      max_cpu          = optional(string)
-      max_memory       = optional(string)
-      min_available    = optional(number)
-      heartbeat_url    = optional(string)
-      env              = optional(map(any))
-      env_list          = optional(list(object({
+      replica_count      = optional(number)
+      cli_service        = optional(bool)
+      http_port          = optional(string)
+      metrics_port       = optional(string)
+      ports              = optional(map(any))
+      min_cpu            = optional(string)
+      min_memory         = optional(string)
+      max_cpu            = optional(string)
+      max_memory         = optional(string)
+      min_available      = optional(number)
+      heartbeat_url      = optional(string)
+      env                = optional(map(any))
+      env_list = optional(list(object({
         name  = string
         value = string
       })))
-      configmaps_list  = optional(list(string))
-      secrets_list     = optional(list(string))
-      hpa              = optional(object({
-        enable           = optional(bool)
-        min_replicas     = optional(number)
-        max_replicas     = optional(number)
-        cpu_limit        = optional(number)
-        memory_limit     = optional(number)
+      configmaps_list = optional(list(string))
+      secrets_list    = optional(list(string))
+      hpa = optional(object({
+        enable       = optional(bool)
+        min_replicas = optional(number)
+        max_replicas = optional(number)
+        cpu_limit    = optional(number)
+        memory_limit = optional(number)
       }))
       command = optional(list(string))
-      readiness_probes        = optional(object({
+      readiness_probes = optional(object({
         enable                = optional(bool)
         initial_delay_seconds = optional(number)
         period_seconds        = optional(number)
         timeout_seconds       = optional(number)
         failure_threshold     = optional(number)
       }))
-      liveness_probes         = optional(object({
+      liveness_probes = optional(object({
         enable                = optional(bool)
         initial_delay_seconds = optional(number)
         period_seconds        = optional(number)
         timeout_seconds       = optional(number)
         failure_threshold     = optional(number)
       }))
-      volume_mounts  = optional(object({
-        configmaps   = optional(map(object({
+      volume_mounts = optional(object({
+        configmaps = optional(map(object({
           mount_path = string
           sub_path   = optional(string)
           read_only  = optional(bool)
         })))
-        secrets      = optional(map(object({
+        secrets = optional(map(object({
           mount_path = string
           sub_path   = optional(string)
           read_only  = optional(bool)
         })))
-        pvc      = optional(map(object({
+        pvc = optional(map(object({
           mount_path = string
           sub_path   = optional(string)
           read_only  = optional(bool)
@@ -222,16 +204,16 @@ variable "services" {
       }))
     }))
   }))
-  default     = {}
+  default = {}
 }
 
 variable "cassandra_db" {
   description = "Inputs to provision Cassandra instances"
-  type        = object({
+  type = object({
     admin_user       = string
     replica_count    = number
     persistence_size = number
-    })
+  })
   default = null
 }
 
@@ -242,20 +224,20 @@ variable "common_tags" {
 }
 
 variable "sql_db" {
-  description    = "Inputs to provision sql instances"
-  type           = object(
+  description = "Inputs to provision sql instances"
+  type = object(
     {
-      type         = string
-      sku_name     = optional(string)
-      admin_user   = optional(string)
-      enable_ssl   = optional(bool)
-      read_replica = optional(bool)
-      storage      = optional(number)
+      type            = string
+      sku_name        = optional(string)
+      admin_user      = optional(string)
+      enable_ssl      = optional(bool)
+      read_replica    = optional(bool)
+      storage         = optional(number)
       storage_scaling = optional(bool)
       storage_tier    = optional(string)
       iops            = optional(number)
       iops_scaling    = optional(bool)
-    })
+  })
   default = null
 }
 
@@ -265,23 +247,9 @@ variable "custom_namespace_secrets" {
   default     = []
 }
 
-variable "ingress_custom_domain" {
-  description = "Map for k8 ingress for custom domain."
-  type        = map(any)
-  default     = {}
-  # below is example value
-  # ingress_custom_domain  =  {
-  #  acme = [{ ---> namespace
-  #       service =  "acme-challenge"     ---> service name
-  #       domain  =  "*.test1.shgw.link"  ---> custom domain name
-  #       name    =  "shgw.link"          ---> this should be unique name
-  #     }]
-  #   }
-}
-
 variable "local_redis" {
   description = "Inputs to provision Redis instance within the cluster as a statefulset."
-  type        = object(
+  type = object(
     {
       enable        = bool
       disk_size     = optional(string)
@@ -308,38 +276,20 @@ variable "helm_charts" {
   default = {}
 }
 
-variable "deploy_env" {
-  description = "Deployment environment"
-  type        = string
-  default     = null
-}
-
-variable "provisioner" {
-  description = "Provisioner being used to setup Infra"
-  type        = string
-  default     = "zop-dev"
-}
-
 variable "shared_services" {
   type = object({
-    type     = string
-    bucket   = string
-    profile  = optional(string)
-    location = optional(string)
-    resource_group = optional(string)
+    type            = string
+    bucket          = string
+    profile         = optional(string)
+    location        = optional(string)
+    resource_group  = optional(string)
     storage_account = optional(string)
-    container = optional(string)
-    cluster_prefix = optional(string)
+    container       = optional(string)
+    cluster_prefix  = optional(string)
   })
 }
 
-variable "vpc" {
-  description = "VPC the apps are going to use"
-  type        = string
-  default     = ""
-}
-
-variable "cert_issuer_config"{
+variable "cert_issuer_config" {
   description = "email to be added as cert-manager issuer"
   type = object({
     env   = optional(string)
@@ -348,18 +298,18 @@ variable "cert_issuer_config"{
 }
 variable "sql_list" {
   type = map(object({
-    type                    = optional(string)
-    sku_name                = optional(string)
-    admin_user              = optional(string)
-    storage                 = optional(number)
-    storage_scaling         = optional(bool)
-    iops                    = optional(number)
-    storage_tier            = optional(string)
-    iops_scaling            = optional(bool)
-    read_replica            = optional(bool)
-    disk_autoresize         = optional(string)
-    disk_size               = optional(string)
-    enable_ssl              = optional(bool)
+    type            = optional(string)
+    sku_name        = optional(string)
+    admin_user      = optional(string)
+    storage         = optional(number)
+    storage_scaling = optional(bool)
+    iops            = optional(number)
+    storage_tier    = optional(string)
+    iops_scaling    = optional(bool)
+    read_replica    = optional(bool)
+    disk_autoresize = optional(string)
+    disk_size       = optional(string)
+    enable_ssl      = optional(bool)
   }))
   default = null
 }

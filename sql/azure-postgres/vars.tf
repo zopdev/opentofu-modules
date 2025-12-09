@@ -88,14 +88,8 @@ variable "namespace" {
 }
 
 variable "key_vault_id" {
-  type        = string
-  default     = ""
-}
-
-variable "zone" {
-  description = "zone for resources"
-  type        = number
-  default     = 2
+  type    = string
+  default = ""
 }
 
 variable "enable_ssl" {
@@ -109,11 +103,11 @@ variable "storage_mb" {
   type        = number
   default     = 32768
   validation {
-    condition = (var.storage_mb >= 32768 )
+    condition     = (var.storage_mb >= 32768)
     error_message = "Storage value must be greater than or equal to 20."
   }
   validation {
-    condition = (var.storage_mb <= 33553408 )
+    condition     = (var.storage_mb <= 33553408)
     error_message = "Storage value must be less than or equal to 16384."
   }
 }

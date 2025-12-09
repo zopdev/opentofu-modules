@@ -1,5 +1,5 @@
 locals {
-  domain_name = try(var.accessibility.domain_name != null ? var.accessibility.domain_name  : "", "")
+  domain_name = try(var.accessibility.domain_name != null ? var.accessibility.domain_name : "", "")
 }
 
 data "aws_route53_zone" "zone" {
@@ -19,10 +19,10 @@ data "kubernetes_service" "ingress-controller" {
 
 resource "aws_route53_record" "c_name_record" {
   provider = aws.shared-services
-  zone_id  = data.aws_route53_zone.zone.0.zone_id
+  zone_id  = data.aws_route53_zone.zone[0].zone_id
   name     = "*.${local.domain_name}"
   type     = "CNAME"
-  records  = [data.kubernetes_service.ingress-controller.status.0.load_balancer.0.ingress.0.hostname]
+  records  = [data.kubernetes_service.ingress-controller.status[0].load_balancer[0].ingress[0].hostname]
   ttl      = 300
 }
 

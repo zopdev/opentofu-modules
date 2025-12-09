@@ -1,4 +1,3 @@
-data "aws_availability_zones" "available" {}
 
 locals {
   enable_ssl = var.enable_ssl == true ? 1 : 0
@@ -9,8 +8,8 @@ locals {
       enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
       version                         = var.postgresql_engine_version
       port                            = 5432
-      parameter_group                 = {
-        key    = "postgres16"
+      parameter_group = {
+        key = "postgres16"
         values = [
           {
             name  = "log_connections"
@@ -26,18 +25,18 @@ locals {
           },
           {
             name  = "rds.force_ssl"
-            value = "${local.enable_ssl}"
+            value = local.enable_ssl
           }
         ]
       }
     }
-    "mysql"      = {
+    "mysql" = {
       type                            = "mysql"
       enabled_cloudwatch_logs_exports = ["error", "slowquery"]
       version                         = var.mysql_engine_version
       port                            = 3306
-      parameter_group                 = {
-        key    = "mysql8.0"
+      parameter_group = {
+        key = "mysql8.0"
         values = [
           {
             name  = "character_set_server"
@@ -64,12 +63,12 @@ locals {
 
 resource "aws_db_subnet_group" "db_subnet" {
   name       = "${var.rds_name}-sg"
-  subnet_ids =  var.db_subnets
+  subnet_ids = var.db_subnets
 
   tags = merge(var.tags,
-  tomap({
-    "Name" = var.rds_name
-  })
+    tomap({
+      "Name" = var.rds_name
+    })
   )
 }
 
@@ -92,9 +91,9 @@ resource "aws_security_group" "rds" {
   }
 
   tags = merge(var.tags,
-  tomap({
-    "Name" = var.rds_name
-  })
+    tomap({
+      "Name" = var.rds_name
+    })
   )
 }
 
@@ -111,9 +110,9 @@ resource "aws_db_parameter_group" "db_param_group" {
   }
 
   tags = merge(var.tags,
-  tomap({
-    "Name" = var.rds_name
-  })
+    tomap({
+      "Name" = var.rds_name
+    })
   )
 }
 
@@ -141,19 +140,19 @@ resource "aws_db_instance" "db_instance" {
   storage_type                    = var.storage_tier
   auto_minor_version_upgrade      = var.auto_minor_version_upgrade
   tags = merge(var.tags,
-  tomap({
-    "Name" = var.rds_name
-  })
+    tomap({
+      "Name" = var.rds_name
+    })
   )
 }
 
 resource "aws_db_instance" "rds_read_replica" {
-  count                           =  var.read_replica ? 1 : 0
+  count = var.read_replica ? 1 : 0
 
   identifier                      = "rds-read-replica-${var.rds_name}"
   publicly_accessible             = false
   storage_encrypted               = true
-  instance_class                  = var.instance_class 
+  instance_class                  = var.instance_class
   replicate_source_db             = aws_db_instance.db_instance.id
   allocated_storage               = var.allocated_storage
   vpc_security_group_ids          = [aws_security_group.rds.id]
@@ -168,8 +167,8 @@ resource "aws_db_instance" "rds_read_replica" {
   storage_type                    = var.storage_tier
   auto_minor_version_upgrade      = var.auto_minor_version_upgrade
   tags = merge(var.tags,
-  tomap({
-    "Name" = "rds-read-replica-${var.rds_name}"
-  })
+    tomap({
+      "Name" = "rds-read-replica-${var.rds_name}"
+    })
   )
 }

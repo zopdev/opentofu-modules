@@ -10,8 +10,3 @@ variable "enable_versioning" {
   default     = false
 }
 
-variable "force_destroy" {
-  description = "Whether to force destroy by cleaning up the bucket"
-  type        = bool
-  default     = true
-}

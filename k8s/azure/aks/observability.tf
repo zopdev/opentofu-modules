@@ -3,7 +3,7 @@ locals {
   enable_tempo  = try(var.observability_config.tempo != null ? var.observability_config.tempo.enable : false, false)
   enable_cortex = try(var.observability_config.cortex != null ? var.observability_config.cortex.enable : false, false)
   enable_mimir  = try(var.observability_config.mimir != null ? var.observability_config.mimir.enable : false,false)
-  storage_account = "${replace(local.cluster_name,"-","")}${random_string.storage_account_suffix.result}"
+  storage_account = "${replace(try(local.cluster_name != null ? local.cluster_name : "default-cluster","default-cluster"),"-","")}${random_string.storage_account_suffix.result}"
 }
 
 resource "random_string" "storage_account_suffix" {
