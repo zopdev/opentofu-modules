@@ -21,13 +21,13 @@ jobs:
         with:
           directory: .
           output_format: sarif
-          output_file_path: checkov-pr.sarif
+          output_file_path: checkov.sarif
           soft_fail: true
 
-      - name: Upload SARIF to GitHub Security Dashboard
-        uses: github/code-scanning-action/upload-sarif@v3
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: checkov-pr.sarif
+          sarif_file: checkov.sarif
 
   # Main Branch Scan (strict fail)
   checkov_main:
