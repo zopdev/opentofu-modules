@@ -1,3 +1,16 @@
+data "azurerm_virtual_network" "vnet" {
+  count               = var.vpc != "" ? 1 : 0
+  name                = var.vpc
+  resource_group_name = var.resource_group_name
+}
+
+data "azurerm_subnet" "db_subnet" {
+  count                = var.vpc != "" && var.subnet != "" ? 1 : 0
+  name                 = var.subnet
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.vnet[0].name
+}
+
 resource "azurerm_postgresql_flexible_server" "postgres_server" {
   name                             = var.postgres_server_name
   location                         = var.location
@@ -11,6 +24,11 @@ resource "azurerm_postgresql_flexible_server" "postgres_server" {
   storage_tier                     = var.storage_tier
   backup_retention_days            = var.backup_retention_days
   geo_redundant_backup_enabled     = true
+
+  # VNet integration
+  delegated_subnet_id              = var.vpc != "" && var.subnet != "" ? data.azurerm_subnet.db_subnet[0].id : null
+  private_dns_zone_id              = var.private_dns_zone_id
+  public_network_access_enabled    = var.vpc != "" && var.subnet != "" ? false : var.public_network_access_enabled
 
   tags = merge(var.tags,
     tomap({
@@ -40,10 +58,11 @@ resource "azurerm_postgresql_flexible_server_configuration" "ssl_parameter_group
 }
 
 resource "azurerm_postgresql_flexible_server_firewall_rule" "postgres_firewall" {
-  name                = "${var.cluster_name}-${var.namespace}-postgres-firewall"
-  server_id           = azurerm_postgresql_flexible_server.postgres_server.id
-  start_ip_address    = "0.0.0.0"
-  end_ip_address      = "255.255.255.255"
+  count             = var.vpc == "" || var.subnet == "" ? 1 : 0
+  name              = "${var.cluster_name}-${var.namespace}-postgres-firewall"
+  server_id         = azurerm_postgresql_flexible_server.postgres_server.id
+  start_ip_address  = "0.0.0.0"
+  end_ip_address    = "255.255.255.255"
 }
 
 resource "azurerm_postgresql_flexible_server" "postgresql_replica_server" {

@@ -1,5 +1,18 @@
 data "azurerm_subscription" "current" {}
 
+data "azurerm_virtual_network" "vnet" {
+  count               = var.vpc != "" ? 1 : 0
+  name                = var.vpc
+  resource_group_name = var.resource_group_name
+}
+
+data "azurerm_subnet" "aks_subnet" {
+  count                = var.vpc != "" && var.subnet != "" ? 1 : 0
+  name                 = var.subnet
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.vnet[0].name
+}
+
 resource "random_password" "aks_sp_pwd" {
   length  = 16
   special = false
@@ -67,6 +80,13 @@ module "aks" {
   oidc_issuer_enabled                = true
   temporary_name_for_rotation        = "${var.app_name}1"
   secret_rotation_enabled            = true
+  
+  # VNet configuration - when VNet is provided, use Azure CNI for private node connectivity
+  # This allows nodes in private subnet to connect to SQL/Redis via VNet, and use NAT for outbound
+  vnet_subnet_id                     = var.vpc != "" && var.subnet != "" ? data.azurerm_subnet.aks_subnet[0].id : null
+  network_plugin                     = var.vpc != "" && var.subnet != "" ? "azure" : "kubenet"
+  network_policy                     = var.vpc != "" && var.subnet != "" ? "azure" : null
+  
   tags = merge(local.common_tags,
     tomap({
       "Name" = local.cluster_name

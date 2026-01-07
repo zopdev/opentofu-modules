@@ -709,3 +709,15 @@ variable "dns_zone_list" {
   type        = list(string)
   default     = []
 }
+
+variable "vpc" {
+  description = "VNet name the apps are going to use"
+  type        = string
+  default     = ""
+}
+
+variable "subnet" {
+  description = "Subnet name the apps are going to use"
+  type        = string
+  default     = ""
+}

@@ -45,9 +45,17 @@ data "azurerm_key_vault" "secrets" {
   resource_group_name = var.resource_group_name
 }
 
-data "azurerm_virtual_network" "avn" {
-  name  =  var.vpc
+data "azurerm_virtual_network" "vnet" {
+  count               = var.vpc != "" ? 1 : 0
+  name                = var.vpc
   resource_group_name = var.resource_group_name
+}
+
+data "azurerm_subnet" "redis_subnet" {
+  count                = var.vpc != "" && var.subnet != "" ? 1 : 0
+  name                 = var.subnet
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.vnet[0].name
 }
 
 resource "azurerm_redis_cache" "redis_cluster" {
@@ -58,6 +66,7 @@ resource "azurerm_redis_cache" "redis_cluster" {
   capacity             = var.redis.redis_cache_capacity
   family               = var.redis.redis_cache_family
   non_ssl_port_enabled = var.redis.redis_enable_non_ssl_port
+  subnet_id            = var.vpc != "" && var.subnet != "" ? data.azurerm_subnet.redis_subnet[0].id : null
   tags                 = var.tags
 }
 

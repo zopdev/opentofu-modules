@@ -135,3 +135,27 @@ variable "multi_ds" {
   type        = bool
   default     = false
 }
+
+variable "vpc" {
+  description = "VNet name the apps are going to use"
+  type        = string
+  default     = ""
+}
+
+variable "subnet" {
+  description = "Subnet name the apps are going to use"
+  type        = string
+  default     = ""
+}
+
+variable "private_dns_zone_id" {
+  description = "The ID of the private DNS zone for PostgreSQL Flexible Server"
+  type        = string
+  default     = null
+}
+
+variable "public_network_access_enabled" {
+  description = "Whether public network access is enabled for the PostgreSQL Flexible Server"
+  type        = bool
+  default     = true
+}

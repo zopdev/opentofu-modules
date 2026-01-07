@@ -1,3 +1,16 @@
+data "azurerm_virtual_network" "vnet" {
+  count               = var.vpc != "" ? 1 : 0
+  name                = var.vpc
+  resource_group_name = var.resource_group_name
+}
+
+data "azurerm_subnet" "db_subnet" {
+  count                = var.vpc != "" && var.subnet != "" ? 1 : 0
+  name                 = var.subnet
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.vnet[0].name
+}
+
 resource "azurerm_mysql_flexible_server" "mysql_server" {
   name                      = var.mysql_server_name
   resource_group_name       = var.resource_group_name
@@ -14,6 +27,11 @@ resource "azurerm_mysql_flexible_server" "mysql_server" {
     iops = var.iops
     io_scaling_enabled = var.io_scaling_enabled
   }
+
+  # VNet integration - enables connectivity from AKS private nodes via VNet
+  delegated_subnet_id          = var.vpc != "" && var.subnet != "" ? data.azurerm_subnet.db_subnet[0].id : null
+  private_dns_zone_id          = var.private_dns_zone_id
+  public_network_access_enabled = var.vpc != "" && var.subnet != "" ? false : var.public_network_access_enabled
 
   tags = merge(var.tags,
     tomap({
@@ -44,11 +62,12 @@ resource "azurerm_mysql_flexible_server_configuration" "mysql_parameter_group" {
 }
 
 resource "azurerm_mysql_flexible_server_firewall_rule" "mysql_firewall" {
-  name                    = "${var.cluster_name}-${var.namespace}-mysql-firewall"
-  resource_group_name     = var.resource_group_name
-  server_name             = azurerm_mysql_flexible_server.mysql_server.name
-  start_ip_address        = "0.0.0.0"
-  end_ip_address          = "255.255.255.255"
+  count               = var.vpc == "" || var.subnet == "" ? 1 : 0
+  name                = "${var.cluster_name}-${var.namespace}-mysql-firewall"
+  resource_group_name = var.resource_group_name
+  server_name         = azurerm_mysql_flexible_server.mysql_server.name
+  start_ip_address    = "0.0.0.0"
+  end_ip_address      = "255.255.255.255"
 }
 
 resource "azurerm_mysql_flexible_server" "mysql_read_replica" {

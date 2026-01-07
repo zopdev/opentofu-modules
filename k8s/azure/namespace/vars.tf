@@ -338,7 +338,13 @@ variable "shared_services" {
 }
 
 variable "vpc" {
-  description = "VPC the apps are going to use"
+  description = "VNet name the apps are going to use"
+  type        = string
+  default     = ""
+}
+
+variable "subnet" {
+  description = "Subnet name the apps are going to use (database subnet for SQL)"
   type        = string
   default     = ""
 }
