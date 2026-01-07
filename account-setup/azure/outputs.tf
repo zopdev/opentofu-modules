@@ -1,39 +1,30 @@
-output "vnet_id" {
-  description = "The ID of the Virtual Network"
-  value       = try(azurerm_virtual_network.vnet[0].id, null)
+output "vnet" {
+  description = "Map of VNet names to their IDs"
+  value = {
+    for k, v in azurerm_virtual_network.vnet : k => v.id
+  }
 }
 
-output "vnet_name" {
-  description = "The name of the Virtual Network"
-  value       = try(azurerm_virtual_network.vnet[0].name, null)
+output "private_subnets" {
+  description = "List of private subnet names"
+  value       = [for subnet in azurerm_subnet.private : subnet.name]
 }
 
-output "vnet_address_space" {
-  description = "The address space of the Virtual Network"
-  value       = try(azurerm_virtual_network.vnet[0].address_space, [])
+output "database_subnets" {
+  description = "List of database subnet names"
+  value       = [for subnet in azurerm_subnet.database : subnet.name]
 }
 
-output "private_subnet_id" {
-  description = "The ID of the private subnet (for AKS nodes and services)"
-  value       = try(azurerm_subnet.private[0].id, null)
+output "private_subnet_ids" {
+  description = "Map of private subnet names to their IDs"
+  value = {
+    for k, v in azurerm_subnet.private : v.name => v.id
+  }
 }
 
-output "private_subnet_name" {
-  description = "The name of the private subnet"
-  value       = try(azurerm_subnet.private[0].name, null)
-}
-
-output "database_subnet_id" {
-  description = "The ID of the database subnet"
-  value       = try(azurerm_subnet.database[0].id, null)
-}
-
-output "database_subnet_name" {
-  description = "The name of the database subnet"
-  value       = try(azurerm_subnet.database[0].name, null)
-}
-
-output "nat_gateway_id" {
-  description = "The ID of the NAT Gateway"
-  value       = try(azurerm_nat_gateway.nat_gateway[0].id, null)
+output "database_subnet_ids" {
+  description = "Map of database subnet names to their IDs"
+  value = {
+    for k, v in azurerm_subnet.database : v.name => v.id
+  }
 }

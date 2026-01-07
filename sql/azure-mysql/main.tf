@@ -29,9 +29,9 @@ resource "azurerm_mysql_flexible_server" "mysql_server" {
   }
 
   # VNet integration - enables connectivity from AKS private nodes via VNet
+  # When VNet is provided, automatically disable public access (like AWS/GCP)
   delegated_subnet_id          = var.vpc != "" && var.subnet != "" ? data.azurerm_subnet.db_subnet[0].id : null
-  private_dns_zone_id          = var.private_dns_zone_id
-  public_network_access_enabled = var.vpc != "" && var.subnet != "" ? false : var.public_network_access_enabled
+  public_network_access_enabled = var.vpc != "" && var.subnet != "" ? false : true
 
   tags = merge(var.tags,
     tomap({

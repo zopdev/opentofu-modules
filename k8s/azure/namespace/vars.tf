@@ -255,6 +255,7 @@ variable "sql_db" {
       storage_tier    = optional(string)
       iops            = optional(number)
       iops_scaling    = optional(bool)
+      version         = optional(string)
     })
   default = null
 }
@@ -370,7 +371,7 @@ variable "sql_list" {
     disk_autoresize         = optional(string)
     disk_size               = optional(string)
     enable_ssl              = optional(bool)
-    version                 = optional(bool)
+    version                 = optional(string)
   }))
   default = null
 }
