@@ -3,23 +3,7 @@ data "azurerm_resource_group" "rg" {
 }
 
 locals {
-  # Public subnet CIDR - default to first /24 if not provided (for NAT Gateway)
-  public_subnet_cidrs = {
-    for vnet_name, vnet_config in var.vnet_config : vnet_name => length(try(vnet_config.public_subnets_cidr, [])) > 0 ? vnet_config.public_subnets_cidr : [cidrsubnet(vnet_config.address_space[0], 8, 0)]
-  }
-  
-  # Default public subnet CIDR if not provided (for NAT Gateway)
-  public_subnet_map = merge([
-    for vnet_name, vnet_config in var.vnet_config : tomap({
-      for idx, cidr in local.public_subnet_cidrs[vnet_name] :
-        "${vnet_name}-${idx}" => {
-          vnet_name = vnet_name
-          cidr      = cidr
-        }
-    })
-  ]...)
-
-  # Private subnets
+  # Private subnets (for AKS nodes - will have public IPs)
   private_subnet_map = merge([
     for vnet_name, vnet_config in var.vnet_config : tomap({
       for idx, cidr in vnet_config.private_subnets_cidr :
@@ -50,64 +34,13 @@ resource "azurerm_virtual_network" "vnet" {
   address_space       = each.value.address_space
 }
 
-# Public subnet for NAT Gateway (auto-created if private subnets exist, like GCP)
-resource "azurerm_subnet" "public" {
-  for_each             = local.public_subnet_map
-  name                 = "${each.value.vnet_name}-public-subnet"
-  resource_group_name  = data.azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet[each.value.vnet_name].name
-  address_prefixes     = [each.value.cidr]
-}
-
-# Public IP for NAT Gateway (auto-created like GCP)
-resource "azurerm_public_ip" "nat_gateway_ip" {
-  for_each            = var.vnet_config
-  name                = "${each.key}-nat-gateway-pip"
-  location            = data.azurerm_resource_group.rg.location
-  resource_group_name = data.azurerm_resource_group.rg.name
-  allocation_method   = "Static"
-  sku                 = "Standard"
-  
-  tags = {
-    Name = "${each.key}-nat-gateway-pip"
-  }
-}
-
-# NAT Gateway for private subnet outbound connectivity (auto-created like GCP)
-resource "azurerm_nat_gateway" "nat_gateway" {
-  for_each                = var.vnet_config
-  name                    = "${each.key}-nat-gateway"
-  location                = data.azurerm_resource_group.rg.location
-  resource_group_name     = data.azurerm_resource_group.rg.name
-  sku_name                = "Standard"
-  idle_timeout_in_minutes = 10
-  
-  tags = {
-    Name = "${each.key}-nat-gateway"
-  }
-}
-
-# Associate Public IP with NAT Gateway
-resource "azurerm_nat_gateway_public_ip_association" "nat_gateway_ip_assoc" {
-  for_each            = var.vnet_config
-  nat_gateway_id      = azurerm_nat_gateway.nat_gateway[each.key].id
-  public_ip_address_id = azurerm_public_ip.nat_gateway_ip[each.key].id
-}
-
-# Private subnet for AKS nodes and other services (like AWS/GCP pattern)
+# Subnet for AKS nodes (nodes will have public IPs for internet access)
 resource "azurerm_subnet" "private" {
   for_each             = local.private_subnet_map
   name                 = "${each.value.vnet_name}-private-subnet"
   resource_group_name  = data.azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet[each.value.vnet_name].name
   address_prefixes     = [each.value.cidr]
-}
-
-# Associate NAT Gateway with private subnet (for outbound connectivity)
-resource "azurerm_subnet_nat_gateway_association" "private_nat" {
-  for_each       = local.private_subnet_map
-  subnet_id      = azurerm_subnet.private[each.key].id
-  nat_gateway_id = azurerm_nat_gateway.nat_gateway[each.value.vnet_name].id
 }
 
 # Network Security Group for private subnet - allow all internal VNet communication
@@ -130,7 +63,7 @@ resource "azurerm_network_security_group" "private" {
     destination_address_prefix = "VirtualNetwork"
   }
 
-  # Allow all outbound (for NAT Gateway to work)
+  # Allow all outbound (nodes have public IPs for direct internet access)
   security_rule {
     name                       = "AllowAllOutbound"
     priority                   = 2000

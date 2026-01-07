@@ -81,11 +81,12 @@ module "aks" {
   temporary_name_for_rotation        = "${var.app_name}1"
   secret_rotation_enabled            = true
   
-  # VNet configuration - when VNet is provided, use Azure CNI for private node connectivity
-  # This allows nodes in private subnet to connect to SQL/Redis via VNet, and use NAT for outbound
+  # VNet configuration - when VNet is provided, use Azure CNI with public node IPs
+  # Nodes will have public IPs for internet access and can connect to SQL/Redis via VNet
   vnet_subnet_id                     = var.vpc != "" && var.subnet != "" ? data.azurerm_subnet.aks_subnet[0].id : null
   network_plugin                     = var.vpc != "" && var.subnet != "" ? "azure" : "kubenet"
   network_policy                     = var.vpc != "" && var.subnet != "" ? "azure" : null
+  enable_node_public_ip              = var.vpc != "" && var.subnet != "" ? true : null
   
   tags = merge(local.common_tags,
     tomap({
