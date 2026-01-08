@@ -31,10 +31,9 @@ module "azure_account_setup" {
 
   vnet_config = {
     "production-vnet" = {
-      address_space         = ["10.0.0.0/16"]
-      private_subnets_cidr  = ["10.0.1.0/24"]      # For AKS nodes
-      database_subnets_cidr = ["10.0.2.0/24"]      # For MySQL/PostgreSQL
-      public_subnets_cidr   = ["10.0.0.0/24"]      # For NAT Gateway (optional)
+      address_space         = ["10.1.0.0/16"]      # Must NOT be 10.0.0.0/16 (conflicts with Azure's default service CIDR)
+      private_subnets_cidr  = ["10.1.1.0/24"]      # For AKS nodes (with public IPs)
+      database_subnets_cidr = ["10.1.2.0/24"]      # For MySQL/PostgreSQL (optional)
     }
   }
 }
@@ -74,29 +73,33 @@ module "azure_account_setup" {
 
   vnet_config = {
     "my-vnet" = {
-      address_space        = ["10.0.0.0/16"]
-      private_subnets_cidr = ["10.0.1.0/24"]
-      # NAT Gateway and public subnet will be auto-created
+      address_space        = ["10.1.0.0/16"]      # Must NOT be 10.0.0.0/16 (conflicts with Azure's default service CIDR)
+      private_subnets_cidr = ["10.1.1.0/24"]
       # Database subnet omitted - no VNet integration for DBs
+      # AKS nodes will have public IPs for internet access (no NAT Gateway needed)
     }
   }
 }
 ```
 
-## Using Outputs
+## Using Subnet Names
 
+Subnet names follow a pattern: `{vnet_name}-{type}-subnet`
+
+For VNet `"production-vnet"`:
+- Private subnet: `"production-vnet-private-subnet"`
+- Database subnet: `"production-vnet-database-subnet"`
+
+**For AKS cluster:**
 ```hcl
-# Get VNet name
-vnet_name = keys(module.azure_account_setup.vnet)[0]  # "production-vnet"
+vpc    = "production-vnet"
+subnet = "production-vnet-private-subnet"
+```
 
-# Get private subnet name (for AKS)
-private_subnet = module.azure_account_setup.private_subnets[0]  # "production-vnet-private-subnet"
-
-# Get database subnet name (for SQL)
-database_subnet = module.azure_account_setup.database_subnets[0]  # "production-vnet-database-subnet"
-
-# Get subnet IDs
-private_subnet_id = module.azure_account_setup.private_subnet_ids["production-vnet-private-subnet"]
+**For namespace module:**
+```hcl
+vpc    = "production-vnet"
+subnet = "production-vnet-database-subnet"
 ```
 
 ## Integration with AKS and Databases
@@ -109,9 +112,9 @@ module "vnet" {
   resource_group_name = "my-rg"
   vnet_config = {
     "my-vnet" = {
-      address_space        = ["10.0.0.0/16"]
-      private_subnets_cidr = ["10.0.1.0/24"]
-      database_subnets_cidr = ["10.0.2.0/24"]
+      address_space        = ["10.1.0.0/16"]      # Must NOT be 10.0.0.0/16 (conflicts with Azure's default service CIDR)
+      private_subnets_cidr = ["10.1.1.0/24"]
+      database_subnets_cidr = ["10.1.2.0/24"]
     }
   }
 }
@@ -122,8 +125,8 @@ module "aks" {
   
   resource_group_name = "my-rg"
   app_name            = "my-app"
-  vpc                 = "my-vnet"  # VNet name from account-setup
-  subnet              = module.vnet.private_subnets[0]  # First private subnet
+  vpc                 = "my-vnet"                                    # VNet name from account-setup
+  subnet              = "my-vnet-private-subnet"                     # Private subnet name (pattern: {vnet_name}-private-subnet)
   # ... other vars
 }
 
@@ -134,8 +137,8 @@ module "namespace" {
   resource_group_name = "my-rg"
   app_name            = "my-app"
   namespace           = "production"
-  vpc                 = "my-vnet"
-  subnet              = module.vnet.database_subnets[0]  # Database subnet
+  vpc                 = "my-vnet"                                    # VNet name from account-setup
+  subnet              = "my-vnet-database-subnet"                    # Database subnet name (pattern: {vnet_name}-database-subnet)
   
   sql_db = {
     type = "postgresql"
@@ -147,10 +150,11 @@ module "namespace" {
 
 ## Notes
 
-- **NAT Gateway**: Automatically created when VNet config is provided (like GCP)
-- **Public Subnet**: Auto-created if not specified (first /24 from address space)
+- **VNet Address Space**: Must NOT use `10.0.0.0/16` (conflicts with Azure's default AKS service CIDR). Use `10.1.0.0/16`, `10.2.0.0/16`, etc.
+- **Public Node IPs**: AKS nodes automatically get public IPs when using VNet (no NAT Gateway needed)
 - **NSG Rules**: Automatically configured:
-  - Private subnet: Allows all VNet internal communication
+  - Private subnet: Allows all VNet internal communication and outbound internet
   - Database subnet: Only allows DB ports (3306, 5432, 6379) from private subnet
 - **Backward Compatible**: Empty `vnet_config = {}` means no VNet is created
+- **Cost Savings**: No NAT Gateway cost (~$32-100/month saved)
 

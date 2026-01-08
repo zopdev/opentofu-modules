@@ -344,11 +344,6 @@ variable "vpc" {
   default     = ""
 }
 
-variable "subnet" {
-  description = "Subnet name the apps are going to use (database subnet for SQL)"
-  type        = string
-  default     = ""
-}
 
 variable "cert_issuer_config"{
   description = "email to be added as cert-manager issuer"

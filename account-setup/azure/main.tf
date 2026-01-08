@@ -14,16 +14,33 @@ locals {
     })
   ]...)
 
-  # Database subnets
-  database_subnet_map = merge([
+  # Database subnets - Azure requires separate subnets for MySQL and PostgreSQL delegations
+  # PostgreSQL uses even indices (0, 2, 4...), MySQL uses odd indices (1, 3, 5...)
+  # This allows using database_subnets_cidr = ["10.0.2.0/24", "10.0.3.0/24"] for both services
+  postgresql_subnet_map = merge([
     for vnet_name, vnet_config in var.vnet_config : tomap({
       for idx, cidr in try(vnet_config.database_subnets_cidr, []) :
-        "${vnet_name}-${idx}" => {
+        "${vnet_name}-postgres-${idx}" => {
           vnet_name = vnet_name
           cidr      = cidr
-        }
+          idx       = idx
+        } if idx % 2 == 0
     })
   ]...)
+  
+  mysql_subnet_map = merge([
+    for vnet_name, vnet_config in var.vnet_config : tomap({
+      for idx, cidr in try(vnet_config.database_subnets_cidr, []) :
+        "${vnet_name}-mysql-${idx}" => {
+          vnet_name = vnet_name
+          cidr      = cidr
+          idx       = idx
+        } if idx % 2 == 1
+    })
+  ]...)
+  
+  # Combined database subnet map for outputs (backwards compatibility)
+  database_subnet_map = merge(local.postgresql_subnet_map, local.mysql_subnet_map)
 }
 
 resource "azurerm_virtual_network" "vnet" {
@@ -88,26 +105,34 @@ resource "azurerm_subnet_network_security_group_association" "private" {
   network_security_group_id = azurerm_network_security_group.private[each.value.vnet_name].id
 }
 
-# Subnet for databases (MySQL, PostgreSQL) - like AWS db_subnets
-resource "azurerm_subnet" "database" {
-  for_each             = local.database_subnet_map
-  name                 = "${each.value.vnet_name}-database-subnet"
+# Subnet for PostgreSQL databases - Azure requires separate subnet per service delegation
+resource "azurerm_subnet" "postgresql" {
+  for_each             = local.postgresql_subnet_map
+  name                 = "${each.value.vnet_name}-postgresql-subnet"
   resource_group_name  = data.azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet[each.value.vnet_name].name
   address_prefixes     = [each.value.cidr]
   
-  # Delegation for both PostgreSQL and MySQL
-  # Note: Azure requires separate delegations with unique names for each service
   delegation {
-    name = "postgresql-delegation"
+    name = "database-delegation"
     service_delegation {
       name    = "Microsoft.DBforPostgreSQL/flexibleServers"
       actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
     }
   }
+}
+
+# Subnet for MySQL databases - Azure requires separate subnet per service delegation
+# Note: Azure doesn't allow MySQL and PostgreSQL delegations on the same subnet
+resource "azurerm_subnet" "mysql" {
+  for_each             = local.mysql_subnet_map
+  name                 = "${each.value.vnet_name}-mysql-subnet"
+  resource_group_name  = data.azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet[each.value.vnet_name].name
+  address_prefixes     = [each.value.cidr]
   
   delegation {
-    name = "mysql-delegation"
+    name = "database-delegation"
     service_delegation {
       name    = "Microsoft.DBforMySQL/flexibleServers"
       actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
@@ -115,36 +140,19 @@ resource "azurerm_subnet" "database" {
   }
 }
 
-# Network Security Group for database subnet - ONLY allow traffic from private subnet (cluster)
-resource "azurerm_network_security_group" "database" {
-  for_each            = local.database_subnet_map
-  name                = "${each.value.vnet_name}-database-nsg"
+# Network Security Group for PostgreSQL subnet - ONLY allow traffic from private subnet (cluster)
+resource "azurerm_network_security_group" "postgresql" {
+  for_each            = local.postgresql_subnet_map
+  name                = "${each.value.vnet_name}-postgresql-nsg"
   location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
-
-  # Allow MySQL (3306) from private subnets
-  dynamic "security_rule" {
-    for_each = var.vnet_config[each.value.vnet_name].private_subnets_cidr
-    content {
-      name                       = "AllowMySQLFromPrivateSubnet-${security_rule.key}"
-      priority                   = 1000 + security_rule.key
-      direction                  = "Inbound"
-      access                     = "Allow"
-      protocol                   = "Tcp"
-      source_port_range          = "*"
-      destination_port_range     = "3306"
-      source_address_prefix      = security_rule.value
-      destination_address_prefix = "*"
-      description                = "Allow MySQL traffic from AKS cluster (private subnet)"
-    }
-  }
 
   # Allow PostgreSQL (5432) from private subnets
   dynamic "security_rule" {
     for_each = var.vnet_config[each.value.vnet_name].private_subnets_cidr
     content {
       name                       = "AllowPostgreSQLFromPrivateSubnet-${security_rule.key}"
-      priority                   = 1100 + security_rule.key
+      priority                   = 1000 + security_rule.key
       direction                  = "Inbound"
       access                     = "Allow"
       protocol                   = "Tcp"
@@ -153,23 +161,6 @@ resource "azurerm_network_security_group" "database" {
       source_address_prefix      = security_rule.value
       destination_address_prefix = "*"
       description                = "Allow PostgreSQL traffic from AKS cluster (private subnet)"
-    }
-  }
-
-  # Allow Redis (6379) from private subnets
-  dynamic "security_rule" {
-    for_each = var.vnet_config[each.value.vnet_name].private_subnets_cidr
-    content {
-      name                       = "AllowRedisFromPrivateSubnet-${security_rule.key}"
-      priority                   = 1200 + security_rule.key
-      direction                  = "Inbound"
-      access                     = "Allow"
-      protocol                   = "Tcp"
-      source_port_range          = "*"
-      destination_port_range     = "6379"
-      source_address_prefix      = security_rule.value
-      destination_address_prefix = "*"
-      description                = "Allow Redis traffic from AKS cluster (private subnet)"
     }
   }
 
@@ -201,13 +192,77 @@ resource "azurerm_network_security_group" "database" {
   }
 
   tags = {
-    Name = "${each.value.vnet_name}-database-nsg"
+    Name = "${each.value.vnet_name}-postgresql-nsg"
   }
 }
 
-# Associate NSG with database subnet
-resource "azurerm_subnet_network_security_group_association" "database" {
-  for_each                  = local.database_subnet_map
-  subnet_id                 = azurerm_subnet.database[each.key].id
-  network_security_group_id = azurerm_network_security_group.database[each.key].id
+# Network Security Group for MySQL subnet - ONLY allow traffic from private subnet (cluster)
+resource "azurerm_network_security_group" "mysql" {
+  for_each            = local.mysql_subnet_map
+  name                = "${each.value.vnet_name}-mysql-nsg"
+  location            = data.azurerm_resource_group.rg.location
+  resource_group_name = data.azurerm_resource_group.rg.name
+
+  # Allow MySQL (3306) from private subnets
+  dynamic "security_rule" {
+    for_each = var.vnet_config[each.value.vnet_name].private_subnets_cidr
+    content {
+      name                       = "AllowMySQLFromPrivateSubnet-${security_rule.key}"
+      priority                   = 1000 + security_rule.key
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "3306"
+      source_address_prefix      = security_rule.value
+      destination_address_prefix = "*"
+      description                = "Allow MySQL traffic from AKS cluster (private subnet)"
+    }
+  }
+
+  # Deny all other inbound traffic (Azure default, but explicit)
+  security_rule {
+    name                       = "DenyAllInbound"
+    priority                   = 4000
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+    description                = "Deny all other inbound traffic"
+  }
+
+  # Allow all outbound (for database connections back to cluster if needed)
+  security_rule {
+    name                       = "AllowAllOutbound"
+    priority                   = 2000
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  tags = {
+    Name = "${each.value.vnet_name}-mysql-nsg"
+  }
 }
+
+# Associate NSG with PostgreSQL subnet
+resource "azurerm_subnet_network_security_group_association" "postgresql" {
+  for_each                  = local.postgresql_subnet_map
+  subnet_id                 = azurerm_subnet.postgresql[each.key].id
+  network_security_group_id = azurerm_network_security_group.postgresql[each.key].id
+}
+
+# Associate NSG with MySQL subnet
+resource "azurerm_subnet_network_security_group_association" "mysql" {
+  for_each                  = local.mysql_subnet_map
+  subnet_id                 = azurerm_subnet.mysql[each.key].id
+  network_security_group_id = azurerm_network_security_group.mysql[each.key].id
+}
+

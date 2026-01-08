@@ -45,7 +45,7 @@ module "mysql" {
   key_vault_id               = data.azurerm_key_vault.secrets.id
   mysql_version              = var.sql_db.version != null ? var.sql_db.version : "5.7"
   vpc                        = var.vpc
-  subnet                     = var.subnet
+  # subnet is auto-generated from vpc name ({vpc}-mysql-subnet) if not provided
   tags                       = local.common_tags
 }
 
@@ -87,7 +87,7 @@ module "postgresql" {
   enable_ssl                 = var.sql_db.enable_ssl != null ? var.sql_db.enable_ssl : false
   postgres_version           = var.sql_db.version != null ? var.sql_db.version : "13"
   vpc                        = var.vpc
-  subnet                     = var.subnet
+  # subnet is auto-generated from vpc name ({vpc}-postgresql-subnet) if not provided
 
   tags                       = merge(local.common_tags,
     tomap({
@@ -137,7 +137,7 @@ module "mysql_v2" {
   key_vault_id               = data.azurerm_key_vault.secrets.id
   mysql_version              = each.value.version != null && each.value.version != "" ? each.value.version : "5.7"
   vpc                        = var.vpc
-  subnet                     = var.subnet
+  # subnet is auto-generated from vpc name ({vpc}-mysql-subnet) if not provided
   tags                       = local.common_tags
 }
 
@@ -186,7 +186,7 @@ module "postgres_v2" {
   enable_ssl                 = each.value.enable_ssl != null ? each.value.enable_ssl : false
   postgres_version           = each.value.version != null && each.value.version != "" ? each.value.version : "13"
   vpc                        = var.vpc
-  subnet                     = var.subnet
+  # subnet is auto-generated from vpc name ({vpc}-postgresql-subnet) if not provided
 
   tags                       = merge(local.common_tags,
     tomap({
