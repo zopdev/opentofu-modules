@@ -80,6 +80,48 @@ resource "azurerm_network_security_group" "private" {
     destination_address_prefix = "VirtualNetwork"
   }
 
+  # Allow Azure LoadBalancer health probes (required for LoadBalancer services)
+  security_rule {
+    name                       = "AllowAzureLoadBalancerInbound"
+    priority                   = 1050
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "AzureLoadBalancer"
+    destination_address_prefix = "*"
+    description                = "Allow Azure LoadBalancer health probes and traffic"
+  }
+
+  # Allow HTTP (80) from internet for ingress LoadBalancer
+  security_rule {
+    name                       = "AllowHTTPInbound"
+    priority                   = 1100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+    description                = "Allow HTTP traffic from internet for ingress LoadBalancer"
+  }
+
+  # Allow HTTPS (443) from internet for ingress LoadBalancer
+  security_rule {
+    name                       = "AllowHTTPSInbound"
+    priority                   = 1200
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+    description                = "Allow HTTPS traffic from internet for ingress LoadBalancer"
+  }
+
   # Allow all outbound (nodes have public IPs for direct internet access)
   security_rule {
     name                       = "AllowAllOutbound"
