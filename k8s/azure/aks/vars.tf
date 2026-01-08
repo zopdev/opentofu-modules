@@ -42,9 +42,9 @@ variable "public_ingress" {
 }
 
 variable "kubernetes_version" {
-  description = "Kubernetes version of the AKS Cluster"
+  description = "Kubernetes version of the AKS Cluster (use non-LTS version like 1.32.x to avoid Premium tier cost, avoid LTS versions like 1.31.x which require Premium tier)"
   type        = string
-  default     = "1.31.10"
+  default     = "1.32.0"
 }
 
 variable "user_access" {
