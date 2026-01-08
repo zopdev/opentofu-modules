@@ -31,7 +31,7 @@ variable "administrator_password" {
 variable "mysql_version" {
   description = "Version of the mysql database"
   type        = string
-  default     = "5.7"
+  default     = "8.0.21"
 }
 
 variable "collation" {
@@ -141,12 +141,6 @@ variable "multi_ds" {
 
 variable "vpc" {
   description = "VNet name the apps are going to use"
-  type        = string
-  default     = ""
-}
-
-variable "subnet" {
-  description = "Subnet name the apps are going to use"
   type        = string
   default     = ""
 }

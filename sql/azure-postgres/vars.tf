@@ -141,9 +141,3 @@ variable "vpc" {
   type        = string
   default     = ""
 }
-
-variable "subnet" {
-  description = "Subnet name the apps are going to use"
-  type        = string
-  default     = ""
-}

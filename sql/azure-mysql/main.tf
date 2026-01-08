@@ -4,9 +4,14 @@ data "azurerm_virtual_network" "vnet" {
   resource_group_name = var.resource_group_name
 }
 
+locals {
+  # Construct subnet name from VPC name
+  subnet_name = var.vpc != "" ? "${var.vpc}-mysql-subnet" : ""
+}
+
 data "azurerm_subnet" "db_subnet" {
-  count                = var.vpc != "" && var.subnet != "" ? 1 : 0
-  name                 = var.subnet
+  count                = var.vpc != "" ? 1 : 0
+  name                 = local.subnet_name
   resource_group_name  = var.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.vnet[0].name
 }
@@ -30,7 +35,7 @@ resource "azurerm_mysql_flexible_server" "mysql_server" {
 
   # VNet integration - enables connectivity from AKS nodes via VNet
   # When delegated_subnet_id is provided, Azure automatically disables public network access
-  delegated_subnet_id = var.vpc != "" && var.subnet != "" ? data.azurerm_subnet.db_subnet[0].id : null
+  delegated_subnet_id = var.vpc != "" ? data.azurerm_subnet.db_subnet[0].id : null
 
   tags = merge(var.tags,
     tomap({
@@ -61,7 +66,7 @@ resource "azurerm_mysql_flexible_server_configuration" "mysql_parameter_group" {
 }
 
 resource "azurerm_mysql_flexible_server_firewall_rule" "mysql_firewall" {
-  count               = var.vpc == "" || var.subnet == "" ? 1 : 0
+  count               = var.vpc == "" ? 1 : 0
   name                = "${var.cluster_name}-${var.namespace}-mysql-firewall"
   resource_group_name = var.resource_group_name
   server_name         = azurerm_mysql_flexible_server.mysql_server.name

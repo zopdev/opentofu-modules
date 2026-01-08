@@ -43,7 +43,7 @@ module "mysql" {
   io_scaling_enabled         = var.sql_db.iops_scaling != null ? var.sql_db.iops_scaling : false
   read_replica               = var.sql_db.read_replica != null ? var.sql_db.read_replica : false
   key_vault_id               = data.azurerm_key_vault.secrets.id
-  mysql_version              = var.sql_db.version != null ? var.sql_db.version : "5.7"
+  mysql_version              = var.sql_db.version != null ? var.sql_db.version : "8.0.21"
   vpc                        = var.vpc
   # subnet is auto-generated from vpc name ({vpc}-mysql-subnet) if not provided
   tags                       = local.common_tags
@@ -135,7 +135,7 @@ module "mysql_v2" {
   read_replica               = each.value.read_replica != null ? each.value.read_replica : false
   multi_ds                   = true
   key_vault_id               = data.azurerm_key_vault.secrets.id
-  mysql_version              = each.value.version != null && each.value.version != "" ? each.value.version : "5.7"
+  mysql_version              = each.value.version != null && each.value.version != "" ? each.value.version : "8.0.21"
   vpc                        = var.vpc
   # subnet is auto-generated from vpc name ({vpc}-mysql-subnet) if not provided
   tags                       = local.common_tags
