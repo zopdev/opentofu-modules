@@ -96,18 +96,18 @@ resource "azurerm_subnet" "database" {
   virtual_network_name = azurerm_virtual_network.vnet[each.value.vnet_name].name
   address_prefixes     = [each.value.cidr]
   
-  # Delegation for PostgreSQL
+  # Delegation for both PostgreSQL and MySQL
+  # Note: Azure requires separate delegations with unique names for each service
   delegation {
-    name = "database-delegation"
+    name = "postgresql-delegation"
     service_delegation {
       name    = "Microsoft.DBforPostgreSQL/flexibleServers"
       actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
     }
   }
   
-  # Delegation for MySQL
   delegation {
-    name = "database-delegation"
+    name = "mysql-delegation"
     service_delegation {
       name    = "Microsoft.DBforMySQL/flexibleServers"
       actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
