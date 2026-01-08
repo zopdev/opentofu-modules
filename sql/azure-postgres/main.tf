@@ -26,9 +26,8 @@ resource "azurerm_postgresql_flexible_server" "postgres_server" {
   geo_redundant_backup_enabled     = true
 
   # VNet integration
-  # When VNet is provided, automatically disable public access (like AWS/GCP)
-  delegated_subnet_id              = var.vpc != "" && var.subnet != "" ? data.azurerm_subnet.db_subnet[0].id : null
-  public_network_access_enabled    = var.vpc != "" && var.subnet != "" ? false : true
+  # When delegated_subnet_id is provided, Azure automatically disables public network access
+  delegated_subnet_id = var.vpc != "" && var.subnet != "" ? data.azurerm_subnet.db_subnet[0].id : null
 
   tags = merge(var.tags,
     tomap({

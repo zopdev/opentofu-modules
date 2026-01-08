@@ -28,10 +28,9 @@ resource "azurerm_mysql_flexible_server" "mysql_server" {
     io_scaling_enabled = var.io_scaling_enabled
   }
 
-  # VNet integration - enables connectivity from AKS private nodes via VNet
-  # When VNet is provided, automatically disable public access (like AWS/GCP)
-  delegated_subnet_id          = var.vpc != "" && var.subnet != "" ? data.azurerm_subnet.db_subnet[0].id : null
-  public_network_access_enabled = var.vpc != "" && var.subnet != "" ? false : true
+  # VNet integration - enables connectivity from AKS nodes via VNet
+  # When delegated_subnet_id is provided, Azure automatically disables public network access
+  delegated_subnet_id = var.vpc != "" && var.subnet != "" ? data.azurerm_subnet.db_subnet[0].id : null
 
   tags = merge(var.tags,
     tomap({
