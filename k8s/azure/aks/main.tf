@@ -24,6 +24,17 @@ locals {
   environment        = var.app_env == "" ? element(local.cluster_name_parts, length(local.cluster_name_parts) - 1) : var.app_env
   node_port    = 32443 # Node port which will be used by LB for exposure
 
+  # Calculate service CIDR from VNet data source to avoid conflicts
+  # Extract base IP from VNet address space (e.g., "10.1" from "10.1.0.0/16")
+  vnet_address_space = var.vpc != "" && var.subnet != "" ? data.azurerm_virtual_network.vnet[0].address_space[0] : ""
+  vnet_base_parts = var.vpc != "" && var.subnet != "" ? split(".", split("/", local.vnet_address_space)[0]) : []
+  vnet_base_ip = length(local.vnet_base_parts) >= 2 ? "${local.vnet_base_parts[0]}.${local.vnet_base_parts[1]}" : ""
+  
+  # Use high range in VNet for service CIDR to avoid subnet conflicts
+  # Example: For VNet 10.1.0.0/16, use service CIDR 10.1.240.0/20 (avoids subnets like 10.1.1.0/24, 10.1.2.0/24)
+  service_cidr = var.vpc != "" && var.subnet != "" && local.vnet_base_ip != "" ? "${local.vnet_base_ip}.240.0/20" : null
+  dns_service_ip = var.vpc != "" && var.subnet != "" && local.vnet_base_ip != "" ? "${local.vnet_base_ip}.240.10" : null
+
   common_tags        = merge(var.common_tags,
     tomap({
       Project     = local.cluster_name,
@@ -87,6 +98,10 @@ module "aks" {
   network_plugin                     = var.vpc != "" && var.subnet != "" ? "azure" : "kubenet"
   network_policy                     = var.vpc != "" && var.subnet != "" ? "azure" : null
   enable_node_public_ip              = var.vpc != "" && var.subnet != "" ? true : null
+  
+  # Service CIDR configuration - automatically calculated from VNet to avoid subnet conflicts
+  net_profile_service_cidr           = local.service_cidr
+  net_profile_dns_service_ip         = local.dns_service_ip
   
   tags = merge(local.common_tags,
     tomap({
