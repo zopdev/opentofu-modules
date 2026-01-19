@@ -3,7 +3,7 @@ resource "helm_release" "app_dynamics" {
   count     = var.appd_controller_url == "" || var.appd_controller_url == "" || var.appd_account == "" || var.appd_user == "" || var.appd_password == "" || var.appd_accesskey == "" ? 0 : 1
   chart     = "cluster-agent"
   name      = "cluster-agent"
-  namespace = kubernetes_namespace.monitoring.metadata[0].name
+  namespace = kubernetes_namespace.monitoring.metadata.0.name
   version   = "0.1.18"
 
   repository = "https://ciscodevnet.github.io/appdynamics-charts"

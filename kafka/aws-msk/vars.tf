@@ -31,9 +31,24 @@ variable "kafka_admin_user" {
   type        = string
 }
 
+variable "app_region" {
+  description = "Cloud region to deploy to (e.g. us-east-1)"
+  type        = string
+}
+
 variable "common_tags" {
   description = "additional tags for merging with common tags"
   type        = map(string)
   default     = {}
+}
+
+variable "kafka_topics" {
+  description = "Kafka Topics to be created."
+  type = list(object({
+    name               = string
+    replication_factor = number
+    partitions         = number
+  }))
+  default = []
 }
 

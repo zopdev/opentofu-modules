@@ -14,7 +14,7 @@ data "aws_secretsmanager_secret" "kafka_secert_msk" {
 
 data "aws_secretsmanager_secret_version" "kafka_secert_version" {
   count     = length(data.aws_secretsmanager_secrets.kafka_secert.arns) == 0 ? 0 : 1
-  secret_id = data.aws_secretsmanager_secret.kafka_secert_msk[0].id
+  secret_id = data.aws_secretsmanager_secret.kafka_secert_msk.0.id
 }
 
 resource "aws_secretsmanager_secret" "local_kafka" {
@@ -25,6 +25,6 @@ resource "aws_secretsmanager_secret" "local_kafka" {
 
 resource "aws_secretsmanager_secret_version" "local_kafka" {
   count         = length(data.aws_secretsmanager_secrets.kafka_secert.arns) == 0 ? 0 : 1
-  secret_id     = aws_secretsmanager_secret.local_kafka[0].id
-  secret_string = jsondecode(data.aws_secretsmanager_secret_version.kafka_secert_version[0].secret_string).password
+  secret_id     = aws_secretsmanager_secret.local_kafka.0.id
+  secret_string = jsondecode(data.aws_secretsmanager_secret_version.kafka_secert_version.0.secret_string).password
 }

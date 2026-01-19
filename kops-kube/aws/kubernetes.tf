@@ -1,17 +1,17 @@
 module "remote_state_gcp_cluster" {
-  source        = "../../remote-state/gcp"
-  count         = var.shared_services.type == "gcp" ? 1 : 0
-  bucket_name   = var.shared_services.bucket
-  bucket_prefix = var.shared_services.cluster_prefix
+  source         = "../../remote-state/gcp"
+  count          = var.shared_services.type == "gcp" ? 1 : 0
+  bucket_name    = var.shared_services.bucket
+  bucket_prefix  = var.shared_services.cluster_prefix
 }
 
 module "remote_state_aws_cluster" {
-  source        = "../../remote-state/aws"
-  count         = var.shared_services.type == "aws" ? 1 : 0
-  bucket_name   = var.shared_services.bucket
-  provider_id   = var.shared_services.profile
-  bucket_prefix = var.shared_services.cluster_prefix
-  location      = var.shared_services.location
+  source         = "../../remote-state/aws"
+  count          = var.shared_services.type == "aws" ? 1 : 0
+  bucket_name    = var.shared_services.bucket
+  provider_id    = var.shared_services.profile
+  bucket_prefix  = var.shared_services.cluster_prefix
+  location       = var.shared_services.location
 }
 
 module "remote_state_azure_cluster" {
@@ -33,7 +33,7 @@ data "aws_eks_cluster_auth" "cluster" {
 
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.cluster.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
   token                  = data.aws_eks_cluster_auth.cluster.token
 }
 
@@ -41,7 +41,7 @@ provider "kubernetes" {
 provider "kubectl" {
   load_config_file       = false
   host                   = data.aws_eks_cluster.cluster.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
   token                  = data.aws_eks_cluster_auth.cluster.token
 }
 
@@ -49,7 +49,7 @@ provider "kubectl" {
 provider "helm" {
   kubernetes {
     host                   = data.aws_eks_cluster.cluster.endpoint
-    cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
     token                  = data.aws_eks_cluster_auth.cluster.token
   }
 }

@@ -79,10 +79,23 @@ variable "activation_policy" {
   default     = "ALWAYS"
 }
 
+variable "authorized_networks" {
+  description = "A list of authorized CIDR-formatted IP address ranges that can connect to this DB. Only applies to public IP instances."
+  type        = list(map(string))
+  default     = []
+
+}
+
 variable "availability_type" {
   description = "The availability type of the Cloud SQL instance, high availability (REGIONAL) or single zone (ZONAL)"
   type        = string
   default     = "ZONAL"
+}
+
+variable "disk_autoresize" {
+  description = "Second Generation only. Configuration to increase storage size automatically."
+  type        = bool
+  default     = false
 }
 
 variable "disk_size" {
@@ -97,6 +110,17 @@ variable "disk_type" {
   default     = "PD_SSD"
 }
 
+variable "require_ssl" {
+  description = "True if the instance should require SSL/TLS for users connecting over IP. Note: SSL/TLS is needed to provide security when you connect to Cloud SQL using IP addresses. If you are connecting to your instance only by using the Cloud SQL Proxy or the Java Socket Library, you do not need to configure your instance to use SSL/TLS."
+  type        = bool
+  default     = false
+}
+
+variable "private_network" {
+  description = "The resource link for the VPC network from which the Cloud SQL instance is accessible for private IP."
+  type        = string
+  default     = null
+}
 
 
 variable "read_replica" {
@@ -105,6 +129,20 @@ variable "read_replica" {
   default     = false
 }
 
+variable "num_read_replicas" {
+  description = "The number of read replicas to create. Cloud SQL will replicate all data from the master to these replicas, which you can use to horizontally scale read traffic."
+  type        = number
+  default     = 0
+}
+
+variable "read_replica_zones" {
+  description = "A list of compute zones where read replicas should be created. List size should match 'num_read_replicas'"
+  type        = list(string)
+  default     = []
+
+  # Example:
+  #  default = ["us-central1-b", "us-central1-c"]
+}
 
 
 variable "deletion_protection" {
@@ -122,9 +160,9 @@ variable "ext_rds_sg_cidr_block" {
 variable "db_collation" {
   description = "Collation to be used while creating the DB"
   type        = string
-  default     = "en_US.UTF8"
+  default = "en_US.UTF8"
 }
-
+  
 variable "labels" {
   description = "Common Labels on the resources"
   type        = map(string)
