@@ -1,13 +1,13 @@
 locals {
-  domain_name = try(var.accessibility.domain_name != null ? var.accessibility.domain_name : "", "")
+  domain_name = try(var.accessibility.domain_name != null ? var.accessibility.domain_name  : "", "")
 
   default_domain_list = merge([
     for service, service_config in var.services : {
-      (service) = {
-        ingress    = ["${split(":", service)[0]}-${var.namespace}.${local.domain_name}"]
+      "${ service }" = {
+        ingress    =  ["${split(":", service)[0]}-${var.namespace}.${local.domain_name}"]
         basic_auth = (service_config.enable_basic_auth != null ? service_config.enable_basic_auth : false) ? true : false
       }
-    } if(coalesce(var.services[service].enable_default_ingress, false) == true)
+    } if (coalesce(var.services[service].enable_default_ingress, false) == true)
   ]...)
 
   service_custom_domain_list = merge([
@@ -23,12 +23,12 @@ locals {
       }
       # Exclude wildcard hosts from custom host logic
       if !can(regex("^\\*\\.", split("/", host)[0]))
-    }) if try(length(var.services[service].ingress_list), 0) != 0
+    })if try(length(var.services[service].ingress_list),0) != 0
   ]...)
 
   default_services_list = merge([
     for service in keys(local.default_domain_list) : {
-      for ingress_name in local.default_domain_list[service].ingress : "${service}-${var.namespace}-${ingress_name}" => {
+      for ingress_name  in local.default_domain_list[service].ingress : "${service}-${var.namespace}-${ingress_name}" => {
         service_name = split(":", service)[0]
         service_port = length(split(":", service)) != 2 ? 80 : split(":", service)[1]
         # domain_name backward compatible with namespace based names if app_env is not given, if app_env is given then new scheme is chosen
@@ -43,54 +43,54 @@ locals {
   wildcard_custom_hosts = merge([
     for service, config in var.services : tomap({
       for host in try(config.ingress_list, []) :
-      "${service}-${var.namespace}-${host}" => {
-        service_name = split(":", service)[0]
-        service_port = length(split(":", service)) != 2 ? 80 : split(":", service)[1]
-        ingress_host = split("/", host)[0]
-        ns           = var.namespace
-        ingress_name = lower(replace("${split(":", service)[0]}-${replace(host, "/", "-")}-wildcard-ingress", "*", "wildcard"))
-        base_domain  = replace(split("/", host)[0], "*.", "")
-      }
-      if can(regex("^\\*\\.", split("/", host)[0]))
+        "${service}-${var.namespace}-${host}" => {
+          service_name = split(":", service)[0]
+          service_port = length(split(":", service)) != 2 ? 80 : split(":", service)[1]
+          ingress_host = split("/", host)[0]
+          ns           = var.namespace
+          ingress_name = lower(replace("${split(":", service)[0]}-${replace(host, "/", "-")}-wildcard-ingress", "*", "wildcard"))
+          base_domain  = replace(split("/", host)[0], "*.", "")
+        }
+        if can(regex("^\\*\\.", split("/", host)[0]))
     }) if try(length(config.ingress_list), 0) != 0
   ]...)
 }
 
 resource "random_password" "basic_auth_password" {
-  for_each         = { for k, v in var.services : k => v if v.enable_basic_auth != null ? v.enable_basic_auth : false }
+  for_each = {for k, v in var.services : k => v if v.enable_basic_auth != null ? v.enable_basic_auth : false }
   length           = 32
   special          = true
   override_special = "_@"
 }
 
 resource "random_string" "basic_auth_user_name_suffix" {
-  for_each    = { for k, v in var.services : k => v if v.enable_basic_auth != null ? v.enable_basic_auth : false }
-  length      = 6
-  special     = true
-  upper       = false
-  numeric     = false
+  for_each = {for k, v in var.services : k => v if v.enable_basic_auth != null ? v.enable_basic_auth : false }
+  length  = 6
+  special = true
+  upper   = false
+  numeric = false
   min_special = 2
-  lower       = true
+  lower = true
 }
 
 resource "aws_secretsmanager_secret" "basic_auth_credentials" {
-  for_each = { for k, v in var.services : k => v if v.enable_basic_auth != null ? v.enable_basic_auth : false }
+  for_each = {for k, v in var.services : k => v if v.enable_basic_auth != null ? v.enable_basic_auth : false }
   name     = "${local.cluster_name}-${var.namespace}-${each.key}-basic-auth-credentials"
   tags     = local.common_tags
 }
 
 resource "aws_secretsmanager_secret_version" "basic_auth_credentials" {
-  for_each  = { for k, v in var.services : k => v if v.enable_basic_auth != null ? v.enable_basic_auth : false }
-  secret_id = aws_secretsmanager_secret.basic_auth_credentials[each.key].id
+  for_each      = {for k, v in var.services : k => v if v.enable_basic_auth != null ? v.enable_basic_auth : false }
+  secret_id     = aws_secretsmanager_secret.basic_auth_credentials[each.key].id
   secret_string = jsonencode({ user_name = "${each.key}-${random_string.basic_auth_user_name_suffix[each.key].result}",
-  password = random_password.basic_auth_password[each.key].result })
+                    password = random_password.basic_auth_password[each.key].result })
 }
 
 resource "kubernetes_secret_v1" "basic_auth_secret" {
-  for_each = { for k, v in var.services : k => v if v.enable_basic_auth != null ? v.enable_basic_auth : false }
+  for_each = {for k, v in var.services : k => v if v.enable_basic_auth != null ? v.enable_basic_auth : false}
 
   metadata {
-    name      = "${each.key}-basic-auth"
+    name = "${each.key}-basic-auth"
     namespace = var.namespace
   }
   data = {
@@ -100,15 +100,15 @@ resource "kubernetes_secret_v1" "basic_auth_secret" {
 }
 
 resource "kubernetes_ingress_v1" "default_service_ingress" {
-  for_each = { for service, value in local.default_services_list : service => value }
+  for_each = {for service, value in local.default_services_list : service => value }
   metadata {
     name      = each.value.ingress_name
     namespace = each.value.ns
     annotations = {
-      "kubernetes.io/ingress.class"             = "nginx"
-      "nginx.ingress.kubernetes.io/auth-type"   = each.value.basic_auth ? "basic" : ""
+      "kubernetes.io/ingress.class" = "nginx"
+      "nginx.ingress.kubernetes.io/auth-type" = each.value.basic_auth ? "basic" : ""
       "nginx.ingress.kubernetes.io/auth-secret" = each.value.basic_auth ? "${each.value.service_name}-basic-auth" : ""
-      "nginx.ingress.kubernetes.io/auth-realm"  = each.value.basic_auth ? "Authentication Required" : ""
+      "nginx.ingress.kubernetes.io/auth-realm" = each.value.basic_auth ? "Authentication Required" : ""
     }
   }
   spec {
@@ -137,17 +137,17 @@ resource "kubernetes_ingress_v1" "default_service_ingress" {
 }
 
 resource "kubernetes_ingress_v1" "custom_service_ingress" {
-  for_each = { for service, value in local.service_custom_domain_list : service => value if value.path_based_routing == "" }
+  for_each = {for service, value in local.service_custom_domain_list : service => value if value.path_based_routing == ""  }
   metadata {
     name      = each.value.ingress_name
     namespace = each.value.ns
     annotations = {
-      "kubernetes.io/ingress.class"             = "nginx"
-      "cert-manager.io/issuer"                  = "letsencrypt"
-      "kubernetes.io/tls-acme"                  = "true"
-      "nginx.ingress.kubernetes.io/auth-type"   = each.value.basic_auth ? "basic" : ""
+      "kubernetes.io/ingress.class" = "nginx"
+      "cert-manager.io/issuer"      = "letsencrypt"
+      "kubernetes.io/tls-acme"      = "true"
+      "nginx.ingress.kubernetes.io/auth-type" = each.value.basic_auth ? "basic" : ""
       "nginx.ingress.kubernetes.io/auth-secret" = each.value.basic_auth ? "${each.value.service_name}-basic-auth" : ""
-      "nginx.ingress.kubernetes.io/auth-realm"  = each.value.basic_auth ? "Authentication Required" : ""
+      "nginx.ingress.kubernetes.io/auth-realm" = each.value.basic_auth ? "Authentication Required" : ""
     }
   }
   spec {
@@ -168,15 +168,15 @@ resource "kubernetes_ingress_v1" "custom_service_ingress" {
       }
     }
     tls {
-      secret_name = "tls-secret-${each.value.ingress_host}"
-      hosts       = [each.value.ingress_host]
+      secret_name ="tls-secret-${each.value.ingress_host}"
+      hosts       =[each.value.ingress_host]
     }
   }
   depends_on = [kubernetes_namespace.app_environments]
 }
 
 resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
-  for_each = { for service, value in local.service_custom_domain_list : service => value if value.path_based_routing != "" }
+  for_each = {for service, value in local.service_custom_domain_list : service => value if value.path_based_routing != "" }
   metadata {
     name      = each.value.ingress_name
     namespace = each.value.ns
@@ -186,9 +186,9 @@ resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
       "kubernetes.io/tls-acme"                     = "true"
       "nginx.ingress.kubernetes.io/use-regex"      = "true"
       "nginx.ingress.kubernetes.io/rewrite-target" = "/$2"
-      "nginx.ingress.kubernetes.io/auth-type"      = each.value.basic_auth ? "basic" : ""
-      "nginx.ingress.kubernetes.io/auth-secret"    = each.value.basic_auth ? "${each.value.service_name}-basic-auth" : ""
-      "nginx.ingress.kubernetes.io/auth-realm"     = each.value.basic_auth ? "Authentication Required" : ""
+      "nginx.ingress.kubernetes.io/auth-type" = each.value.basic_auth ? "basic" : ""
+      "nginx.ingress.kubernetes.io/auth-secret" = each.value.basic_auth ? "${each.value.service_name}-basic-auth" : ""
+      "nginx.ingress.kubernetes.io/auth-realm" = each.value.basic_auth ? "Authentication Required" : ""
     }
   }
   spec {
@@ -209,8 +209,8 @@ resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
       }
     }
     tls {
-      secret_name = "tls-secret-${each.value.ingress_host}"
-      hosts       = [each.value.ingress_host]
+      secret_name ="tls-secret-${each.value.ingress_host}"
+      hosts       =[each.value.ingress_host]
     }
   }
   depends_on = [kubernetes_namespace.app_environments]

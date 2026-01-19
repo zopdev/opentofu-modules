@@ -1,3 +1,7 @@
+variable "oci_compartment_id" {
+  description = "OCI Compartment ID where resources will be created"
+  type        = string
+}
 
 variable "load_balancer_shape" {
   description = "The shape of the load balancer"
@@ -17,7 +21,7 @@ variable "app_name" {
 
 variable "lb_ip" {
   description = "Global IP address to be added in LoadBalancer"
-  type        = string
+  type   = string
 }
 
 variable "prometheus_enabled" {

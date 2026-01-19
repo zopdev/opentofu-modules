@@ -20,7 +20,7 @@ output "db_name" {
 }
 
 output "read_replica_db_url" {
-  value = var.read_replica == true ? google_sql_database_instance.sql_db_replica[0].connection_name : null
+  value =  var.read_replica == true ? google_sql_database_instance.sql_db_replica.0.connection_name : null
 }
 
 output "db_type" {
@@ -40,5 +40,5 @@ output "db_tier" {
 }
 
 output "db_user" {
-  value = { for k, v in local.db_map : k => v.user }
+  value = { for k,v in local.db_map : k => v.user}
 }

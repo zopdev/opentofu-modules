@@ -4,9 +4,15 @@ variable "owner" {
   default     = ""
 }
 
+variable "project_name" {
+  description = "Name of the GCP project where GIT PAT is stored as secret"
+  type        = string
+  default     = ""
+}
+
 variable "github_repos" {
   description = "Map of repositories with their respective properties"
-  type = map(object({
+  type        = map(object({
     name                            = string
     team_name                       = string
     visibility                      = optional(string)
@@ -24,12 +30,18 @@ variable "github_repos" {
 
 variable "github_teams" {
   description = "Map of teams with their respective users who can have required access on particular repo"
-  type = map(object({
-    admins  = list(string)
-    editors = list(string)
-    viewers = list(string)
+  type        = map(object({
+    admins         = list(string)
+    editors        = list(string)
+    viewers        = list(string)
   }))
   default = {}
+}
+
+variable "github_base_url" {
+  description = "The base URL of the GitHub API"
+  type        = string
+  default     = "https://github.com"
 }
 
 variable "is_enterprise" {

@@ -10,21 +10,27 @@ variable "tags" {
 }
 
 variable "app_region" {
-  type        = string
+  type = string
   description = "Location where the resources to be created"
+  default = ""
+}
+
+variable "vpc" {
+  description = "VPC the apps are going to use"
+  type        = string
   default     = ""
 }
 
 variable "redis" {
   description = "Inputs to provision Redis instances in the cloud platform"
-  type = object(
-    {
-      name                      = optional(string)
-      sku_name                  = string
-      redis_cache_capacity      = number
-      redis_cache_family        = string
-      redis_enable_non_ssl_port = bool
-  })
+  type        = object(
+      {
+        name                      = optional(string)
+        sku_name                  = string
+        redis_cache_capacity      = number
+        redis_cache_family        = string
+        redis_enable_non_ssl_port = bool
+      })
   default = {
     name                      = ""
     sku_name                  = "Basic"
@@ -41,26 +47,26 @@ variable "namespace" {
 }
 
 variable "app_name" {
-  description = "This is the name of the cluster. This name is also used to namespace all the other resources created by this module."
-  type        = string
+    description = "This is the name of the cluster. This name is also used to namespace all the other resources created by this module."
+    type        = string
 }
 
 variable "shared_services" {
   type = object({
-    type            = string
-    bucket          = string
-    profile         = optional(string)
-    location        = optional(string)
-    resource_group  = optional(string)
+    type     = string
+    bucket   = string
+    profile  = optional(string)
+    location = optional(string)
+    resource_group = optional(string)
     storage_account = optional(string)
-    container       = optional(string)
-    cluster_prefix  = optional(string)
+    container = optional(string)
+    cluster_prefix = optional(string)
   })
 }
 
 
 variable "app_env" {
   description = "Env of the redis cluster created"
-  type        = string
-  default     = ""
+  type = string
+  default = ""
 }

@@ -26,6 +26,17 @@ variable "domain_name" {
   default     = ""
 }
 
+variable "cluster_name" {
+  description = "cluster name"
+  type        = string
+}
+
+variable "resource_group_name" {
+  description = "The Azure Resource Group name in which all resources should be created."
+  type        = string
+  default     = ""
+}
+
 variable "storage_account" {
   description = "The Azure Storage Account name in which data should be stored."
   type        = string
@@ -41,20 +52,20 @@ variable "account_access_key" {
 variable "loki" {
   description = "Loki configuration for observability setup"
   type = object({
-    enable         = bool
+    enable = bool
     enable_ingress = optional(bool)
     alerts = optional(object({
-      distributor_lines_received    = optional(string)
-      distributor_bytes_received    = optional(number)
+      distributor_lines_received = optional(string)
+      distributor_bytes_received= optional(number)
       distributor_appended_failures = optional(number)
-      request_errors                = optional(number)
-      panics                        = optional(number)
-      request_latency               = optional(number)
-      distributor_replica           = optional(number)
-      ingester_replica              = optional(number)
-      querier_replica               = optional(number)
-      query_frontend_replica        = optional(number)
-      compactor_replica             = optional(number)
+      request_errors = optional(number)
+      panics = optional(number)
+      request_latency = optional(number)
+      distributor_replica = optional(number)
+      ingester_replica  = optional(number)
+      querier_replica = optional(number)
+      query_frontend_replica = optional(number)
+      compactor_replica = optional(number)
     }))
     ingester = optional(object({
       replicas           = optional(number)
@@ -110,29 +121,29 @@ variable "loki" {
 
 variable "cortex" {
   description = "Cortex configuration for observability setup"
-  type = object({
-    enable         = bool
+  type        = object({
+    enable = bool
     enable_ingress = optional(bool)
     alerts = optional(object({
-      distributor_replica    = optional(number)
-      ingester_replica       = optional(number)
-      querier_replica        = optional(number)
+      distributor_replica = optional(number)
+      ingester_replica  = optional(number)
+      querier_replica = optional(number)
       query_frontend_replica = optional(number)
-      compactor_replica      = optional(number)
+      compactor_replica = optional(number)
     }))
     limits = optional(object({
-      ingestion_rate               = optional(number)
-      ingestion_burst_size         = optional(number)
-      max_series_per_metric        = optional(number)
-      max_series_per_user          = optional(number)
+      ingestion_rate        = optional(number)
+      ingestion_burst_size  = optional(number)
+      max_series_per_metric = optional(number)
+      max_series_per_user   = optional(number)
       max_fetched_chunks_per_query = optional(number)
     }))
     query_range = optional(object({
       memcached_client_timeout = optional(string)
     }))
     compactor = optional(object({
-      enable   = optional(bool)
-      replicas = optional(number)
+      enable             = optional(bool)
+      replicas           = optional(number)
       persistence_volume = optional(object({
         enable = optional(bool)
         size   = optional(string)
@@ -142,8 +153,8 @@ variable "cortex" {
       min_memory = optional(string)
       max_memory = optional(string)
     }))
-    ingester = optional(object({
-      replicas = optional(number)
+    ingester               = optional(object({
+      replicas           =  optional(number)
       persistence_volume = optional(object({
         size = optional(string)
       }))
@@ -170,7 +181,7 @@ variable "cortex" {
     }))
     query_frontend = optional(object({
       replicas = optional(number)
-      enable   = optional(bool)
+      enable  = optional(bool)
     }))
     store_gateway = optional(object({
       replication_factor = optional(number)
@@ -229,23 +240,23 @@ variable "cortex" {
 
 variable "tempo" {
   description = "tempo configuration for observability setup"
-  type = object({
-    enable         = bool
+  type        = object({
+    enable   = bool
     enable_ingress = optional(bool)
     alerts = optional(object({
-      ingester_bytes_received              = optional(number)
-      distributor_ingester_appends         = optional(number)
+      ingester_bytes_received = optional(number)
+      distributor_ingester_appends = optional(number)
       distributor_ingester_append_failures = optional(number)
-      ingester_live_traces                 = optional(number)
-      distributor_spans_received           = optional(number)
-      distributor_bytes_received           = optional(number)
-      ingester_blocks_flushed              = optional(number)
-      tempodb_blocklist                    = optional(number)
-      distributor_replica                  = optional(number)
-      ingester_replica                     = optional(number)
-      querier_replica                      = optional(number)
-      query_frontend_replica               = optional(number)
-      compactor_replica                    = optional(number)
+      ingester_live_traces = optional(number)
+      distributor_spans_received = optional(number)
+      distributor_bytes_received = optional(number)
+      ingester_blocks_flushed = optional(number)
+      tempodb_blocklist = optional(number)
+      distributor_replica = optional(number)
+      ingester_replica  = optional(number)
+      querier_replica = optional(number)
+      query_frontend_replica = optional(number)
+      compactor_replica = optional(number)
     }))
     ingester = optional(object({
       replicas           = optional(number)
@@ -272,10 +283,10 @@ variable "tempo" {
       cpu_utilization    = optional(string)
     }))
     querier = optional(object({
-      replicas = optional(number)
+      replicas           = optional(number)
     }))
     query_frontend = optional(object({
-      replicas = optional(number)
+      replicas           = optional(number)
     }))
     metrics_generator = optional(object({
       enable                      = optional(bool)
@@ -283,9 +294,9 @@ variable "tempo" {
       service_graphs_max_items    = optional(number)
       service_graphs_wait         = optional(string)
       remote_write_flush_deadline = optional(string)
-      remote_write = optional(list(object({
-        host = optional(string)
-        header = optional(object({
+      remote_write                = optional(list(object({
+        host    = optional(string)
+        header  = optional(object({
           key   = optional(string)
           value = optional(string)
         }))
@@ -297,25 +308,25 @@ variable "tempo" {
 
 variable "mimir" {
   description = "mimir configuration for observability setup"
-  type = object({
-    enable         = bool
+  type        = object({
+    enable    = bool
     enable_ingress = optional(bool)
     alerts = optional(object({
-      distributor_replica    = optional(number)
-      ingester_replica       = optional(number)
-      querier_replica        = optional(number)
+      distributor_replica = optional(number)
+      ingester_replica  = optional(number)
+      querier_replica = optional(number)
       query_frontend_replica = optional(number)
-      compactor_replica      = optional(number)
+      compactor_replica = optional(number)
     }))
     limits = optional(object({
-      ingestion_rate                      = optional(number)
-      ingestion_burst_size                = optional(number)
-      max_fetched_chunks_per_query        = optional(number)
-      max_cache_freshness                 = optional(number)
+      ingestion_rate        = optional(number)
+      ingestion_burst_size  = optional(number)
+      max_fetched_chunks_per_query = optional(number)
+      max_cache_freshness   = optional(number)
       max_outstanding_requests_per_tenant = optional(number)
     }))
     compactor = optional(object({
-      replicas = optional(number)
+      replicas           = optional(number)
       persistence_volume = optional(object({
         enable = optional(bool)
         size   = optional(string)
@@ -325,22 +336,22 @@ variable "mimir" {
       min_memory = optional(string)
       max_memory = optional(string)
     }))
-    ingester = optional(object({
-      replicas = optional(number)
+    ingester               = optional(object({
+      replicas           =  optional(number)
       persistence_volume = optional(object({
         size = optional(string)
       }))
-      min_memory = optional(string)
-      max_memory = optional(string)
-      min_cpu    = optional(string)
-      max_cpu    = optional(string)
+      min_memory         = optional(string)
+      max_memory         = optional(string)
+      min_cpu            = optional(string)
+      max_cpu            = optional(string)
     }))
     querier = optional(object({
-      replicas   = optional(number)
-      min_memory = optional(string)
-      max_memory = optional(string)
-      min_cpu    = optional(string)
-      max_cpu    = optional(string)
+      replicas           = optional(number)
+      min_memory         = optional(string)
+      max_memory         = optional(string)
+      min_cpu            = optional(string)
+      max_cpu            = optional(string)
     }))
     query_frontend = optional(object({
       replicas = optional(number)
@@ -357,11 +368,11 @@ variable "mimir" {
       max_memory = optional(string)
     }))
     distributor = optional(object({
-      replicas   = optional(number)
-      min_memory = optional(string)
-      min_cpu    = optional(string)
-      max_cpu    = optional(string)
-      max_memory = optional(string)
+      replicas           = optional(number)
+      min_memory         = optional(string)
+      min_cpu            = optional(string)
+      max_cpu            = optional(string)
+      max_memory         = optional(string)
     }))
   })
 }

@@ -20,7 +20,7 @@ output "db_name" {
 }
 
 output "rds_read_replica_db_url" {
-  value = element(concat(aws_db_instance.rds_read_replica[*].endpoint, [""]), 0)
+  value =   element(concat(aws_db_instance.rds_read_replica.*.endpoint, [""]), 0)  
 }
 
 output "db_type" {
@@ -40,5 +40,5 @@ output "db_instance_class" {
 }
 
 output "db_user" {
-  value = { for k, v in local.db_map : k => v.user }
+  value = { for k,v in local.db_map : k => v.user}
 }

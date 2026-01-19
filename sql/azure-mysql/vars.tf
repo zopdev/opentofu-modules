@@ -22,6 +22,12 @@ variable "administrator_login" {
   default     = "mysqladmin"
 }
 
+variable "administrator_password" {
+  description = "The admin password for mysql database"
+  type        = string
+  default     = ""
+}
+
 variable "mysql_version" {
   description = "Version of the mysql database"
   type        = string
@@ -92,11 +98,11 @@ variable "storage" {
   type        = number
   default     = 20
   validation {
-    condition     = (var.storage >= 20)
+    condition = (var.storage >= 20 )
     error_message = "Storage value must be greater than or equal to 20."
   }
   validation {
-    condition     = (var.storage <= 16384)
+    condition = (var.storage <= 16384 )
     error_message = "Storage value must be less than or equal to 16384."
   }
 }
@@ -112,11 +118,11 @@ variable "iops" {
   type        = number
   default     = 360
   validation {
-    condition     = (var.iops >= 360)
+    condition = (var.iops >= 360 )
     error_message = "IOPS value must be greater than or equal to 360."
   }
   validation {
-    condition     = (var.iops <= 20000)
+    condition = (var.iops <= 20000 )
     error_message = "IOPS value must be less than or equal to 20000."
   }
 }

@@ -1,21 +1,21 @@
 variable "subnet_id" {
   description = "Subnet id to host the mysql database"
-  type        = string
+  type = string
 }
 
 variable "provider_id" {
   description = "OCI Compartment ID"
-  type        = string
+  type = string
 }
 
 variable "mysql_shape_name" {
   description = "Shape of the mysql instance"
-  type        = string
+  type = string
 }
 
 variable "availability_domain" {
   description = "Availability domain to install the mysql instance"
-  type        = string
+  type = string
 }
 
 variable "administrator_login" {
@@ -24,24 +24,29 @@ variable "administrator_login" {
   default     = "mysqladmin"
 }
 
+variable "cluster_name" {
+  description = "Name of the oke cluster"
+  type = string
+}
+
 variable "namespace" {
   description = "Namespace for the mysql service"
-  type        = string
+  type = string
 }
 
 variable "vault_id" {
   description = "Kms vault id for vault secret"
-  type        = string
+  type = string
 }
 
 variable "key_id" {
   description = "Kms key id for vault secret"
-  type        = string
+  type = string
 }
 
 variable "mysql_db_system_name" {
   description = "Name of the Mysql db system"
-  type        = string
+  type = string
 }
 
 variable "storage" {
@@ -71,6 +76,11 @@ variable "backup_retention_days" {
   description = "Backup retention days for the server"
   type        = number
   default     = 7
+}
+
+variable "tags" {
+  description = "Tags for oci resources"
+  type        = map(any)
 }
 
 variable "read_replica" {

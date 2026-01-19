@@ -1,6 +1,10 @@
+data "google_compute_zones" "available_zones" {
+  project = var.provider_id
+  region  = var.app_region
+}
 
 module "nginx" {
-  project = var.provider_id
+  project       =  var.provider_id
 
 
   source             = "../nginx"
