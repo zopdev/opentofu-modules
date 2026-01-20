@@ -16,19 +16,11 @@ data "azurerm_subnet" "db_subnet" {
   virtual_network_name = data.azurerm_virtual_network.vnet[0].name
 }
 
-resource "azurerm_private_dns_zone" "postgres" {
+# Reference existing Private DNS Zone created by account-setup module
+data "azurerm_private_dns_zone" "postgres" {
   count               = local.vnet_enabled ? 1 : 0
   name                = "privatelink.postgres.database.azure.com"
   resource_group_name = var.resource_group_name
-  tags                = var.tags
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "postgres" {
-  count                 = local.vnet_enabled ? 1 : 0
-  name                  = "${var.vpc}-postgres-dns-link"
-  private_dns_zone_name = azurerm_private_dns_zone.postgres[0].name
-  virtual_network_id    = data.azurerm_virtual_network.vnet[0].id
-  resource_group_name   = var.resource_group_name
 }
 
 resource "azurerm_postgresql_flexible_server" "postgres_server" {
@@ -49,7 +41,7 @@ resource "azurerm_postgresql_flexible_server" "postgres_server" {
   # VNet integration
   # When delegated_subnet_id is provided, Azure automatically disables public network access
   delegated_subnet_id = local.vnet_enabled ? data.azurerm_subnet.db_subnet[0].id : null
-  private_dns_zone_id = local.vnet_enabled ? azurerm_private_dns_zone.postgres[0].id : null
+  private_dns_zone_id = local.vnet_enabled ? data.azurerm_private_dns_zone.postgres[0].id : null
 
   tags = merge(var.tags,
     tomap({
@@ -61,8 +53,6 @@ resource "azurerm_postgresql_flexible_server" "postgres_server" {
       zone,
     ]
   }
-
-  depends_on = [azurerm_private_dns_zone_virtual_network_link.postgres]
 }
 
 resource "azurerm_postgresql_flexible_server_database" "postgres_db" {

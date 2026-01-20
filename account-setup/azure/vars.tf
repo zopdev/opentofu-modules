@@ -10,6 +10,7 @@ variable "vnet_config" {
     address_space         = list(string)
     private_subnets_cidr  = list(string)
     database_subnets_cidr = optional(list(string))
+    redis_subnets_cidr    = optional(list(string))
   }))
   default = {}
 }

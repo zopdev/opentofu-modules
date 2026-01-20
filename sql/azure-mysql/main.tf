@@ -16,19 +16,11 @@ data "azurerm_subnet" "db_subnet" {
   virtual_network_name = data.azurerm_virtual_network.vnet[0].name
 }
 
-resource "azurerm_private_dns_zone" "mysql" {
+# Reference existing Private DNS Zone created by account-setup module
+data "azurerm_private_dns_zone" "mysql" {
   count               = local.vnet_enabled ? 1 : 0
   name                = "privatelink.mysql.database.azure.com"
   resource_group_name = var.resource_group_name
-  tags                = var.tags
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "mysql" {
-  count                 = local.vnet_enabled ? 1 : 0
-  name                  = "${var.vpc}-mysql-dns-link"
-  private_dns_zone_name = azurerm_private_dns_zone.mysql[0].name
-  virtual_network_id    = data.azurerm_virtual_network.vnet[0].id
-  resource_group_name   = var.resource_group_name
 }
 
 resource "azurerm_mysql_flexible_server" "mysql_server" {
@@ -42,7 +34,7 @@ resource "azurerm_mysql_flexible_server" "mysql_server" {
 
   # VNet integration
   delegated_subnet_id           = local.vnet_enabled ? data.azurerm_subnet.db_subnet[0].id : null
-  private_dns_zone_id           = local.vnet_enabled ? azurerm_private_dns_zone.mysql[0].id : null
+  private_dns_zone_id           = local.vnet_enabled ? data.azurerm_private_dns_zone.mysql[0].id : null
   public_network_access_enabled = local.vnet_enabled ? false : true
 
   storage {
@@ -62,8 +54,6 @@ resource "azurerm_mysql_flexible_server" "mysql_server" {
      zone,
     ]
   }
-
-  depends_on = [azurerm_private_dns_zone_virtual_network_link.mysql]
 }
 
 resource "azurerm_mysql_flexible_database" "mysql_db" {

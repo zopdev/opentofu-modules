@@ -64,6 +64,23 @@ locals {
   
   # Combined database subnet map for outputs (backwards compatibility)
   database_subnet_map = merge(local.postgresql_subnet_map, local.mysql_subnet_map)
+
+  # Redis subnets - for Private Endpoints
+  redis_subnet_map = merge([
+    for vnet_name, vnet_config in var.vnet_config : tomap({
+      for idx, cidr in try(vnet_config.redis_subnets_cidr, []) :
+        "${vnet_name}-redis-${idx}" => {
+          vnet_name = vnet_name
+          cidr      = cidr
+          idx       = idx
+        }
+    })
+  ]...)
+
+  # Redis port constant
+  redis_port = 6380
+
+  dns_enabled = length(var.vnet_config) > 0
 }
 
 resource "azurerm_virtual_network" "vnet" {
@@ -328,4 +345,141 @@ resource "azurerm_subnet_network_security_group_association" "mysql" {
   for_each                  = local.mysql_subnet_map
   subnet_id                 = azurerm_subnet.mysql[each.key].id
   network_security_group_id = azurerm_network_security_group.mysql[each.key].id
+}
+
+# Subnet for Redis Private Endpoints
+resource "azurerm_subnet" "redis" {
+  for_each             = local.redis_subnet_map
+  name                 = "${each.value.vnet_name}-redis-subnet"
+  resource_group_name  = data.azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet[each.value.vnet_name].name
+  address_prefixes     = [each.value.cidr]
+}
+
+# Network Security Group for Redis subnet - ONLY allow traffic from private subnet (cluster)
+resource "azurerm_network_security_group" "redis" {
+  for_each            = local.redis_subnet_map
+  name                = "${each.value.vnet_name}-redis-nsg"
+  location            = data.azurerm_resource_group.rg.location
+  resource_group_name = data.azurerm_resource_group.rg.name
+
+  # Allow Redis from private subnets
+  dynamic "security_rule" {
+    for_each = var.vnet_config[each.value.vnet_name].private_subnets_cidr
+    content {
+      name                       = "AllowRedisFromPrivateSubnet-${security_rule.key}"
+      priority                   = local.nsg_priority_base_database_allow + (security_rule.key * local.nsg_priority_increment_per_subnet)
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = tostring(local.redis_port)
+      source_address_prefix      = security_rule.value
+      destination_address_prefix = "*"
+      description                = "Allow Redis traffic from AKS cluster (private subnet)"
+    }
+  }
+
+  # Deny all other inbound traffic (Azure default, but explicit)
+  security_rule {
+    name                       = "DenyAllInbound"
+    priority                   = local.nsg_priority_deny_all
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+    description                = "Deny all other inbound traffic"
+  }
+
+  # Allow all outbound
+  security_rule {
+    name                       = "AllowAllOutbound"
+    priority                   = local.nsg_priority_base_outbound
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  tags = {
+    Name = "${each.value.vnet_name}-redis-nsg"
+  }
+}
+
+# Associate NSG with Redis subnet
+resource "azurerm_subnet_network_security_group_association" "redis" {
+  for_each                  = local.redis_subnet_map
+  subnet_id                 = azurerm_subnet.redis[each.key].id
+  network_security_group_id = azurerm_network_security_group.redis[each.key].id
+}
+
+# =============================================================================
+# DNS zones are created ONCE per resource group.
+# VNet links are created for EACH VNet to connect them to the shared zones
+# =============================================================================
+
+# Private DNS Zone for PostgreSQL (created once if any VNet exists)
+resource "azurerm_private_dns_zone" "postgresql" {
+  count               = local.dns_enabled ? 1 : 0
+  name                = "privatelink.postgres.database.azure.com"
+  resource_group_name = data.azurerm_resource_group.rg.name
+
+  tags = {
+    Name = "postgresql-private-dns-zone"
+  }
+}
+
+# VNet links for PostgreSQL Private DNS Zone (one per VNet)
+resource "azurerm_private_dns_zone_virtual_network_link" "postgresql" {
+  for_each              = local.dns_enabled ? var.vnet_config : {}
+  name                  = "${each.key}-postgresql-dns-link"
+  private_dns_zone_name = azurerm_private_dns_zone.postgresql[0].name
+  virtual_network_id    = azurerm_virtual_network.vnet[each.key].id
+  resource_group_name   = data.azurerm_resource_group.rg.name
+}
+
+# Private DNS Zone for MySQL (created once if any VNet exists)
+resource "azurerm_private_dns_zone" "mysql" {
+  count               = local.dns_enabled ? 1 : 0
+  name                = "privatelink.mysql.database.azure.com"
+  resource_group_name = data.azurerm_resource_group.rg.name
+
+  tags = {
+    Name = "mysql-private-dns-zone"
+  }
+}
+
+# VNet links for MySQL Private DNS Zone (one per VNet)
+resource "azurerm_private_dns_zone_virtual_network_link" "mysql" {
+  for_each              = local.dns_enabled ? var.vnet_config : {}
+  name                  = "${each.key}-mysql-dns-link"
+  private_dns_zone_name = azurerm_private_dns_zone.mysql[0].name
+  virtual_network_id    = azurerm_virtual_network.vnet[each.key].id
+  resource_group_name   = data.azurerm_resource_group.rg.name
+}
+
+# Private DNS Zone for Redis (created once if any VNet exists)
+resource "azurerm_private_dns_zone" "redis" {
+  count               = local.dns_enabled ? 1 : 0
+  name                = "privatelink.redis.cache.windows.net"
+  resource_group_name = data.azurerm_resource_group.rg.name
+
+  tags = {
+    Name = "redis-private-dns-zone"
+  }
+}
+
+# VNet links for Redis Private DNS Zone (one per VNet)
+resource "azurerm_private_dns_zone_virtual_network_link" "redis" {
+  for_each              = local.dns_enabled ? var.vnet_config : {}
+  name                  = "${each.key}-redis-dns-link"
+  private_dns_zone_name = azurerm_private_dns_zone.redis[0].name
+  virtual_network_id    = azurerm_virtual_network.vnet[each.key].id
+  resource_group_name   = data.azurerm_resource_group.rg.name
 }
