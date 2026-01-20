@@ -1,3 +1,36 @@
+locals {
+  vnet_enabled = var.vpc != ""
+  subnet_name  = local.vnet_enabled ? "${var.vpc}-postgresql-subnet" : ""
+}
+
+data "azurerm_virtual_network" "vnet" {
+  count               = local.vnet_enabled ? 1 : 0
+  name                = var.vpc
+  resource_group_name = var.resource_group_name
+}
+
+data "azurerm_subnet" "db_subnet" {
+  count                = local.vnet_enabled ? 1 : 0
+  name                 = local.subnet_name
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.vnet[0].name
+}
+
+resource "azurerm_private_dns_zone" "postgres" {
+  count               = local.vnet_enabled ? 1 : 0
+  name                = "privatelink.postgres.database.azure.com"
+  resource_group_name = var.resource_group_name
+  tags                = var.tags
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "postgres" {
+  count                 = local.vnet_enabled ? 1 : 0
+  name                  = "${var.vpc}-postgres-dns-link"
+  private_dns_zone_name = azurerm_private_dns_zone.postgres[0].name
+  virtual_network_id    = data.azurerm_virtual_network.vnet[0].id
+  resource_group_name   = var.resource_group_name
+}
+
 resource "azurerm_postgresql_flexible_server" "postgres_server" {
   name                             = var.postgres_server_name
   location                         = var.location
@@ -11,6 +44,12 @@ resource "azurerm_postgresql_flexible_server" "postgres_server" {
   storage_tier                     = var.storage_tier
   backup_retention_days            = var.backup_retention_days
   geo_redundant_backup_enabled     = true
+  public_network_access_enabled    = local.vnet_enabled ? false : true
+
+  # VNet integration
+  # When delegated_subnet_id is provided, Azure automatically disables public network access
+  delegated_subnet_id = local.vnet_enabled ? data.azurerm_subnet.db_subnet[0].id : null
+  private_dns_zone_id = local.vnet_enabled ? azurerm_private_dns_zone.postgres[0].id : null
 
   tags = merge(var.tags,
     tomap({
@@ -22,6 +61,8 @@ resource "azurerm_postgresql_flexible_server" "postgres_server" {
       zone,
     ]
   }
+
+  depends_on = [azurerm_private_dns_zone_virtual_network_link.postgres]
 }
 
 resource "azurerm_postgresql_flexible_server_database" "postgres_db" {
@@ -40,10 +81,11 @@ resource "azurerm_postgresql_flexible_server_configuration" "ssl_parameter_group
 }
 
 resource "azurerm_postgresql_flexible_server_firewall_rule" "postgres_firewall" {
-  name                = "${var.cluster_name}-${var.namespace}-postgres-firewall"
-  server_id           = azurerm_postgresql_flexible_server.postgres_server.id
-  start_ip_address    = "0.0.0.0"
-  end_ip_address      = "255.255.255.255"
+  count             = local.vnet_enabled ? 0 : 1
+  name              = "${var.cluster_name}-${var.namespace}-postgres-firewall"
+  server_id         = azurerm_postgresql_flexible_server.postgres_server.id
+  start_ip_address  = "0.0.0.0"
+  end_ip_address    = "255.255.255.255"
 }
 
 resource "azurerm_postgresql_flexible_server" "postgresql_replica_server" {

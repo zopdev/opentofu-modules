@@ -138,3 +138,9 @@ variable "multi_ds" {
   type        = bool
   default     = false
 }
+
+variable "vpc" {
+  description = "VNet name the apps are going to use. When provided, the MySQL server will be deployed in the VNet using delegated subnet. If not provided, public network access will be enabled."
+  type        = string
+  default     = ""
+}
