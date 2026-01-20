@@ -137,7 +137,7 @@ variable "multi_ds" {
 }
 
 variable "vpc" {
-  description = "VNet name the apps are going to use. When provided, the PostgreSQL server will be deployed in the VNet using delegated subnet. If not provided, public network access will be enabled."
+  description = "VNet name the apps are going to use."
   type        = string
   default     = ""
 }

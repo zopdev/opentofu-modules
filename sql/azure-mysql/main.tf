@@ -46,9 +46,9 @@ resource "azurerm_mysql_flexible_server" "mysql_server" {
   public_network_access_enabled = local.vnet_enabled ? false : true
 
   storage {
-    size_gb            = var.storage
-    auto_grow_enabled  = var.storage_scaling
-    iops               = var.iops
+    size_gb = var.storage
+    auto_grow_enabled = var.storage_scaling
+    iops = var.iops
     io_scaling_enabled = var.io_scaling_enabled
   }
 

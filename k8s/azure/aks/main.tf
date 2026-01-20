@@ -28,7 +28,7 @@ locals {
   vnet_enabled = var.vpc != "" && var.subnet != ""
   
   # Service CIDR configuration constants
-  service_cidr_prefix           = 20   # /20 provides 4096 IPs for services
+  service_cidr_prefix           = 20 
   dns_service_ip_fourth_octet   = 10
 
   # Calculate service CIDR from VNet data source to avoid conflicts

@@ -10,7 +10,7 @@ locals {
   nsg_priority_base_https               = 1200
   nsg_priority_base_outbound            = 2000
   nsg_priority_base_database_allow      = 1000
-  nsg_priority_increment_per_subnet     = 10  # Prevents conflicts with multiple subnets
+  nsg_priority_increment_per_subnet     = 10
   nsg_priority_deny_all                 = 4000
   
   # Database port constants
