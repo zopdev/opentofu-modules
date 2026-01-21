@@ -419,10 +419,8 @@ resource "azurerm_subnet_network_security_group_association" "redis" {
   network_security_group_id = azurerm_network_security_group.redis[each.key].id
 }
 
-# =============================================================================
 # DNS zones are created ONCE per resource group.
 # VNet links are created for EACH VNet to connect them to the shared zones
-# =============================================================================
 
 # Private DNS Zone for PostgreSQL (created once if any VNet exists)
 resource "azurerm_private_dns_zone" "postgresql" {
