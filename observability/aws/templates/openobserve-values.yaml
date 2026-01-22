@@ -1,0 +1,55 @@
+replicaCount: ${replica_count}
+
+resources:
+  requests:
+    cpu: ${cpu_request}
+    memory: ${memory_request}
+  limits:
+    cpu: ${cpu_limit}
+    memory: ${memory_limit}
+
+auth:
+  ZO_ROOT_USER_EMAIL: "${root_user_email}"
+  ZO_ROOT_USER_PASSWORD: "${root_user_password}"
+  ZO_ROOT_USER_TOKEN: ""
+  ZO_S3_ACCESS_KEY: "${aws_access_key}"
+  ZO_S3_SECRET_KEY: "${aws_secret_key}"
+
+config:
+  ZO_S3_PROVIDER: "s3"
+  ZO_S3_REGION_NAME: "${storage_region}"
+  ZO_S3_BUCKET_NAME: "${storage_bucket_name}"
+  ZO_S3_BUCKET_PREFIX: ""
+  ZO_S3_FEATURE_FORCE_HOSTED_STYLE: "false"
+  ZO_S3_FEATURE_HTTP1_ONLY: "false"
+  ZO_S3_FEATURE_HTTP2_ONLY: "false"
+  ZO_S3_ALLOW_INVALID_CERTIFICATES: "false"
+  ZO_S3_CONNECT_TIMEOUT: "10"
+  ZO_S3_REQUEST_TIMEOUT: "3600"
+  ZO_S3_MAX_RETRIES: "10"
+  ZO_S3_SYNC_TO_CACHE_INTERVAL: "600"
+  ZO_LOCAL_MODE_STORAGE: "s3"
+  ZO_MEM_PERSIST_INTERVAL: "20"
+  ZO_FILE_PUSH_INTERVAL: "10"
+  ZO_MAX_FILE_SIZE_ON_DISK: "128"
+  ZO_MAX_FILE_RETENTION_TIME: "30"
+  ZO_COMPACT_MAX_FILE_SIZE: "512"
+  ZO_MEM_TABLE_MAX_SIZE: "256"
+  ZO_MEMORY_CACHE_DATAFUSION_MAX_SIZE: "0"
+  ZO_MEMORY_CACHE_GC_INTERVAL: "60"
+  ZO_MEMORY_CACHE_MAX_SIZE: "0"
+
+persistence:
+  enabled: false
+
+probes:
+  enabled: true
+  path: /healthz
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 3
+
+extraEnv:
+%{~ if additional_env_vars != "" ~}
+${additional_env_vars}
+%{~ endif ~}

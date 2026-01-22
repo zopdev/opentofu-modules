@@ -3,10 +3,11 @@ locals {
   enable_tempo  = try(var.observability_config.tempo != null ? var.observability_config.tempo.enable : false, false)
   enable_cortex = try(var.observability_config.cortex != null ? var.observability_config.cortex.enable : false, false)
   enable_mimir  = try(var.observability_config.mimir != null ? var.observability_config.mimir.enable : false, false)
+  enable_openobserve = try(var.observability_config.openobserve != null ? length(var.observability_config.openobserve) > 0 && anytrue([for instance in var.observability_config.openobserve : instance.enable]) : false, false)
 }
 
 module "observability" {
-  count       =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir) ? 1: 0
+  count       =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir || local.enable_openobserve) ? 1: 0
   source = "../../../observability/aws"
 
   app_name             = var.app_name
@@ -21,11 +22,12 @@ module "observability" {
   tempo                = var.observability_config.tempo
   cortex               = var.observability_config.cortex
   mimir                = var.observability_config.mimir
+  openobserve          = try(var.observability_config.openobserve, [])
   depends_on           = [helm_release.prometheus, helm_release.k8s_replicator]
 }
 
 resource "aws_iam_policy" "observability_s3_iam_policy" {
-  count       =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir) ? 1: 0
+  count       =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir || local.enable_openobserve) ? 1: 0
   name        = "observability-${local.environment}-policy"
   description = "IAM policy for Observability Cluster to access S3"
 
@@ -78,29 +80,29 @@ resource "aws_iam_policy" "observability_s3_iam_policy" {
 }
 
 resource "aws_iam_user" "observability_s3_user" {
-  count     =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir) ? 1: 0
+  count     =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir || local.enable_openobserve) ? 1: 0
   name      =  "${local.cluster_name}-s3-user"
   tags      =  local.common_tags
 }
 
 resource "aws_iam_user_policy_attachment" "observability_s3_attach" {
-  count      =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir) ? 1: 0
+  count      =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir || local.enable_openobserve) ? 1: 0
   user       = aws_iam_user.observability_s3_user.0.name
   policy_arn = aws_iam_policy.observability_s3_iam_policy.0.arn
 }
 
 resource "aws_iam_access_key" "observability_s3_user"{
-  count =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir) ? 1: 0
+  count =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir || local.enable_openobserve) ? 1: 0
   user  = aws_iam_user.observability_s3_user.0.name
 }
 
 resource "aws_secretsmanager_secret" "observability_s3_user" {
-  count =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir) ? 1: 0
+  count =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir || local.enable_openobserve) ? 1: 0
   name  = "${local.cluster_name}-s3-user-secret-key"
 }
 
 resource "aws_secretsmanager_secret_version" "observability_s3_user"{
-  count         =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir) ? 1: 0
+  count         =  (local.enable_cortex || local.enable_loki || local.enable_tempo || local.enable_mimir || local.enable_openobserve) ? 1: 0
   secret_id     = aws_secretsmanager_secret.observability_s3_user.0.id
   secret_string = jsonencode({ username = aws_iam_user.observability_s3_user.0.name, access_key = aws_iam_access_key.observability_s3_user.0.user,
     access_secret = aws_iam_access_key.observability_s3_user.0.secret })
