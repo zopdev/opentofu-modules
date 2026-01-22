@@ -142,3 +142,9 @@ output "dns_zone_list" {
   description = "The list of Azure DNS zone names used in the ClusterIssuer solvers."
   value       = var.dns_zone_list
 }
+
+output "openobserve_instances" {
+  description = "OpenObserve instances with URL, username, and password grouped together"
+  value = try(module.observability[0].openobserve_instances, {})
+  sensitive = true
+}
