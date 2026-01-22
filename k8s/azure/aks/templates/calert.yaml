@@ -57,6 +57,11 @@ spec:
         app.kubernetes.io/name: calert
         app.kubernetes.io/instance: calert
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: "calert"
           image: "ghcr.io/mr-karan/calert:v2.0.6"
@@ -65,6 +70,12 @@ spec:
           ports:
             - containerPort: 6000
               protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           volumeMounts:
             - mountPath: /app/static/
               name: config-dir
