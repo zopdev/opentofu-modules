@@ -334,7 +334,7 @@ variable "shared_services" {
 }
 
 variable "vpc" {
-  description = "VPC the apps are going to use"
+  description = "VNet name the apps are going to use"
   type        = string
   default     = ""
 }
