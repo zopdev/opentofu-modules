@@ -159,3 +159,9 @@ output "grafana_datasources" {
 output "lbip" {
   value = data.kubernetes_service.ingress-controller.status.0.load_balancer.0.ingress.0.hostname
 }
+
+output "openobserve_instances" {
+  description = "OpenObserve instances with URL, username, and password grouped together"
+  value = try(module.observability[0].openobserve_instances, {})
+  sensitive = true
+}
