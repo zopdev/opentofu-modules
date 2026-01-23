@@ -1,0 +1,51 @@
+replicaCount: ${replica_count}
+
+resources:
+  requests:
+    cpu: ${cpu_request}
+    memory: ${memory_request}
+  limits:
+    cpu: ${cpu_limit}
+    memory: ${memory_limit}
+
+auth:
+  ZO_ROOT_USER_EMAIL: "${root_user_email}"
+  ZO_ROOT_USER_PASSWORD: "${root_user_password}"
+  ZO_ROOT_USER_TOKEN: ""
+  ZO_S3_ACCESS_KEY: ""
+  ZO_S3_SECRET_KEY: ""
+  AZURE_STORAGE_ACCOUNT_KEY: "${account_key}"
+  AZURE_STORAGE_ACCOUNT_NAME: "${storage_account}"
+
+config:
+  ZO_S3_PROVIDER: "azure"
+  ZO_S3_BUCKET_NAME: "${storage_bucket_name}"
+  ZO_LOCAL_MODE_STORAGE: "s3"
+  ZO_S3_BATCH_SIZE: "1000"
+  ZO_S3_BATCH_WAIT: "5s"
+  ZO_S3_FLUSH_INTERVAL: "30s"
+  ZO_S3_COMPRESSION: "gzip"
+  ZO_MEM_PERSIST_INTERVAL: "20"
+  ZO_FILE_PUSH_INTERVAL: "10"
+  ZO_MAX_FILE_SIZE_ON_DISK: "128"
+  ZO_MAX_FILE_RETENTION_TIME: "30"
+  ZO_COMPACT_MAX_FILE_SIZE: "512"
+  ZO_MEM_TABLE_MAX_SIZE: "256"
+  ZO_MEMORY_CACHE_DATAFUSION_MAX_SIZE: "0"
+  ZO_MEMORY_CACHE_GC_INTERVAL: "60"
+  ZO_MEMORY_CACHE_MAX_SIZE: "0"
+
+persistence:
+  enabled: false
+
+probes:
+  enabled: true
+  path: /
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 3
+
+extraEnv:
+%{~ if additional_env_vars != "" ~}
+${additional_env_vars}
+%{~ endif ~}
