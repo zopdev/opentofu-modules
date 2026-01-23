@@ -374,3 +374,22 @@ variable "mimir" {
     }))
   })
 }
+
+variable "openobserve" {
+  description = "List of OpenObserve instances to deploy"
+  type = list(object({
+    enable         = bool
+    name           = string
+    replicaCount   = optional(number, 2)
+    min_cpu        = optional(string, "250m")
+    max_cpu        = optional(string, "1")
+    min_memory     = optional(string, "1Gi")
+    max_memory     = optional(string, "2Gi")
+    enable_ingress = optional(bool, true)
+    env = optional(list(object({
+      name  = string
+      value = string
+    })), [])
+  }))
+  default = []
+}
