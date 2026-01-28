@@ -4,3 +4,9 @@ variable "services" {
   type        = list(string)
   default     = []
 }
+
+variable "immutable_image_tags" {
+  description = "Specifies the ECR image tags are immutable"
+  type        = bool
+  default     = true
+}
