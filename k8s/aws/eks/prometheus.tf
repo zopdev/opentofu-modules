@@ -113,7 +113,7 @@ locals{
       SLACK_CONFIGS                 = jsonencode(local.cluster_slack_alerts)
       WEBHOOK_CONFIGS               = jsonencode(local.cluster_webhook_alerts)
     }
-  ) : null
+  ) : ""
 
   cluster_alert_config = templatefile(
     "${path.module}/templates/cluster-level-alerts.yaml",
@@ -147,7 +147,7 @@ resource "helm_release" "prometheus" {
   repository = "https://prometheus-community.github.io/helm-charts"
 
   values = [
-    local.prom_template[count.index]
+    local.prom_template
   ]
 }
 

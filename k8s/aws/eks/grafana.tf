@@ -64,7 +64,7 @@ resource "helm_release" "grafana" {
   repository = "https://grafana.github.io/helm-charts"
 
   values = [
-    local.grafana_template[count.index]
+    local.grafana_template
   ]
   depends_on = [helm_release.prometheus, kubernetes_storage_class.gp3_default]
 }

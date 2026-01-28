@@ -75,7 +75,7 @@ resource "helm_release" "velero" {
   create_namespace = true
   depends_on       = [module.eks]
 
-  values = [local.velero_values[0]]
+  values = [local.velero_values]
 }
 
 resource "time_sleep" "wait_for_velero" {

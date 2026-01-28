@@ -127,7 +127,7 @@ resource "helm_release" "prometheus" {
   repository = "https://prometheus-community.github.io/helm-charts"
 
   values = [
-   local.prom_template[count.index]
+   local.prom_template
   ]
 }
 

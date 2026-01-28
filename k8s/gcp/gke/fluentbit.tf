@@ -103,7 +103,7 @@ resource "helm_release" "fluentbit-config" {
   namespace  = kubernetes_namespace.monitoring.metadata.0.name
 
   values = [
-    local.fluent_bit[0]
+    local.fluent_bit
   ]
 depends_on = [
   kubernetes_namespace.monitoring
