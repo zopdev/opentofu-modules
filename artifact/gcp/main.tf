@@ -13,6 +13,10 @@ resource "google_artifact_registry_repository" "gcr_repo" {
   description   = "${each.value} docker repository"
   format        = "DOCKER"
 
+  docker_config {
+    immutable_tags = var.image_tags
+  }
+
   depends_on = [google_project_service.enable_artifact_registry]
 }
 
