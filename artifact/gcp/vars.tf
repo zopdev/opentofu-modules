@@ -17,3 +17,9 @@ variable "registry_permissions" {
   }))
   default     = {}
 }
+
+variable "immutable_image_tags" {
+  description = "Specifies whether the GAR image tags are immutable"
+  type        = bool
+  default     = true
+}
