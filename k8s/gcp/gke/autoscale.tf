@@ -1,12 +1,15 @@
-data "template_file" "autoscale_template" {
-  template = file("./templates/cluster-auto-scaler-values.yaml")
-  vars = {
-    CLUSTER_NAME    = local.cluster_name
-    SERVICE_ACCOUNT = google_service_account.cluster_autoscaler.email
-    MIN_COUNT       = var.node_config.min_count
-    MAX_COUNT       = var.node_config.max_count
-  }
+locals {
+  autoscale_template = templatefile(
+    "${path.module}/templates/cluster-auto-scaler-values.yaml",
+    {
+      CLUSTER_NAME    = local.cluster_name
+      SERVICE_ACCOUNT = google_service_account.cluster_autoscaler.email
+      MIN_COUNT       = var.node_config.min_count
+      MAX_COUNT       = var.node_config.max_count
+    }
+  )
 }
+
 
 resource "helm_release" "auto_scaler" {
   chart      = "cluster-autoscaler"
@@ -15,7 +18,7 @@ resource "helm_release" "auto_scaler" {
   namespace  = "kube-system"
   version    = "9.28.0"
 
-  values = [data.template_file.autoscale_template.rendered]
+  values = [local.autoscale_template]
 }
 
 resource "google_service_account" "cluster_autoscaler" {

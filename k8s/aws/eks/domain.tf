@@ -17,6 +17,12 @@ data "kubernetes_service" "ingress-controller" {
   depends_on = [module.nginx]
 }
 
+provider "aws" {
+  alias  = "shared-services"
+  region = "us-east-1"
+  # any other credentials/configuration you had before
+}
+
 resource "aws_route53_record" "c_name_record" {
   provider = aws.shared-services
   zone_id  = data.aws_route53_zone.zone.0.zone_id

@@ -1,16 +1,18 @@
-data "template_file" "mimir_alerts" {
-  count = local.configure_mimir_alerts ? 1 : 0
-  template = file("${path.module}/templates/mimir-alerts.yaml")
-  vars     = {
-    cluster_name = var.cluster_name
-    distributor_replica_threshold = var.mimir.alerts == null ? 1 : (var.mimir.alerts.distributor_replica == null ? 1 : var.mimir.alerts.distributor_replica)
-    ingester_replica_threshold  = var.mimir.alerts == null ? 2 : (var.mimir.alerts.ingester_replica == null ? 2 : var.mimir.alerts.ingester_replica)
-    querier_replica_threshold  = var.mimir.alerts == null ? 3 : (var.mimir.alerts.querier_replica == null ? 3 : var.mimir.alerts.querier_replica)
-    queryfrontend_replica_threshold  = var.mimir.alerts == null ? 1 : (var.mimir.alerts.query_frontend_replica == null ? 1 : var.mimir.alerts.query_frontend_replica)
-  }
+locals {
+  mimir_alerts = local.configure_mimir_alerts ? templatefile(
+    "${path.module}/templates/mimir-alerts.yaml",
+    {
+      cluster_name = var.cluster_name
+      distributor_replica_threshold = try(var.mimir.alerts.distributor_replica, 1)
+      ingester_replica_threshold = try(var.mimir.alerts.ingester_replica, 2)
+      querier_replica_threshold = try(var.mimir.alerts.querier_replica, 3)
+      queryfrontend_replica_threshold = try(var.mimir.alerts.query_frontend_replica, 1)
+    }
+  ) : null
 }
+
 
 resource "kubectl_manifest" "mimir_alerts" {
   count = local.configure_mimir_alerts ? 1 : 0
-  yaml_body  = data.template_file.mimir_alerts[0].rendered
+  yaml_body  = local.mimir_alerts
 }

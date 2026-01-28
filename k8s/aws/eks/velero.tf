@@ -52,18 +52,18 @@ resource "aws_iam_access_key" "velero" {
   user = aws_iam_user.velero[0].name
 }
 
-data "template_file" "velero_values" {
-  count = var.velero_enabled ? 1 : 0
-
-  template = file("${path.module}/templates/velero-values.yaml")
-
-  vars = {
-    access_key        = aws_iam_access_key.velero[0].id
-    secret_access_key = aws_iam_access_key.velero[0].secret
-    bucket_name       = "k8s-resource-backups"
-    region            = var.app_region
-  }
+locals {
+  velero_values = var.velero_enabled ? templatefile(
+    "${path.module}/templates/velero-values.yaml",
+    {
+      access_key        = aws_iam_access_key.velero[0].id
+      secret_access_key = aws_iam_access_key.velero[0].secret
+      bucket_name       = "k8s-resource-backups"
+      region            = var.app_region
+    }
+  ) : null
 }
+
 
 resource "helm_release" "velero" {
   count            = var.velero_enabled ? 1 : 0
@@ -75,7 +75,7 @@ resource "helm_release" "velero" {
   create_namespace = true
   depends_on       = [module.eks]
 
-  values = [data.template_file.velero_values[0].rendered]
+  values = [local.velero_values]
 }
 
 resource "time_sleep" "wait_for_velero" {

@@ -1,14 +1,21 @@
-data "template_file" "issuer" {
-  template =  file("${path.module}/templates/issuer.yaml")
-  vars     = {
-    namespace = kubernetes_namespace.app_environments.metadata[0].name
-    cert_issuer_url = try(var.cert_issuer_config.env == "stage" ? "https://acme-staging-v02.api.letsencrypt.org/directory" : "https://acme-v02.api.letsencrypt.org/directory","https://acme-staging-v02.api.letsencrypt.org/directory")
-    email           = var.cert_issuer_config.email
-  }
+locals {
+  issuer_template = templatefile(
+    "${path.module}/templates/issuer.yaml",
+    {
+      namespace       = kubernetes_namespace.app_environments.metadata[0].name
+      cert_issuer_url = try(
+          var.cert_issuer_config.env == "stage" ?
+          "https://acme-staging-v02.api.letsencrypt.org/directory" :
+          "https://acme-v02.api.letsencrypt.org/directory",
+        "https://acme-staging-v02.api.letsencrypt.org/directory"
+      )
+      email           = var.cert_issuer_config.email
+    }
+  )
 }
 
 resource "kubectl_manifest" "namespace_issuer" {
-  yaml_body = data.template_file.issuer.rendered
+  yaml_body = local.issuer_template
 }
 
 resource "kubernetes_secret_v1" "namespace-cert-replicator" {
