@@ -1,6 +1,37 @@
-data "template_file" "cert_manager_template" {
-  template = file("./templates/cert-manager-values.yaml")
+locals {
+  cert_manager_template = templatefile(
+    "${path.module}/templates/cert-manager-values.yaml",
+    {}
+  )
+
+  cluster_wildcard_issuer = templatefile(
+    "${path.module}/templates/cluster-issuer.yaml",
+    {
+      DNS                 = var.accessibility.domain_name
+      cert_issuer_url     = try(
+          var.cert_issuer_config.env == "stage" ?
+          "https://acme-staging-v02.api.letsencrypt.org/directory" :
+          "https://acme-v02.api.letsencrypt.org/directory",
+        "https://acme-staging-v02.api.letsencrypt.org/directory"
+      )
+      location            = var.app_region
+      RESOURCE_GROUP_NAME = var.resource_group_name
+      SUBSCRIPTION_ID     = data.azurerm_subscription.current.subscription_id
+      CLIENT_ID           = data.azurerm_kubernetes_cluster.cluster.kubelet_identity[0].client_id
+      email               = var.cert_issuer_config.email
+      dns_zone_list       = join(",", var.dns_zone_list)
+    }
+  )
+
+  cluster_wildcard_certificate = templatefile(
+    "${path.module}/templates/cluster-certificate.yaml",
+    {
+      dns = local.domain_name
+    }
+  )
 }
+
+
 
 resource "azurerm_role_assignment" "cert-manager" {
   scope                = data.azurerm_dns_zone.dns_zone.id
@@ -37,38 +68,15 @@ resource "helm_release" "cert_manager" {
     value = "true"
   }
 
-  values = [data.template_file.cert_manager_template.rendered]
-}
-
-data "template_file" "cluster_wildcard_issuer" {
-  template = file("./templates/cluster-issuer.yaml")
-  vars     = {
-    DNS                 = var.accessibility.domain_name
-    cert_issuer_url     = try(var.cert_issuer_config.env == "stage" ? "https://acme-staging-v02.api.letsencrypt.org/directory" : "https://acme-v02.api.letsencrypt.org/directory","https://acme-staging-v02.api.letsencrypt.org/directory")
-    location            = var.app_region
-    RESOURCE_GROUP_NAME = var.resource_group_name
-    SUBSCRIPTION_ID     = data.azurerm_subscription.current.subscription_id
-    CLIENT_ID           = data.azurerm_kubernetes_cluster.cluster.kubelet_identity[0].client_id
-    email               = var.cert_issuer_config.email
-    dns_zone_list       = join(",", var.dns_zone_list)
-  }
-  depends_on = [helm_release.cert_manager, kubernetes_namespace.monitoring]
+  values = [local.cert_manager_template]
 }
 
 resource "kubectl_manifest" "cluster_wildcard_issuer" {
-  yaml_body = data.template_file.cluster_wildcard_issuer.rendered
-}
-
-data "template_file" "cluster_wildcard_certificate" {
-  template = file("./templates/cluster-certificate.yaml")
-  vars     = {
-    dns       = local.domain_name
-  }
-  depends_on = [kubectl_manifest.cluster_wildcard_issuer]
+  yaml_body = local.cluster_wildcard_issuer
 }
 
 resource "kubectl_manifest" "cluster_wildcard_certificate" {
-  yaml_body = data.template_file.cluster_wildcard_certificate.rendered
+  yaml_body = local.cluster_wildcard_certificate
 }
 
 resource "kubernetes_secret_v1" "certificate_replicator" {

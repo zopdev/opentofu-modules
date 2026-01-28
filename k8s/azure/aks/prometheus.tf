@@ -66,40 +66,55 @@ locals{
   }] : []
 
   remote_write_config = concat(local.remote_write_config_list, local.default_remote_write_config)
-}
+  prom_template = local.prometheus_enable ? templatefile(
+    "${path.module}/templates/prometheus-values.yaml",
+    {
+      PROMETHEUS_DISK_SIZE          = try(var.observability_config.prometheus.persistence.disk_size != null ? var.observability_config.prometheus.persistence.disk_size : "50Gi", "50Gi")
+      PROMETHEUS_RETENTION_SIZE     = try(var.observability_config.prometheus.persistence.retention_size != null ? var.observability_config.prometheus.persistence.retention_size : "45GB", "45GB")
+      PROMETHEUS_RETENTION_DURATION = try(var.observability_config.prometheus.persistence.retention_duration != null ? var.observability_config.prometheus.persistence.retention_duration : "10d", "10d")
+      CLUSTER_NAME                  = var.app_name
+      DOMAIN_NAME                   = var.accessibility.domain_name
+      REMOTE_WRITE_CONFIGS          = jsonencode(local.remote_write_config)
+      ALERTS_ENABLED                = jsonencode(local.cluster_moogsoft_alerts) != "" || jsonencode(local.namespace_teams_webhook) != "" || jsonencode(local.cluster_teams_alerts) != "" || jsonencode(local.google_chat_alerts) != "" || jsonencode(local.cluster_slack_alerts) != "" || jsonencode(local.cluster_webhook_alerts) != "" ? true : false
+      MOOGSOFT_ALERTS_ENABLED       = local.cluster_moogsoft_alerts != {} ? true : false
+      MS_TEAMS_ALERT_ENABLED        = jsonencode(local.namespace_teams_webhook) != "" || jsonencode(local.cluster_teams_alerts) != "" ? true : false
+      MOOGSOFT_ENDPOINT_URL         = jsonencode(local.cluster_moogsoft_alerts)
+      MOOGSOFT_ENDPOINT_API_KEY     = var.moogsoft_endpoint_api_key
+      MOOGSOFT_USERNAME             = var.moogsoft_username
+      teams_webhook_alerts          = jsonencode(local.cluster_alerts)
+      cluster_teams_alerts          = jsonencode(local.cluster_alerts_webhook)
+      cluster_moogsoft_alerts       = jsonencode(local.cluster_moogsoft_alerts)
+      GOOGLE_CHAT_ALERTS_ENABLED    = local.google_chat_alerts != "" ? true : false
+      GOOGLE_CHAT_CONFIGS           = jsonencode(local.google_chat_alerts)
+      PAGER_DUTY_ALERTS_ENABLED     = local.cluster_pagerduty_alerts != "" ? true : false
+      PAGER_DUTY_KEY                = var.pagerduty_integration_key
+      PAGER_DUTY_ENDPOINT_URL       = jsonencode(local.cluster_pagerduty_alerts)
+      GRAFANA_HOST                  = local.grafana_host
+      SLACK_CHAT_ALERTS_ENABLED     = local.cluster_slack_alerts != "" ? true : false
+      WEBHOOK_ALERTS_ENABLED        = local.cluster_webhook_alerts != "" ? true : false
+      SLACK_CONFIGS                 = jsonencode(local.cluster_slack_alerts)
+      WEBHOOK_CONFIGS               = jsonencode(local.cluster_webhook_alerts)
+    }
+  ) : ""
 
-
-data "template_file" "prom_template" {
-  count = local.prometheus_enable ? 1 : 0
-
-  template = file("./templates/prometheus-values.yaml")
-  vars     = {
-    PROMETHEUS_DISK_SIZE              = try(var.observability_config.prometheus.persistence.disk_size != null ? var.observability_config.prometheus.persistence.disk_size : "50Gi", "50Gi")
-    PROMETHEUS_RETENTION_SIZE         = try(var.observability_config.prometheus.persistence.retention_size != null ? var.observability_config.prometheus.persistence.retention_size : "45GB", "45GB")
-    PROMETHEUS_RETENTION_DURATION     = try(var.observability_config.prometheus.persistence.retention_duration != null ? var.observability_config.prometheus.persistence.retention_duration : "10d", "10d")
-    CLUSTER_NAME                      = var.app_name
-    DOMAIN_NAME                       = var.accessibility.domain_name
-    REMOTE_WRITE_CONFIGS              = jsonencode(local.remote_write_config)
-    ALERTS_ENABLED                    = jsonencode(local.cluster_moogsoft_alerts) != "" || jsonencode(local.namespace_teams_webhook) != "" || jsonencode(local.cluster_teams_alerts) != "" || jsonencode(local.google_chat_alerts) != "" || jsonencode(local.cluster_slack_alerts) != "" || jsonencode(local.cluster_webhook_alerts) != "" ? true : false
-    MOOGSOFT_ALERTS_ENABLED           = local.cluster_moogsoft_alerts == {} ? false : true
-    MS_TEAMS_ALERT_ENABLED            = jsonencode(local.namespace_teams_webhook) == "" && jsonencode(local.cluster_teams_alerts) == ""  ? false : true
-    MOOGSOFT_ENDPOINT_URL             = jsonencode(local.cluster_moogsoft_alerts)
-    MOOGSOFT_ENDPOINT_API_KEY         = var.moogsoft_endpoint_api_key
-    MOOGSOFT_USERNAME                 = var.moogsoft_username
-    teams_webhook_alerts              = jsonencode(local.cluster_alerts)
-    cluster_teams_alerts              = jsonencode(local.cluster_alerts_webhook)
-    cluster_moogsoft_alerts           = jsonencode(local.cluster_moogsoft_alerts)
-    GOOGLE_CHAT_ALERTS_ENABLED        = local.google_chat_alerts == "" ? false : true
-    GOOGLE_CHAT_CONFIGS               = jsonencode(local.google_chat_alerts)
-    PAGER_DUTY_ALERTS_ENABLED         = local.cluster_pagerduty_alerts == "" ? false : true
-    PAGER_DUTY_KEY                    = var.pagerduty_integration_key
-    PAGER_DUTY_ENDPOINT_URL           = jsonencode(local.cluster_pagerduty_alerts)
-    GRAFANA_HOST                      = local.grafana_host
-    SLACK_CHAT_ALERTS_ENABLED         = local.cluster_slack_alerts == "" ? false : true
-    WEBHOOK_ALERTS_ENABLED            = local.cluster_webhook_alerts == "" ? false : true
-    SLACK_CONFIGS                     = jsonencode(local.cluster_slack_alerts)
-    WEBHOOK_CONFIGS                   = jsonencode(local.cluster_webhook_alerts)
-  }
+  cluster_alerts_config = templatefile(
+    "${path.module}/templates/cluster-level-alerts.yaml",
+    {
+      cluster_memory_usage_request_underutilisation_threshold = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.memory_underutilisation != null ? var.cluster_alert_thresholds.memory_underutilisation : 20)
+      cluster_cpu_usage_request_underutilisation_threshold    = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.cpu_underutilisation != null ? var.cluster_alert_thresholds.cpu_underutilisation : 20)
+      cluster_node_count_max_value                             = var.node_config.max_count
+      cluster_node_count_threshold                             = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.node_count != null ? var.cluster_alert_thresholds.node_count : 80)
+      cluster_pod_count_threshold                               = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.pod_count != null ? var.cluster_alert_thresholds.pod_count: 80)
+      cluster_total_cpu_utilization_threshold                  = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.cpu_utilisation != null ? var.cluster_alert_thresholds.cpu_utilisation: 80)
+      cluster_total_memory_utilization_threshold               = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.memory_utilisation != null ? var.cluster_alert_thresholds.memory_utilisation: 20)
+      cluster_disk_utilization_threshold                        = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.disk_utilization != null ? var.cluster_alert_thresholds.disk_utilization: 80)
+      cluster_name                                             = local.cluster_name
+      cortex_enabled                                           = try(var.observability_config.cortex == null ? false : var.observability_config.cortex.enable, false)
+      nginx_5xx_percentage_threshold                           = var.cluster_alert_thresholds == null ? 5 : (var.cluster_alert_thresholds.nginx_5xx_percentage_threshold != null ? var.cluster_alert_thresholds.nginx_5xx_percentage_threshold: 5)
+      cortex_disk_utilization_threshold                        = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.cortex_disk_utilization_threshold != null ? var.cluster_alert_thresholds.cortex_disk_utilization_threshold : 80)
+      prometheus_disk_utilization_threshold                    = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.prometheus_disk_utilization_threshold != null ? var.cluster_alert_thresholds.prometheus_disk_utilization_threshold : 80)
+    }
+  )
 }
 
 resource "helm_release" "prometheus" {
@@ -114,7 +129,7 @@ resource "helm_release" "prometheus" {
   repository = "https://prometheus-community.github.io/helm-charts"
 
   values = [
-    data.template_file.prom_template[count.index].rendered
+    local.prom_template[count.index]
   ]
   depends_on = [azurerm_public_ip.app_public_ip]
 }
@@ -135,28 +150,9 @@ resource "helm_release" "alerts_teams" {
   depends_on = [helm_release.prometheus]
 }
 
-data "template_file" "cluster-alerts" {
-  template = file("./templates/cluster-level-alerts.yaml")
-  vars     = {
-    cluster_memory_usage_request_underutilisation_threshold = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.memory_underutilisation != null ? var.cluster_alert_thresholds.memory_underutilisation : 20)
-    cluster_cpu_usage_request_underutilisation_threshold = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.cpu_underutilisation != null ? var.cluster_alert_thresholds.cpu_underutilisation : 20)
-    cluster_node_count_max_value = var.node_config.max_count
-    cluster_node_count_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.node_count != null ? var.cluster_alert_thresholds.node_count : 80)
-    cluster_pod_count_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.pod_count != null ? var.cluster_alert_thresholds.pod_count: 80)
-    cluster_total_cpu_utilization_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.cpu_utilisation != null ? var.cluster_alert_thresholds.cpu_utilisation: 80)
-    cluster_total_memory_utilization_threshold = var.cluster_alert_thresholds == null ? 20 : (var.cluster_alert_thresholds.memory_utilisation != null ? var.cluster_alert_thresholds.memory_utilisation: 20)
-    cluster_disk_utilization_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.disk_utilization != null ? var.cluster_alert_thresholds.disk_utilization: 80)
-    cluster_name   = local.cluster_name
-    cortex_enabled = try(var.observability_config.cortex == null ? false : var.observability_config.cortex.enable, false)
-    nginx_5xx_percentage_threshold = var.cluster_alert_thresholds == null ? 5 : (var.cluster_alert_thresholds.nginx_5xx_percentage_threshold != null ? var.cluster_alert_thresholds.nginx_5xx_percentage_threshold: 5)
-    cortex_disk_utilization_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.cortex_disk_utilization_threshold != null ? var.cluster_alert_thresholds.cortex_disk_utilization_threshold : 80)
-    prometheus_disk_utilization_threshold = var.cluster_alert_thresholds == null ? 80 : (var.cluster_alert_thresholds.prometheus_disk_utilization_threshold != null ? var.cluster_alert_thresholds.prometheus_disk_utilization_threshold : 80)
-  }
-}
-
 resource "kubectl_manifest" "cluster-alerts" {
   count      = local.grafana_enable ? 1 : 0
-  yaml_body = data.template_file.cluster-alerts.rendered
+  yaml_body = local.cluster_alerts_config
   depends_on = [helm_release.prometheus]
 }
 
