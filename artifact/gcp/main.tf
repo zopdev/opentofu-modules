@@ -14,7 +14,7 @@ resource "google_artifact_registry_repository" "gcr_repo" {
   format        = "DOCKER"
 
   docker_config {
-    immutable_tags = var.image_tags
+    immutable_tags = var.immutable_image_tags
   }
 
   depends_on = [google_project_service.enable_artifact_registry]
