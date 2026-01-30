@@ -89,8 +89,7 @@ locals {
       secret_name           = "openobserve-gcs-creds-${inst.name}"
       root_user_email       = "admin@zop.dev"
       root_user_password    = random_password.openobserve_password[inst.name].result
-      additional_env_vars   = length(try(inst.env, [])) > 0 ?
-        join("\n", [for env in inst.env : "  - name: ${env.name}\n    value: \"${env.value}\""]) : ""
+      additional_env_vars   = length(try(inst.env, [])) > 0 ? join("\n", [for env in inst.env : "  - name: ${env.name}\n    value: \"${env.value}\""]) : ""
     }) : null
   }
 }
