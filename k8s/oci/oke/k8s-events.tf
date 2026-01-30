@@ -30,23 +30,18 @@ locals {
   }] : []
 
   all_loki_receivers = concat(local.loki_receivers,local.observability_loki_recievers)
-}
 
-data "template_file" "k8s_event_exporter" {
-  count = local.enable_k8s_event_exporter || local.enable_loki ? 1 : 0
-
-  template = file("./templates/event-exporter-values.yaml")
-  vars     = {
+  k8s_event_exporter_values = (local.enable_k8s_event_exporter || local.enable_loki) ? templatefile("${path.module}/templates/event-exporter-values.yaml", {
     CLUSTER_NAME             = local.cluster_name
-    LOG_LEVEL                = try(var.observability_config.kubernetes_event_exporter.log_level != null ? var.observability_config.kubernetes_event_exporter.log_level : "error" , "error")
-    MAX_EVENT_AGE_SECONDS    = try(var.observability_config.kubernetes_event_exporter.max_event_age_second != null ? var.observability_config.kubernetes_event_exporter.max_event_age_second : "150" , "150")
+    LOG_LEVEL                = try(var.observability_config.kubernetes_event_exporter.log_level, "error")
+    MAX_EVENT_AGE_SECONDS    = try(var.observability_config.kubernetes_event_exporter.max_event_age_second, "150")
     LOKI_RECEIVER_CONFIGS    = jsonencode(local.all_loki_receivers)
     WEBHOOK_RECEIVER_CONFIGS = jsonencode(local.webhook_receivers)
-    LIMIT_CPU                = try(var.observability_config.kubernetes_event_exporter.resource.limit_cpu != null ? var.observability_config.kubernetes_event_exporter.resource.limit_cpu : "400m", "400m")
-    LIMIT_MEMORY             = try(var.observability_config.kubernetes_event_exporter.resource.limit_memory != null ? var.observability_config.kubernetes_event_exporter.resource.limit_memory : "250Mi", "250Mi")
-    REQUEST_CPU              = try(var.observability_config.kubernetes_event_exporter.resource.request_cpu != null ? var.observability_config.kubernetes_event_exporter.resource.request_cpu : "100m", "100m")
-    REQUEST_MEMORY           = try(var.observability_config.kubernetes_event_exporter.resource.request_memory != null ? var.observability_config.kubernetes_event_exporter.resource.request_memory : "100Mi", "100Mi")
-  }
+    LIMIT_CPU                = try(var.observability_config.kubernetes_event_exporter.resource.limit_cpu, "400m")
+    LIMIT_MEMORY             = try(var.observability_config.kubernetes_event_exporter.resource.limit_memory, "250Mi")
+    REQUEST_CPU              = try(var.observability_config.kubernetes_event_exporter.resource.request_cpu, "100m")
+    REQUEST_MEMORY           = try(var.observability_config.kubernetes_event_exporter.resource.request_memory, "100Mi")
+  }) : null
 }
 
 resource "helm_release" "kubernetes_event_exporter" {
@@ -59,6 +54,6 @@ resource "helm_release" "kubernetes_event_exporter" {
   namespace  = helm_release.prometheus[0].namespace
 
   values = [
-    data.template_file.k8s_event_exporter[count.index].rendered
+    local.k8s_event_exporter_values[count.index]
   ]
 }

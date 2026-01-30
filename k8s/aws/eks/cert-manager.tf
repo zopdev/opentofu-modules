@@ -1,17 +1,43 @@
+locals {
+  cert_manager_template = templatefile(
+    "${path.module}/templates/cert-manager-values.yaml",
+    {
+      CLUSTER_NAME = local.cluster_name
+      role_arn    = aws_iam_role.cluster_issuer_role.arn
+    }
+  )
+
+  cluster_wildcard_issuer = templatefile(
+    "${path.module}/templates/cluster-issuer.yaml",
+    {
+      dns             = local.domain_name
+      cert_issuer_url = try(
+          var.cert_issuer_config.env == "stage"
+          ? "https://acme-staging-v02.api.letsencrypt.org/directory"
+          : "https://acme-v02.api.letsencrypt.org/directory",
+        "https://acme-staging-v02.api.letsencrypt.org/directory"
+      )
+      location    = var.app_region
+      zone_id     = data.aws_route53_zone.zone.0.zone_id
+      secret_name = "${local.cluster_name}-cluster-issuer-creds"
+      email       = var.cert_issuer_config.email
+    }
+  )
+
+  cluster_wildcard_certificate = templatefile(
+    "${path.module}/templates/cluster-certificate.yaml",
+    {
+      dns = local.domain_name
+    }
+  )
+}
+
 resource "null_resource" "wait_for_cluster" {
   provisioner "local-exec" {
     command = "sleep 60"  # Adjust the duration as needed
   }
 
   depends_on = [module.eks]
-}
-
-data "template_file" "cert_manager_template" {
-  template = file("./templates/cert-manager-values.yaml")
-  vars     = {
-    CLUSTER_NAME    = local.cluster_name
-    role_arn        = aws_iam_role.cluster_issuer_role.arn
-  }
 }
 
 resource "helm_release" "cert-manager" {
@@ -27,7 +53,7 @@ resource "helm_release" "cert-manager" {
     value = "true"
   }
 
-  values = [data.template_file.cert_manager_template.rendered]
+  values = [local.cert_manager_template]
 
   depends_on = [null_resource.wait_for_cluster]
 }
@@ -113,33 +139,12 @@ resource "kubernetes_secret" "cluster_issuer_credentials" {
   depends_on = [helm_release.cert-manager]
 }
 
-data "template_file" "cluster_wildcard_issuer" {
-  template = file("./templates/cluster-issuer.yaml")
-  vars     = {
-    dns             = local.domain_name
-    cert_issuer_url = try(var.cert_issuer_config.env == "stage" ? "https://acme-staging-v02.api.letsencrypt.org/directory" : "https://acme-v02.api.letsencrypt.org/directory","https://acme-staging-v02.api.letsencrypt.org/directory")
-    location        = var.app_region
-    zone_id         = data.aws_route53_zone.zone.0.zone_id
-    secret_name     = "${local.cluster_name}-cluster-issuer-creds"
-    email           = var.cert_issuer_config.email
-  }
-  depends_on = [helm_release.cert-manager,kubernetes_namespace.monitoring]
-}
-
 resource "kubectl_manifest" "cluster_wildcard_issuer" {
-  yaml_body = data.template_file.cluster_wildcard_issuer.rendered
-}
-
-data "template_file" "cluster_wildcard_certificate" {
-  template = file("./templates/cluster-certificate.yaml")
-  vars     = {
-    dns       = local.domain_name
-  }
-  depends_on = [kubectl_manifest.cluster_wildcard_issuer]
+  yaml_body = local.cluster_wildcard_issuer
 }
 
 resource "kubectl_manifest" "cluster_wildcard_certificate" {
-  yaml_body = data.template_file.cluster_wildcard_certificate.rendered
+  yaml_body = local.cluster_wildcard_certificate
 }
 
 resource "kubernetes_secret_v1" "certificate_replicator" {

@@ -74,26 +74,27 @@ resource "random_password" "openobserve_password" {
 }
 
 # Create template for OpenObserve values
-data "template_file" "openobserve_template" {
-  for_each = local.enable_openobserve ? { for instance in var.openobserve : instance.name => instance if instance.enable } : {}
-  
-  template = file("${path.module}/templates/openobserve-values.yaml")
-  vars = {
-    replica_count        = try(each.value.replicaCount, 1)
-    cpu_request          = "250m"
-    memory_request       = "1Gi"
-    cpu_limit           = "1"
-    memory_limit        = "2Gi"
-    storage_provider    = "gcs"
-    storage_region      = "auto"
-    storage_bucket_name = google_storage_bucket.openobserve_data[each.key].name
-    storage_access_key_path = "/app/key.json"
-    secret_name         = "openobserve-gcs-creds-${each.value.name}"
-    root_user_email     = "admin@zop.dev"
-    root_user_password  = random_password.openobserve_password[each.key].result
-    additional_env_vars = length(try(each.value.env, [])) > 0 ? join("\n", [for env in each.value.env : "  - name: ${env.name}\n    value: \"${env.value}\""]) : ""
+locals {
+  openobserve_template = {
+    for inst in var.openobserve : inst.name => inst.enable ? templatefile("${path.module}/templates/openobserve-values.yaml", {
+      replica_count         = try(inst.replicaCount, 1)
+      cpu_request           = "250m"
+      memory_request        = "1Gi"
+      cpu_limit             = "1"
+      memory_limit          = "2Gi"
+      storage_provider      = "gcs"
+      storage_region        = "auto"
+      storage_bucket_name   = google_storage_bucket.openobserve_data[inst.name].name
+      storage_access_key_path = "/app/key.json"
+      secret_name           = "openobserve-gcs-creds-${inst.name}"
+      root_user_email       = "admin@zop.dev"
+      root_user_password    = random_password.openobserve_password[inst.name].result
+      additional_env_vars   = length(try(inst.env, [])) > 0 ?
+        join("\n", [for env in inst.env : "  - name: ${env.name}\n    value: \"${env.value}\""]) : ""
+    }) : null
   }
 }
+
 
 # Deploy OpenObserve using Helm
 resource "helm_release" "openobserve" {
@@ -106,7 +107,7 @@ resource "helm_release" "openobserve" {
   namespace  = kubernetes_namespace.app_environments["openobserve"].metadata[0].name
 
   values = [
-    data.template_file.openobserve_template[each.key].rendered
+    local.openobserve_template[each.key]
   ]
 
   depends_on = [
