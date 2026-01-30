@@ -1,7 +1,8 @@
-data "template_file" "reloader_template" {
-  template = file("${path.module}/templates/reloader-values.yaml")
-  vars     = {
-  }
+locals {
+  reloader_template = templatefile(
+    "${path.module}/templates/reloader-values.yaml",
+    {}  # no vars
+  )
 }
 
 resource "helm_release" "reloader" {
@@ -11,7 +12,7 @@ resource "helm_release" "reloader" {
   version    = "1.0.60"
 
   values = [
-    data.template_file.reloader_template.rendered
+    local.reloader_template
   ]
 
   depends_on = [

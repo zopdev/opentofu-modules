@@ -68,29 +68,22 @@ locals {
     } if length(local.fluent_bit_slack) > 0
   ]
 
-}
-
-data template_file "fluent-bit"{
-  count    = local.fluent_bit_enable ? 1 : 0
-  template = file("./templates/fluent-bit-values.yaml")
-  vars     = {
-    "CLUSTER_NAME"    = local.cluster_name
-    "TAGS"            = join(",", [for key, value in local.common_tags : "${key}=${value}"])
-
-    "HTTP_SERVER" = "On"
-    "HTTP_PORT"   = "2020"
-
-    "READ_FROM_HEAD" = "Off"
-    "READ_FROM_TAIL" = "On"
-
-    fluent_bit_loki_outputs = jsonencode(local.fluent_bit_loki_outputs)
-    fluent_bit_http_outputs = jsonencode(local.fluent_bit_http_outputs)
+  fluent_bit_yaml = local.fluent_bit_enable ? templatefile("${path.module}/templates/fluent-bit-values.yaml", {
+    CLUSTER_NAME             = local.cluster_name
+    TAGS                     = join(",", [for key, value in local.common_tags : "${key}=${value}"])
+    HTTP_SERVER              = "On"
+    HTTP_PORT                = "2020"
+    READ_FROM_HEAD           = "Off"
+    READ_FROM_TAIL           = "On"
+    fluent_bit_loki_outputs   = jsonencode(local.fluent_bit_loki_outputs)
+    fluent_bit_http_outputs   = jsonencode(local.fluent_bit_http_outputs)
     fluent_bit_splunk_outputs = jsonencode(local.fluent_bit_splunk_outputs)
     fluent_bit_datadog_outputs = jsonencode(local.fluent_bit_datadog_outputs)
     fluent_bit_newrelic_outputs = jsonencode(local.fluent_bit_newrelic_outputs)
     fluent_bit_slack_outputs = jsonencode(local.fluent_bit_slack_outputs)
-  }
+  }) : null
 }
+
 
 resource "helm_release" "fluentbit-config" {
   count    = local.fluent_bit_enable ? 1 : 0
@@ -101,7 +94,7 @@ resource "helm_release" "fluentbit-config" {
   namespace  = kubernetes_namespace.monitoring.metadata.0.name
 
   values = [
-    data.template_file.fluent-bit[0].rendered
+    local.fluent_bit_yaml
   ]
   depends_on = [
     kubernetes_namespace.monitoring
