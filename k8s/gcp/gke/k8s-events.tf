@@ -35,14 +35,14 @@ locals {
     "${path.module}/templates/event-exporter-values.yaml",
     {
       CLUSTER_NAME             = local.cluster_name
-      LOG_LEVEL                = try(var.observability_config.kubernetes_event_exporter.log_level, "error")
-      MAX_EVENT_AGE_SECONDS    = try(var.observability_config.kubernetes_event_exporter.max_event_age_second, "150")
+      LOG_LEVEL                = coalesce(try(var.observability_config.kubernetes_event_exporter.log_level, null), "error")
+      MAX_EVENT_AGE_SECONDS    = coalesce(try(var.observability_config.kubernetes_event_exporter.max_event_age_second, null), "150")
       LOKI_RECEIVER_CONFIGS    = jsonencode(local.all_loki_receivers)
       WEBHOOK_RECEIVER_CONFIGS = jsonencode(local.webhook_receivers)
-      LIMIT_CPU                = try(var.observability_config.kubernetes_event_exporter.resource.limit_cpu, "400m")
-      LIMIT_MEMORY             = try(var.observability_config.kubernetes_event_exporter.resource.limit_memory, "250Mi")
-      REQUEST_CPU              = try(var.observability_config.kubernetes_event_exporter.resource.request_cpu, "100m")
-      REQUEST_MEMORY           = try(var.observability_config.kubernetes_event_exporter.resource.request_memory, "100Mi")
+      LIMIT_CPU                = coalesce(try(var.observability_config.kubernetes_event_exporter.resource.limit_cpu, null), "400m")
+      LIMIT_MEMORY             = coalesce(try(var.observability_config.kubernetes_event_exporter.resource.limit_memory, null), "250Mi")
+      REQUEST_CPU              = coalesce(try(var.observability_config.kubernetes_event_exporter.resource.request_cpu, null), "100m")
+      REQUEST_MEMORY           = coalesce(try(var.observability_config.kubernetes_event_exporter.resource.request_memory, null), "100Mi")
     }
   ) : ""
 }
