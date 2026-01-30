@@ -44,7 +44,7 @@ variable "public_ingress" {
 variable "kubernetes_version" {
   description = "Kubernetes version of the AKS Cluster"
   type        = string
-  default     = "1.31.10"
+  default     = "1.32.0"
 }
 
 variable "user_access" {
@@ -580,6 +580,20 @@ variable "observability_config" {
         metrics_ingestion_time_range_slack = optional(string)
       }))
     }))
+    openobserve = optional(list(object({
+      enable = bool
+      name = string
+      replicaCount = optional(number, 2)
+      min_cpu = optional(string, "250m")
+      max_cpu = optional(string, "1")
+      min_memory = optional(string, "1Gi")
+      max_memory = optional(string, "2Gi")
+      enable_ingress = optional(bool, true)
+      env = optional(list(object({
+        name = string
+        value = string
+      })), [])
+    })), [])
   })
   default = null
 }
