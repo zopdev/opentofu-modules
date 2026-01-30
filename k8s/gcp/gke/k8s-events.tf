@@ -57,6 +57,6 @@ resource "helm_release" "kubernetes_event_exporter" {
   namespace  = helm_release.prometheus[0].namespace
 
   values = [
-    local.k8s_event_exporter_template[count.index]
+    local.k8s_event_exporter_template
   ]
 }
