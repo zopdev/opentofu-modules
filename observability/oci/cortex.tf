@@ -40,7 +40,6 @@ locals {
   }) : null
 }
 
-
 resource "oci_objectstorage_bucket" "cortex_data" {
     count           = local.enable_cortex ? 1 : 0
     compartment_id  = var.provider_id
@@ -74,8 +73,6 @@ resource "null_resource" "cleanup_cortex_bucket" {
 
   depends_on = [oci_objectstorage_bucket.cortex_data]
 }
-
-
 
 resource "kubernetes_secret" "cortex-oci-credentials" {
   count         = local.enable_cortex ? 1 : 0

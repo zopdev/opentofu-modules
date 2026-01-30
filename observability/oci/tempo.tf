@@ -55,7 +55,6 @@ locals {
   ) : null
 }
 
-
 resource "oci_objectstorage_bucket" "tempo_data" {
     count           = local.enable_tempo ? 1 : 0
     compartment_id  = var.provider_id

@@ -19,8 +19,7 @@ data "kubernetes_service" "ingress-controller" {
 
 provider "aws" {
   alias  = "shared-services"
-  region = "us-east-1"
-  # any other credentials/configuration you had before
+  region = var.app_region
 }
 
 resource "aws_route53_record" "c_name_record" {

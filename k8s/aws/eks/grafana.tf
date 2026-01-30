@@ -46,7 +46,6 @@ locals {
   ) : null
 }
 
-
 resource "random_password" "observability_admin" {
   count = local.grafana_enable ?  1 : 0
   length   = 16

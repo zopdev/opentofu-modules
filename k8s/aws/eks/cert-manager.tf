@@ -1,11 +1,3 @@
-resource "null_resource" "wait_for_cluster" {
-  provisioner "local-exec" {
-    command = "sleep 60"  # Adjust the duration as needed
-  }
-
-  depends_on = [module.eks]
-}
-
 locals {
   cert_manager_template = templatefile(
     "${path.module}/templates/cert-manager-values.yaml",
@@ -14,6 +6,38 @@ locals {
       role_arn    = aws_iam_role.cluster_issuer_role.arn
     }
   )
+
+  cluster_wildcard_issuer = templatefile(
+    "${path.module}/templates/cluster-issuer.yaml",
+    {
+      dns             = local.domain_name
+      cert_issuer_url = try(
+          var.cert_issuer_config.env == "stage"
+          ? "https://acme-staging-v02.api.letsencrypt.org/directory"
+          : "https://acme-v02.api.letsencrypt.org/directory",
+        "https://acme-staging-v02.api.letsencrypt.org/directory"
+      )
+      location    = var.app_region
+      zone_id     = data.aws_route53_zone.zone.0.zone_id
+      secret_name = "${local.cluster_name}-cluster-issuer-creds"
+      email       = var.cert_issuer_config.email
+    }
+  )
+
+  cluster_wildcard_certificate = templatefile(
+    "${path.module}/templates/cluster-certificate.yaml",
+    {
+      dns = local.domain_name
+    }
+  )
+}
+
+resource "null_resource" "wait_for_cluster" {
+  provisioner "local-exec" {
+    command = "sleep 60"  # Adjust the duration as needed
+  }
+
+  depends_on = [module.eks]
 }
 
 resource "helm_release" "cert-manager" {
@@ -113,32 +137,6 @@ resource "kubernetes_secret" "cluster_issuer_credentials" {
   }
 
   depends_on = [helm_release.cert-manager]
-}
-
-locals {
-  cluster_wildcard_issuer = templatefile(
-    "${path.module}/templates/cluster-issuer.yaml",
-    {
-      dns             = local.domain_name
-      cert_issuer_url = try(
-          var.cert_issuer_config.env == "stage"
-          ? "https://acme-staging-v02.api.letsencrypt.org/directory"
-          : "https://acme-v02.api.letsencrypt.org/directory",
-        "https://acme-staging-v02.api.letsencrypt.org/directory"
-      )
-      location    = var.app_region
-      zone_id     = data.aws_route53_zone.zone.0.zone_id
-      secret_name = "${local.cluster_name}-cluster-issuer-creds"
-      email       = var.cert_issuer_config.email
-    }
-  )
-
-  cluster_wildcard_certificate = templatefile(
-    "${path.module}/templates/cluster-certificate.yaml",
-    {
-      dns = local.domain_name
-    }
-  )
 }
 
 resource "kubectl_manifest" "cluster_wildcard_issuer" {

@@ -90,7 +90,6 @@ locals {
   ) : null
 }
 
-
 resource "helm_release" "fluentbit-config" {
   count    = local.fluent_bit_enable ? 1 : 0
   repository = "https://fluent.github.io/helm-charts"

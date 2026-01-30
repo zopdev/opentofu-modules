@@ -55,7 +55,6 @@ locals {
   }) : null
 }
 
-
 resource "azurerm_storage_container" "tempo_container" {
   count                 = local.enable_tempo ? 1 : 0
   name                  = "${local.cluster_name}-tempo-container-${var.observability_suffix}"

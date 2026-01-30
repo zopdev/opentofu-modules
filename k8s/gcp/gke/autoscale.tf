@@ -10,7 +10,6 @@ locals {
   )
 }
 
-
 resource "helm_release" "auto_scaler" {
   chart      = "cluster-autoscaler"
   repository = "https://kubernetes.github.io/autoscaler"

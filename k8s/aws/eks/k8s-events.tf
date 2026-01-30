@@ -81,7 +81,6 @@ locals {
   ) : null
 }
 
-
 resource "helm_release" "kubernetes_event_exporter" {
   count = local.enable_k8s_event_exporter || local.enable_loki ? 1 : 0
 

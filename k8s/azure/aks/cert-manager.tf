@@ -31,8 +31,6 @@ locals {
   )
 }
 
-
-
 resource "azurerm_role_assignment" "cert-manager" {
   scope                = data.azurerm_dns_zone.dns_zone.id
   role_definition_name = "DNS Zone Contributor"

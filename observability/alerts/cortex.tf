@@ -11,7 +11,6 @@ locals {
   ) : null
 }
 
-
 resource "kubectl_manifest" "cortex_alerts" {
   count = local.configure_cortex_alerts ? 1 : 0
   yaml_body  = local.cortex_alerts

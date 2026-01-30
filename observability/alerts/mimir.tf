@@ -11,7 +11,6 @@ locals {
   ) : null
 }
 
-
 resource "kubectl_manifest" "mimir_alerts" {
   count = local.configure_mimir_alerts ? 1 : 0
   yaml_body  = local.mimir_alerts

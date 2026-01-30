@@ -70,7 +70,6 @@ resource "google_project_iam_member" "wildcard_dns_solver_iam" {
 }
 
 
-
 resource "helm_release" "cert-manager" {
   name             = "cert-manager"
   repository       = "https://charts.jetstack.io"
