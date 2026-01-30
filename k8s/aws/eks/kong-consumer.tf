@@ -115,7 +115,7 @@
 #
 #resource "kubectl_manifest" "consumer" {
 #  for_each   = {for k in local.kong_consumer_list : k.name => k}
-#  yaml_body  = data.template_file.consumer_template[each.key].rendered
+#  yaml_body  = local.consumer_template[each.key]
 #  depends_on = [kubernetes_secret.kong_acl_group]
 #}
 #
@@ -133,6 +133,6 @@
 #
 #resource "kubectl_manifest" "acl_allow_group" {
 #  for_each   = {for k in local.kong_acl_list : k.name => k}
-#  yaml_body  = data.template_file.acl_template[each.key].rendered
+#  yaml_body  = local.acl_template[each.key]
 #  depends_on = [kubectl_manifest.consumer]
 #}

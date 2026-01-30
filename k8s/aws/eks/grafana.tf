@@ -7,51 +7,49 @@ locals {
   grafana_enable            = try(var.observability_config.grafana != null ? var.observability_config.grafana.enable : false, false)
   grafana_host              = try(var.observability_config.grafana.url != null ? var.observability_config.grafana.url : (local.domain_name != "" && !var.public_ingress ?  "grafana.${local.domain_name}" : ""), "")
 
+  grafana_template = local.grafana_enable ? templatefile(
+    "${path.module}/templates/grafana-values.yaml",
+    {
+      NAMESPACE                         = "monitoring"
+      GRAFANA_HOST                      = local.grafana_host
+      GRAFANA_ENABLED                   = local.grafana_enable
+      GRAFANA_TLS_HOST                  = "*.${local.domain_name}"
+      GRAFANA_OBS_ADMIN_PASSWORD        = try(local.grafana_enable ? try(random_password.observability_admin.0.result, "") : "", "")
+      CLUSTER_NAME                      = var.app_name
+      PERSISTENCE_TYPE_DB               = try(var.observability_config.grafana.persistence.type == "db" ? true : false, false)
+      PERSISTENCE_TYPE_PVC              = try(var.observability_config.grafana.persistence.type == "pvc" ? true : false, false)
+      PERSISTENCE_DISK_SIZE             = try(var.observability_config.grafana.persistence.disk_size != null ? var.observability_config.grafana.persistence.disk_size : "10Gi", "10Gi")
+      GRAFANA_DB_NAME                   = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? "grafana" : "", "")
+      GRAFANA_DB_TYPE                   = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? module.rds[0].db_type : "", "")
+      GRAFANA_DB_HOST                   = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? module.rds[0].db_url : "", "")
+      GRAFANA_DB_PASSWORD               = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? module.rds[0].db_password : "", "")
+      GRAFANA_DB_USER                   = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? module.rds[0].db_admin_user : "", "")
+      GRAFANA_MIN_REPLICA               = try(var.observability_config.grafana.min_replica != null ? var.observability_config.grafana.min_replica : 1, 1)
+      GRAFANA_MAX_REPLICA               = try(var.observability_config.grafana.max_replica != null ? var.observability_config.grafana.max_replica : 10, 10)
+      GRAFANA_REQUEST_MEMORY            = try(var.observability_config.grafana.request_memory != null ? var.observability_config.grafana.request_memory : "100Mi", "100Mi")
+      GRAFANA_REQUEST_CPU               = try(var.observability_config.grafana.request_cpu != null ? var.observability_config.grafana.request_cpu : "100m", "100m")
+      GRAFANA_LIMIT_MEMORY              = try(var.observability_config.grafana.limit_memory != null ? var.observability_config.grafana.limit_memory: "500Mi", "500Mi")
+      GRAFANA_LIMIT_CPU                 = try(var.observability_config.grafana.limit_cpu != null ? var.observability_config.grafana.limit_cpu : "500m", "500m")
+      GRAFANA_DASHBOARD_LIMIT_MEMORY    = try(var.observability_config.grafana.dashboard.limit_memory != null ? var.observability_config.grafana.dashboard.limit_memory : "512Mi", "512Mi")
+      GRAFANA_DASHBOARD_LIMIT_CPU       = try(var.observability_config.grafana.dashboard.limit_cpu != null ? var.observability_config.grafana.dashboard.limit_cpu : "512m", "512m")
+      GRAFANA_DASHBOARD_REQUEST_MEMORY  = try(var.observability_config.grafana.dashboard.request_memory != null ? var.observability_config.grafana.dashboard.request_memory : "256Mi", "256Mi")
+      GRAFANA_DASHBOARD_REQUEST_CPU     = try(var.observability_config.grafana.dashboard.request_cpu != null ? var.observability_config.grafana.dashboard.request_cpu : "256m", "256m")
+      GRAFANA_DATASOURCE_LIMIT_MEMORY   = try(var.observability_config.grafana.datasource.limit_memory != null ? var.observability_config.grafana.datasource.limit_memory : "512Mi", "512Mi")
+      GRAFANA_DATASOURCE_LIMIT_CPU      = try(var.observability_config.grafana.datasource.limit_cpu != null ? var.observability_config.grafana.datasource.limit_cpu : "512m", "512m")
+      GRAFANA_DATASOURCE_REQUEST_MEMORY = try(var.observability_config.grafana.datasource.request_memory != null ? var.observability_config.grafana.datasource.request_memory : "256Mi", "256Mi")
+      GRAFANA_DATASOURCE_REQUEST_CPU    = try(var.observability_config.grafana.datasource.request_cpu != null ? var.observability_config.grafana.datasource.request_cpu : "256m", "256m")
+      ENABLE_SSO                        = try(var.observability_config.grafana.configs != null ? (var.observability_config.grafana.configs.enable_sso != null ? var.observability_config.grafana.configs.enable_sso : false) : false, false)
+      ALLOWED_DOMAINS                   = local.grafana_enable ? local.grafana_allowed_domains : ""
+      OAUTH_ID                          = try(var.observability_config.grafana.configs != null ? (var.observability_config.grafana.configs.enable_sso != null ? data.aws_secretsmanager_secret_version.oauth_client_id[0].secret_string : null) : null, null)
+      OAUTH_SECRET                      = try(var.observability_config.grafana.configs != null ? (var.observability_config.grafana.configs.enable_sso != null ? data.aws_secretsmanager_secret_version.oauth_client_secret[0].secret_string : null) : null, null)
+    }
+  ) : null
 }
 
 resource "random_password" "observability_admin" {
   count = local.grafana_enable ?  1 : 0
   length   = 16
   special  = false
-}
-
-data "template_file" "grafana_template" {
-  count = local.grafana_enable ? 1 : 0
-  template = file("./templates/grafana-values.yaml")
-  vars = {
-    NAMESPACE                         = "monitoring"
-    GRAFANA_HOST                      = local.grafana_host
-    GRAFANA_ENABLED                   = local.grafana_enable
-    GRAFANA_TLS_HOST                  = "*.${local.domain_name}"
-    GRAFANA_OBS_ADMIN_PASSWORD        = try(local.grafana_enable ? try(random_password.observability_admin.0.result, "") : "", "")
-    CLUSTER_NAME                      = var.app_name
-    PERSISTENCE_TYPE_DB               = try(var.observability_config.grafana.persistence.type == "db" ? true : false, false)
-    PERSISTENCE_TYPE_PVC              = try(var.observability_config.grafana.persistence.type == "pvc" ? true : false, false)
-    PERSISTENCE_DISK_SIZE             = try(var.observability_config.grafana.persistence.disk_size != null ? var.observability_config.grafana.persistence.disk_size : "10Gi", "10Gi")
-    GRAFANA_DB_NAME                   = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? "grafana" : "", "")
-    GRAFANA_DB_TYPE                   = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? module.rds[0].db_type : "", "")
-    GRAFANA_DB_HOST                   = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? module.rds[0].db_url : "", "")
-    GRAFANA_DB_PASSWORD               = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? module.rds[0].db_password : "", "")
-    GRAFANA_DB_USER                   = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? module.rds[0].db_admin_user : "", "")
-    GRAFANA_MIN_REPLICA               = try(var.observability_config.grafana.min_replica != null ? var.observability_config.grafana.min_replica : 1, 1)
-    GRAFANA_MAX_REPLICA               = try(var.observability_config.grafana.max_replica != null ? var.observability_config.grafana.max_replica : 10, 10)
-    GRAFANA_REQUEST_MEMORY            = try(var.observability_config.grafana.request_memory != null ? var.observability_config.grafana.request_memory : "100Mi", "100Mi")
-    GRAFANA_REQUEST_CPU               = try( var.observability_config.grafana.request_cpu != null ? var.observability_config.grafana.request_cpu : "100m", "100m")
-    GRAFANA_LIMIT_MEMORY              = try(var.observability_config.grafana.limit_memory != null ? var.observability_config.grafana.limit_memory: "500Mi", "500Mi")
-    GRAFANA_LIMIT_CPU                 = try( var.observability_config.grafana.limit_cpu != null ? var.observability_config.grafana.limit_cpu : "500m", "500m")
-    GRAFANA_DASHBOARD_LIMIT_MEMORY    = try(var.observability_config.grafana.dashboard.limit_memory != null ? var.observability_config.grafana.dashboard.limit_memory : "512Mi", "512Mi")
-    GRAFANA_DASHBOARD_LIMIT_CPU       = try(var.observability_config.grafana.dashboard.limit_cpu != null ? var.observability_config.grafana.dashboard.limit_cpu : "512m", "512m")
-    GRAFANA_DASHBOARD_REQUEST_MEMORY  = try(var.observability_config.grafana.dashboard.request_memory != null ? var.observability_config.grafana.dashboard.request_memory : "256Mi", "256Mi")
-    GRAFANA_DASHBOARD_REQUEST_CPU     = try(var.observability_config.grafana.dashboard.request_cpu != null ? var.observability_config.grafana.dashboard.request_cpu : "256m", "256m")
-    GRAFANA_DATASOURCE_LIMIT_MEMORY   = try(var.observability_config.grafana.datasource.limit_memory != null ? var.observability_config.grafana.datasource.limit_memory : "512Mi", "512Mi")
-    GRAFANA_DATASOURCE_LIMIT_CPU      = try(var.observability_config.grafana.datasource.limit_cpu != null ? var.observability_config.grafana.datasource.limit_cpu : "512m", "512m")
-    GRAFANA_DATASOURCE_REQUEST_MEMORY = try(var.observability_config.grafana.datasource.request_memory != null ? var.observability_config.grafana.datasource.request_memory : "256Mi", "256Mi")
-    GRAFANA_DATASOURCE_REQUEST_CPU    = try(var.observability_config.grafana.datasource.request_cpu != null ? var.observability_config.grafana.datasource.request_cpu : "256m", "256m")
-    ENABLE_SSO                        = try(var.observability_config.grafana.configs != null ? (var.observability_config.grafana.configs.enable_sso != null ? var.observability_config.grafana.configs.enable_sso : false) :false, false)
-    ALLOWED_DOMAINS                   = local.grafana_enable ? local.grafana_allowed_domains : ""
-    OAUTH_ID                          = try(var.observability_config.grafana.configs != null ? (var.observability_config.grafana.configs.enable_sso != null ? data.aws_secretsmanager_secret_version.oauth_client_id[0].secret_string : null) : null, null)
-    OAUTH_SECRET                      = try(var.observability_config.grafana.configs != null ? (var.observability_config.grafana.configs.enable_sso != null ? data.aws_secretsmanager_secret_version.oauth_client_secret[0].secret_string : null) : null, null)
-  }
 }
 
 resource "helm_release" "grafana" {
@@ -65,7 +63,7 @@ resource "helm_release" "grafana" {
   repository = "https://grafana.github.io/helm-charts"
 
   values = [
-    data.template_file.grafana_template[count.index].rendered
+    local.grafana_template
   ]
   depends_on = [helm_release.prometheus, kubernetes_storage_class.gp3_default]
 }
@@ -175,9 +173,9 @@ data "aws_secretsmanager_secret_version" "oauth_client_secret" {
 }
 
 module "rds" {
-  source                     = "../../../sql/aws-rds"
+  source = "../../../sql/aws-rds"
 
-  count                      = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? 1 : 0, 0)
+  count = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? 1 : 0, 0)
 
   cluster_name               = local.cluster_name
   namespace                  = "monitoring"
@@ -186,9 +184,9 @@ module "rds" {
   vpc_id                     = local.vpc_id
   ext_rds_sg_cidr_block      = local.ext_rds_sg_cidr_block
   rds_name                   = "${local.cluster_name}-monitoring-sql-db"
-  read_replica               =  false
-  admin_user                 =  "postgresadmin"
-  databases                  = ["grafana"]
+  read_replica               = false
+  admin_user                 = "postgresadmin"
+  databases = ["grafana"]
   rds_type                   = "postgresql"
   allocated_storage          = 10
   instance_class             = "db.t3.small"
@@ -200,6 +198,5 @@ module "rds" {
   monitoring_interval        = 0
   log_min_duration_statement = -1
   postgresql_engine_version  = "13.7"
-
-  tags                  = local.common_tags
+  tags                       = local.common_tags
 }

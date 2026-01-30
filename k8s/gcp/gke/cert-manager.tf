@@ -1,3 +1,35 @@
+locals {
+  cert_manager_template = templatefile(
+    "${path.module}/templates/cert-manager-values.yaml",
+    {
+      CLUSTER_NAME    = local.cluster_name
+      SERVICE_ACCOUNT = google_service_account.wildcard_dns_solver.email
+    }
+  )
+
+  cluster_wildcard_issuer = templatefile(
+    "${path.module}/templates/cluster-issuer.yaml",
+    {
+      email           = var.cert_issuer_config.email
+      provider        = var.provider_id
+      dns             = local.domain_name
+      cert_issuer_url = try(
+          var.cert_issuer_config.env == "stage"
+          ? "https://acme-staging-v02.api.letsencrypt.org/directory"
+          : "https://acme-v02.api.letsencrypt.org/directory",
+        "https://acme-staging-v02.api.letsencrypt.org/directory"
+      )
+    }
+  )
+
+  cluster_wildcard_certificate = templatefile(
+    "${path.module}/templates/cluster-certificate.yaml",
+    {
+      dns = local.domain_name
+    }
+  )
+}
+
 resource "google_service_account" "wildcard_dns_solver" {
   account_id   = "${local.cluster_name}-wildcard"
   display_name = "${local.cluster_name} wildcard dns01 solver"
@@ -37,13 +69,6 @@ resource "google_project_iam_member" "wildcard_dns_solver_iam" {
   member    = "serviceAccount:${google_service_account.wildcard_dns_solver.email}"
 }
 
-data "template_file" "cert_manager_template" {
-  template = file("./templates/cert-manager-values.yaml")
-  vars     = {
-    CLUSTER_NAME    = local.cluster_name
-    SERVICE_ACCOUNT = google_service_account.wildcard_dns_solver.email
-  }
-}
 
 resource "helm_release" "cert-manager" {
   name             = "cert-manager"
@@ -58,35 +83,15 @@ resource "helm_release" "cert-manager" {
     value = "true"
   }
 
-  values = [data.template_file.cert_manager_template.rendered]
-}
-
-
-data "template_file" "cluster_wildcard_issuer" {
-  template = file("./templates/cluster-issuer.yaml")
-  vars     = {
-    email           = var.cert_issuer_config.email
-    provider        = var.provider_id
-    dns             = local.domain_name
-    cert_issuer_url = try(var.cert_issuer_config.env == "stage" ? "https://acme-staging-v02.api.letsencrypt.org/directory" : "https://acme-v02.api.letsencrypt.org/directory","https://acme-staging-v02.api.letsencrypt.org/directory")
-  }
-  depends_on = [helm_release.cert-manager,kubernetes_namespace.monitoring]
+  values = [local.cert_manager_template]
 }
 
 resource "kubectl_manifest" "cluster_wildcard_issuer" {
-  yaml_body = data.template_file.cluster_wildcard_issuer.rendered
-}
-
-data "template_file" "cluster_wildcard_certificate" {
-  template = file("./templates/cluster-certificate.yaml")
-  vars     = {
-    dns       = local.domain_name
-  }
-  depends_on = [kubectl_manifest.cluster_wildcard_issuer]
+  yaml_body = local.cluster_wildcard_issuer
 }
 
 resource "kubectl_manifest" "cluster_wildcard_certificate" {
-  yaml_body = data.template_file.cluster_wildcard_certificate.rendered
+  yaml_body = local.cluster_wildcard_certificate
 }
 
 resource "kubernetes_secret_v1" "certificate_replicator" {
