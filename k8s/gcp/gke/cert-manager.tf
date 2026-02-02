@@ -88,10 +88,20 @@ resource "helm_release" "cert-manager" {
 
 resource "kubectl_manifest" "cluster_wildcard_issuer" {
   yaml_body = local.cluster_wildcard_issuer
+  wait      = true
+
+  depends_on = [
+    helm_release.cert-manager
+  ]
 }
 
 resource "kubectl_manifest" "cluster_wildcard_certificate" {
   yaml_body = local.cluster_wildcard_certificate
+  wait      = true
+
+  depends_on = [
+    kubectl_manifest.cluster_wildcard_issuer
+  ]
 }
 
 resource "kubernetes_secret_v1" "certificate_replicator" {
