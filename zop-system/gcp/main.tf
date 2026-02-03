@@ -89,6 +89,11 @@ resource "helm_release" "service_helm"{
     value = ["zop-system-secret"]
   }
 
+  set {
+    name  = "Containers.privileged"
+    value = true
+  }
+
   values = [templatefile("./templates/values.yaml",{
     cluster_name = var.cluster_name
     app_region   = var.app_region
