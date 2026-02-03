@@ -135,3 +135,9 @@ variable "multi_ds" {
   type        = bool
   default     = false
 }
+
+variable "vpc" {
+  description = "VNet name the apps are going to use."
+  type        = string
+  default     = ""
+}
