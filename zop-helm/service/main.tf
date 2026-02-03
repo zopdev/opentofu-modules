@@ -19,6 +19,7 @@ resource "helm_release" "service_helm"{
   version     = "v0.0.27"
   chart       = "service"
   reuse_values = true
+  max_history  = var.max_history
 
   values = [templatefile("${path.module}/templates/values.yaml", {
     name                            = var.name

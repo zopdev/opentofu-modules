@@ -264,3 +264,9 @@ variable "custom_alerts" {
   }))
   default = []
 }
+
+variable "max_history" {
+  description = "Maximum number of Helm release revisions to keep. Use 0 for no limit."
+  type        = number
+  default     = 10
+}
