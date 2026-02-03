@@ -1,6 +1,8 @@
 locals {
   cluster_prefix = var.shared_services.cluster_prefix != null ? var.shared_services.cluster_prefix : var.app_name
   cluster_name = var.app_env != "" ? "${var.app_name}-${var.app_env}" : "${var.app_name}"
+  vnet_enabled = var.vpc != ""
+  subnet_name  = local.vnet_enabled ? "${var.vpc}-redis-subnet" : ""
 }
 
 module "remote_state_gcp_cluster" {
@@ -45,20 +47,58 @@ data "azurerm_key_vault" "secrets" {
   resource_group_name = var.resource_group_name
 }
 
-data "azurerm_virtual_network" "avn" {
-  name  =  var.vpc
+data "azurerm_virtual_network" "vnet" {
+  count               = local.vnet_enabled ? 1 : 0
+  name                = var.vpc
+  resource_group_name = var.resource_group_name
+}
+
+data "azurerm_subnet" "redis_subnet" {
+  count                = local.vnet_enabled ? 1 : 0
+  name                 = local.subnet_name
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.vnet[0].name
+}
+
+# Reference existing Private DNS Zone created by account-setup module
+data "azurerm_private_dns_zone" "redis" {
+  count               = local.vnet_enabled ? 1 : 0
+  name                = "privatelink.redis.cache.windows.net"
   resource_group_name = var.resource_group_name
 }
 
 resource "azurerm_redis_cache" "redis_cluster" {
-  name                 = var.redis.name != "" && var.redis.name != null ? var.redis.name : "${local.cluster_name}-${var.namespace}-redis"
-  location             = var.app_region
-  resource_group_name  = var.resource_group_name
-  sku_name             = var.redis.sku_name
-  capacity             = var.redis.redis_cache_capacity
-  family               = var.redis.redis_cache_family
-  non_ssl_port_enabled = var.redis.redis_enable_non_ssl_port
-  tags                 = var.tags
+  name                          = var.redis.name != "" && var.redis.name != null ? var.redis.name : "${local.cluster_name}-${var.namespace}-redis"
+  location                      = var.app_region
+  resource_group_name           = var.resource_group_name
+  sku_name                      = var.redis.sku_name
+  capacity                      = var.redis.redis_cache_capacity
+  family                        = var.redis.redis_cache_family
+  non_ssl_port_enabled          = var.redis.redis_enable_non_ssl_port
+  public_network_access_enabled = local.vnet_enabled ? false : true
+  tags                          = var.tags
+}
+
+# Private Endpoint for Redis Cache (VNet integration)
+resource "azurerm_private_endpoint" "redis" {
+  count               = local.vnet_enabled ? 1 : 0
+  name                = "${azurerm_redis_cache.redis_cluster.name}-pe"
+  location            = var.app_region
+  resource_group_name = var.resource_group_name
+  subnet_id           = data.azurerm_subnet.redis_subnet[0].id
+  tags                = var.tags
+
+  private_service_connection {
+    name                           = "${azurerm_redis_cache.redis_cluster.name}-psc"
+    private_connection_resource_id = azurerm_redis_cache.redis_cluster.id
+    is_manual_connection           = false
+    subresource_names              = ["redisCache"]
+  }
+
+  private_dns_zone_group {
+    name                 = "redis-dns-zone-group"
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.redis[0].id]
+  }
 }
 
 resource "kubernetes_service" "redis_service" {
