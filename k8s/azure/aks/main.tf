@@ -1,5 +1,18 @@
 data "azurerm_subscription" "current" {}
 
+data "azurerm_virtual_network" "vnet" {
+  count               = var.vpc != "" ? 1 : 0
+  name                = var.vpc
+  resource_group_name = var.resource_group_name
+}
+
+data "azurerm_subnet" "aks_subnet" {
+  count                = var.vpc != "" && var.subnet != "" ? 1 : 0
+  name                 = var.subnet
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.vnet[0].name
+}
+
 resource "random_password" "aks_sp_pwd" {
   length  = 16
   special = false
@@ -10,6 +23,27 @@ locals {
   cluster_name_parts = split("-", local.cluster_name)
   environment        = var.app_env == "" ? element(local.cluster_name_parts, length(local.cluster_name_parts) - 1) : var.app_env
   node_port    = 32443 # Node port which will be used by LB for exposure
+
+  # VNet configuration flags
+  vnet_enabled = var.vpc != "" && var.subnet != ""
+  
+  # Service CIDR configuration constants
+  service_cidr_prefix           = 20 
+  dns_service_ip_fourth_octet   = 10
+
+  # Calculate service CIDR from VNet data source to avoid conflicts
+  # Extract base IP from VNet address space (e.g., "10.1" from "10.1.0.0/16")
+  vnet_address_space = local.vnet_enabled ? try(data.azurerm_virtual_network.vnet[0].address_space[0], "") : ""
+  vnet_cidr_parts = local.vnet_enabled && local.vnet_address_space != "" ? split("/", local.vnet_address_space) : []
+  vnet_base_ip_parts = length(local.vnet_cidr_parts) > 0 ? split(".", local.vnet_cidr_parts[0]) : []
+  vnet_base_ip = length(local.vnet_base_ip_parts) >= 2 ? "${local.vnet_base_ip_parts[0]}.${local.vnet_base_ip_parts[1]}" : ""
+  
+  # Use high range in VNet for service CIDR to avoid subnet conflicts
+  # Example: For VNet 10.1.0.0/16, use service CIDR 10.1.240.0/20
+  # This avoids typical subnet ranges like 10.1.1.0/24, 10.1.2.0/24, etc.
+  # The third octet is configurable via var.service_cidr_third_octet (default: 240)
+  service_cidr = local.vnet_enabled && local.vnet_base_ip != "" ? "${local.vnet_base_ip}.${var.service_cidr_third_octet}.0/${local.service_cidr_prefix}" : null
+  dns_service_ip = local.vnet_enabled && local.vnet_base_ip != "" ? "${local.vnet_base_ip}.${var.service_cidr_third_octet}.${local.dns_service_ip_fourth_octet}" : null
 
   common_tags        = merge(var.common_tags,
     tomap({
@@ -67,6 +101,18 @@ module "aks" {
   oidc_issuer_enabled                = true
   temporary_name_for_rotation        = "${var.app_name}1"
   secret_rotation_enabled            = true
+  
+  # VNet configuration - when VNet is provided, use Azure CNI with public node IPs
+  # Nodes will have public IPs for internet access and can connect to SQL/Redis via VNet
+  vnet_subnet_id                     = local.vnet_enabled ? data.azurerm_subnet.aks_subnet[0].id : null
+  network_plugin                     = local.vnet_enabled ? "azure" : "kubenet"
+  network_policy                     = local.vnet_enabled ? "azure" : null
+  enable_node_public_ip              = local.vnet_enabled ? true : null
+  
+  # Service CIDR configuration - automatically calculated from VNet to avoid subnet conflicts
+  net_profile_service_cidr           = local.service_cidr
+  net_profile_dns_service_ip         = local.dns_service_ip
+  
   tags = merge(local.common_tags,
     tomap({
       "Name" = local.cluster_name

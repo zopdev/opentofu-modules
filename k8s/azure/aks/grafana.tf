@@ -148,6 +148,7 @@ module "grafana_db" {
   sku_name                   = "GP_Standard_D2s_v3"
   storage_mb                 = 32768
   key_vault_id               = azurerm_key_vault.secrets.id
+  vpc                        = var.vpc
 
   tags                  = local.common_tags
 }

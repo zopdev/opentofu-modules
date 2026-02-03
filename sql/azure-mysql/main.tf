@@ -1,11 +1,40 @@
+locals {
+  vnet_enabled = var.vpc != ""
+  subnet_name  = local.vnet_enabled ? "${var.vpc}-mysql-subnet" : ""
+}
+
+data "azurerm_virtual_network" "vnet" {
+  count               = local.vnet_enabled ? 1 : 0
+  name                = var.vpc
+  resource_group_name = var.resource_group_name
+}
+
+data "azurerm_subnet" "db_subnet" {
+  count                = local.vnet_enabled ? 1 : 0
+  name                 = local.subnet_name
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.vnet[0].name
+}
+
+# Reference existing Private DNS Zone created by account-setup module
+data "azurerm_private_dns_zone" "mysql" {
+  count               = local.vnet_enabled ? 1 : 0
+  name                = "privatelink.mysql.database.azure.com"
+  resource_group_name = var.resource_group_name
+}
+
 resource "azurerm_mysql_flexible_server" "mysql_server" {
-  name                      = var.mysql_server_name
-  resource_group_name       = var.resource_group_name
-  location                  = var.location
-  administrator_login       = var.administrator_login
-  administrator_password    = azurerm_key_vault_secret.mysql_db_secret.value
-  backup_retention_days     = var.backup_retention_days
-  sku_name                  = var.sku_name
+  name                          = var.mysql_server_name
+  resource_group_name           = var.resource_group_name
+  location                      = var.location
+  administrator_login           = var.administrator_login
+  administrator_password        = azurerm_key_vault_secret.mysql_db_secret.value
+  backup_retention_days         = var.backup_retention_days
+  sku_name                      = var.sku_name
+
+  # VNet integration
+  delegated_subnet_id           = local.vnet_enabled ? data.azurerm_subnet.db_subnet[0].id : null
+  private_dns_zone_id           = local.vnet_enabled ? data.azurerm_private_dns_zone.mysql[0].id : null
 
   storage {
     size_gb = var.storage
@@ -43,6 +72,7 @@ resource "azurerm_mysql_flexible_server_configuration" "mysql_parameter_group" {
 }
 
 resource "azurerm_mysql_flexible_server_firewall_rule" "mysql_firewall" {
+  count                   = local.vnet_enabled ? 0 : 1
   name                    = "${var.cluster_name}-${var.namespace}-mysql-firewall"
   resource_group_name     = var.resource_group_name
   server_name             = azurerm_mysql_flexible_server.mysql_server.name

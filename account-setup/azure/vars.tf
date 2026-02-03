@@ -4,14 +4,20 @@ variable "resource_group_name" {
   default     = ""
 }
 
-variable "vnet" {
-  description = "Name of the virtual network where the AKS will deploy"
+# For ostronaut compatibility
+variable "vpc_configs" {
+  description = "Legacy VPC name as string (for backward compatibility). Use vnet_config instead."
   type        = string
   default     = ""
 }
 
-variable "address_space" {
-  description = "The address space that is used the virtual network"
-  type        = list(string)
-  default     = ["10.0.0.0/16"]
+variable "vnet_config" {
+  description = "VNet configuration - map of VNet names to their configuration. Note: database_subnets_cidr should have even number of entries (even indices for PostgreSQL, odd for MySQL)"
+  type = map(object({
+    address_space         = list(string)
+    private_subnets_cidr  = list(string)
+    database_subnets_cidr = optional(list(string))
+    redis_subnets_cidr    = optional(list(string))
+  }))
+  default = {}
 }
