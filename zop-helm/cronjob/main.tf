@@ -19,6 +19,7 @@ resource "helm_release" "cron_helm"{
   version     = "v0.0.17"
   chart       = "cron-job"
   reuse_values = true
+  max_history  = var.max_history
 
   values = [templatefile("${path.module}/templates/values.yaml", {
     name                            = var.name
