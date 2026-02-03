@@ -35,7 +35,6 @@ resource "azurerm_mysql_flexible_server" "mysql_server" {
   # VNet integration
   delegated_subnet_id           = local.vnet_enabled ? data.azurerm_subnet.db_subnet[0].id : null
   private_dns_zone_id           = local.vnet_enabled ? data.azurerm_private_dns_zone.mysql[0].id : null
-  public_network_access_enabled = local.vnet_enabled ? false : true
 
   storage {
     size_gb = var.storage

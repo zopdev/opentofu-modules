@@ -17,8 +17,20 @@ locals {
   postgresql_port = 5432
   mysql_port      = 3306
 
+  # For ostronaut compatibility
+  vnet_config_merged = length(var.vnet_config) > 0 ? var.vnet_config : (
+    var.vpc_configs != "" ? {
+      var.vpc_configs = {
+        address_space         = ["10.0.0.0/16"]
+        private_subnets_cidr  = ["10.0.1.0/24", "10.0.2.0/24"]
+        database_subnets_cidr = []
+        redis_subnets_cidr    = []
+      }
+    } : {}
+  )
+
   private_subnet_map = merge([
-    for vnet_name, vnet_config in var.vnet_config : tomap({
+    for vnet_name, vnet_config in local.vnet_config_merged : tomap({
       for idx, cidr in vnet_config.private_subnets_cidr :
         "${vnet_name}-${idx}" => {
           vnet_name = vnet_name
@@ -41,7 +53,7 @@ locals {
   #     - Index 2 (10.0.4.0/24) -> PostgreSQL subnet: ${vnet_name}-postgresql-subnet
   #     - Index 3 (10.0.5.0/24) -> MySQL subnet: ${vnet_name}-mysql-subnet
   postgresql_subnet_map = merge([
-    for vnet_name, vnet_config in var.vnet_config : tomap({
+    for vnet_name, vnet_config in local.vnet_config_merged : tomap({
       for idx, cidr in try(vnet_config.database_subnets_cidr, []) :
         "${vnet_name}-postgres-${idx}" => {
           vnet_name = vnet_name
@@ -52,7 +64,7 @@ locals {
   ]...)
   
   mysql_subnet_map = merge([
-    for vnet_name, vnet_config in var.vnet_config : tomap({
+    for vnet_name, vnet_config in local.vnet_config_merged : tomap({
       for idx, cidr in try(vnet_config.database_subnets_cidr, []) :
         "${vnet_name}-mysql-${idx}" => {
           vnet_name = vnet_name
@@ -67,7 +79,7 @@ locals {
 
   # Redis subnets - for Private Endpoints
   redis_subnet_map = merge([
-    for vnet_name, vnet_config in var.vnet_config : tomap({
+    for vnet_name, vnet_config in local.vnet_config_merged : tomap({
       for idx, cidr in try(vnet_config.redis_subnets_cidr, []) :
         "${vnet_name}-redis-${idx}" => {
           vnet_name = vnet_name
@@ -80,11 +92,11 @@ locals {
   # Redis port constant
   redis_port = 6380
 
-  dns_enabled = length(var.vnet_config) > 0
+  dns_enabled = length(local.vnet_config_merged) > 0
 }
 
 resource "azurerm_virtual_network" "vnet" {
-  for_each            = var.vnet_config
+  for_each            = local.vnet_config_merged
   name                = each.key
   location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
@@ -102,7 +114,7 @@ resource "azurerm_subnet" "private" {
 
 # Network Security Group for private subnet - allow all internal VNet communication
 resource "azurerm_network_security_group" "private" {
-  for_each            = var.vnet_config
+  for_each            = local.vnet_config_merged
   name                = "${each.key}-private-nsg"
   location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
@@ -230,7 +242,7 @@ resource "azurerm_network_security_group" "postgresql" {
 
   # Allow PostgreSQL from private subnets
   dynamic "security_rule" {
-    for_each = var.vnet_config[each.value.vnet_name].private_subnets_cidr
+    for_each = local.vnet_config_merged[each.value.vnet_name].private_subnets_cidr
     content {
       name                       = "AllowPostgreSQLFromPrivateSubnet-${security_rule.key}"
       priority                   = local.nsg_priority_base_database_allow + (security_rule.key * local.nsg_priority_increment_per_subnet)
@@ -286,7 +298,7 @@ resource "azurerm_network_security_group" "mysql" {
 
   # Allow MySQL from private subnets
   dynamic "security_rule" {
-    for_each = var.vnet_config[each.value.vnet_name].private_subnets_cidr
+    for_each = local.vnet_config_merged[each.value.vnet_name].private_subnets_cidr
     content {
       name                       = "AllowMySQLFromPrivateSubnet-${security_rule.key}"
       priority                   = local.nsg_priority_base_database_allow + (security_rule.key * local.nsg_priority_increment_per_subnet)
@@ -365,7 +377,7 @@ resource "azurerm_network_security_group" "redis" {
 
   # Allow Redis from private subnets
   dynamic "security_rule" {
-    for_each = var.vnet_config[each.value.vnet_name].private_subnets_cidr
+    for_each = local.vnet_config_merged[each.value.vnet_name].private_subnets_cidr
     content {
       name                       = "AllowRedisFromPrivateSubnet-${security_rule.key}"
       priority                   = local.nsg_priority_base_database_allow + (security_rule.key * local.nsg_priority_increment_per_subnet)
@@ -435,7 +447,7 @@ resource "azurerm_private_dns_zone" "postgresql" {
 
 # VNet links for PostgreSQL Private DNS Zone (one per VNet)
 resource "azurerm_private_dns_zone_virtual_network_link" "postgresql" {
-  for_each              = local.dns_enabled ? var.vnet_config : {}
+  for_each              = local.dns_enabled ? local.vnet_config_merged : {}
   name                  = "${each.key}-postgresql-dns-link"
   private_dns_zone_name = azurerm_private_dns_zone.postgresql[0].name
   virtual_network_id    = azurerm_virtual_network.vnet[each.key].id
@@ -455,7 +467,7 @@ resource "azurerm_private_dns_zone" "mysql" {
 
 # VNet links for MySQL Private DNS Zone (one per VNet)
 resource "azurerm_private_dns_zone_virtual_network_link" "mysql" {
-  for_each              = local.dns_enabled ? var.vnet_config : {}
+  for_each              = local.dns_enabled ? local.vnet_config_merged : {}
   name                  = "${each.key}-mysql-dns-link"
   private_dns_zone_name = azurerm_private_dns_zone.mysql[0].name
   virtual_network_id    = azurerm_virtual_network.vnet[each.key].id
@@ -475,7 +487,7 @@ resource "azurerm_private_dns_zone" "redis" {
 
 # VNet links for Redis Private DNS Zone (one per VNet)
 resource "azurerm_private_dns_zone_virtual_network_link" "redis" {
-  for_each              = local.dns_enabled ? var.vnet_config : {}
+  for_each              = local.dns_enabled ? local.vnet_config_merged : {}
   name                  = "${each.key}-redis-dns-link"
   private_dns_zone_name = azurerm_private_dns_zone.redis[0].name
   virtual_network_id    = azurerm_virtual_network.vnet[each.key].id

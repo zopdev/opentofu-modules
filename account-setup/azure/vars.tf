@@ -4,6 +4,13 @@ variable "resource_group_name" {
   default     = ""
 }
 
+# For ostronaut compatibility
+variable "vpc_configs" {
+  description = "Legacy VPC name as string (for backward compatibility). Use vnet_config instead."
+  type        = string
+  default     = ""
+}
+
 variable "vnet_config" {
   description = "VNet configuration - map of VNet names to their configuration. Note: database_subnets_cidr should have even number of entries (even indices for PostgreSQL, odd for MySQL)"
   type = map(object({
