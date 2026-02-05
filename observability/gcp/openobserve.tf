@@ -78,10 +78,10 @@ locals {
   openobserve_template = {
     for inst in var.openobserve : inst.name => inst.enable ? templatefile("${path.module}/templates/openobserve-values.yaml", {
       replica_count         = try(inst.replicaCount, 1)
-      cpu_request           = try(inst.min_cpu, "250m")
-      memory_request        = try(inst.min_memory, "1Gi")
-      cpu_limit             = try(inst.max_cpu, "1")
-      memory_limit          = try(inst.max_memory, "2Gi")
+      cpu_request           = "250m"
+      memory_request        = "1Gi"
+      cpu_limit             = "1"
+      memory_limit          = "2Gi"
       storage_provider      = "gcs"
       storage_region        = "auto"
       storage_bucket_name   = google_storage_bucket.openobserve_data[inst.name].name
