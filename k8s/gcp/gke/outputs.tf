@@ -89,6 +89,12 @@ output "cortex_host_url" {
   value = try(module.observability[0].cortex_host_url,"")
 }
 
+output "openobserve_instances" {
+  description = "OpenObserve instances with URL, username, and password grouped together"
+  value = try(module.observability[0].openobserve_instances, {})
+  sensitive = true
+}
+
 output "grafana_password" {
   sensitive = true
   value = try(random_password.observability_admin[0].result,"")
