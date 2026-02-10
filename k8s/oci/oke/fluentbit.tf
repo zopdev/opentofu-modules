@@ -90,7 +90,7 @@ resource "helm_release" "fluentbit-config" {
   repository = "https://fluent.github.io/helm-charts"
   chart      = "fluent-bit"
   name       = "fluent-bit"
-  version    = "0.54.0"
+  version    = "0.35.0"
   namespace  = kubernetes_namespace.monitoring.metadata.0.name
 
   values = [
