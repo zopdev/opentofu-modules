@@ -36,7 +36,9 @@ resource "aws_security_group" "external_worker_group_mgmt" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [
+      "10.0.0.0/8",
+    ]
   }
 
   egress {
@@ -59,7 +61,7 @@ resource "aws_security_group" "all_worker_mgmt" {
     protocol  = "tcp"
 
     cidr_blocks = [
-      "0.0.0.0/0"
+      "10.0.0.0/8",
     ]
   }
 
