@@ -64,9 +64,9 @@ module "eks" {
       resources        = ["secrets"]
     }
 
-  // Cluster endpoint should not have public access
-  cluster_endpoint_private_access = false
-  cluster_endpoint_public_access  = true
+  // Cluster endpoint access
+  cluster_endpoint_private_access = true
+  cluster_endpoint_public_access  = false
 
   self_managed_node_group_defaults = {
     autoscaling_group_tags = {

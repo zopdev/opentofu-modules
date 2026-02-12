@@ -55,7 +55,29 @@ locals {
 resource "aws_s3_bucket" "tempo_data" {
   count         = local.enable_tempo ? 1 : 0
   bucket        = "${local.cluster_name}-tempo-data-${var.observability_suffix}"
-  force_destroy = "true"
+  force_destroy = false
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "tempo_encryption" {
+  count  = local.enable_tempo ? 1 : 0
+  bucket = aws_s3_bucket.tempo_data[0].id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "aws:kms"
+    }
+    bucket_key_enabled = true
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "tempo_public_access_block" {
+  count  = local.enable_tempo ? 1 : 0
+  bucket = aws_s3_bucket.tempo_data[0].id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "tempo_data_encryption" {
