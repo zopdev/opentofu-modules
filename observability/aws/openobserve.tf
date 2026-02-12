@@ -6,6 +6,17 @@ resource "aws_s3_bucket" "openobserve_data" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_server_side_encryption_configuration" "openobserve_data_encryption" {
+  for_each = aws_s3_bucket.openobserve_data
+  bucket   = each.value.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "aws:kms"
+    }
+  }
+}
+
 # Generate random password for OpenObserve
 resource "random_password" "openobserve_password" {
   for_each = local.enable_openobserve ? { for instance in var.openobserve : instance.name => instance if instance.enable } : {}
