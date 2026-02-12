@@ -101,7 +101,7 @@ variable "zone" {
 variable "enable_ssl" {
   description = "Whether SSL should be enabled or not based on user requirement"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "storage_mb" {

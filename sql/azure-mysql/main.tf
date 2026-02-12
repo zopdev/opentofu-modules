@@ -65,6 +65,7 @@ resource "azurerm_mysql_flexible_database" "mysql_db" {
 }
 
 resource "azurerm_mysql_flexible_server_configuration" "mysql_parameter_group" {
+  count                   = var.enable_ssl == false ? 1 : 0
   name                    = "require_secure_transport"
   resource_group_name     = var.resource_group_name
   server_name             = azurerm_mysql_flexible_server.mysql_server.name
@@ -77,7 +78,7 @@ resource "azurerm_mysql_flexible_server_firewall_rule" "mysql_firewall" {
   resource_group_name     = var.resource_group_name
   server_name             = azurerm_mysql_flexible_server.mysql_server.name
   start_ip_address        = "0.0.0.0"
-  end_ip_address          = "255.255.255.255"
+  end_ip_address          = "0.0.0.0"
 }
 
 resource "azurerm_mysql_flexible_server" "mysql_read_replica" {
