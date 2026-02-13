@@ -5,8 +5,11 @@ resource "google_storage_bucket" "openobserve_data" {
   name          = "${local.cluster_name}-openobserve-${each.value.name}-${var.observability_suffix}"
   location      = var.app_region
   project       = var.project_id
-  force_destroy = true
+  force_destroy = false
   labels        = var.labels
+
+  uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
 }
 
 # Create service account for OpenObserve

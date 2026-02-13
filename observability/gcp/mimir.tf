@@ -81,8 +81,11 @@ resource "google_storage_bucket" "mimir_data" {
   name          = "${local.cluster_name}-mimir-block-data-${var.observability_suffix}"
   location      = var.app_region
   project       = var.project_id
-  force_destroy = true
+  force_destroy = false
   labels        = var.labels
+
+  uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
 }
 
 resource "google_service_account" "mimir_svc_acc" {
