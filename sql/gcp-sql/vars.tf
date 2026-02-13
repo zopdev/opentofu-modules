@@ -113,7 +113,7 @@ variable "disk_type" {
 variable "require_ssl" {
   description = "True if the instance should require SSL/TLS for users connecting over IP. Note: SSL/TLS is needed to provide security when you connect to Cloud SQL using IP addresses. If you are connecting to your instance only by using the Cloud SQL Proxy or the Java Socket Library, you do not need to configure your instance to use SSL/TLS."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "private_network" {
@@ -171,7 +171,7 @@ variable "labels" {
 variable "enable_ssl" {
   description = "Whether SSL should be enabled or not based on user requirement"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "multi_ds" {
