@@ -141,7 +141,7 @@ variable "auto_minor_version_upgrade" {
 variable "postgresql_engine_version" {
   description = "The engine version to use for postgresql"
   type        = string
-  default     = "16.1"
+  default     = "16.12"
 }
 
 variable "read_replica_multi_az" {
