@@ -1,5 +1,5 @@
 cd ~/
-api_key="2a374411747e464fda7380af2a20264e89ec57393a36cf30cc2f66125f4e5d7a"
+api_key="${nessus_api_key}"
 sudo unzip /tmp/agentPackages.zip -d /tmp
 sudo chmod +x /tmp/install.sh
 sudo /tmp/install.sh -i

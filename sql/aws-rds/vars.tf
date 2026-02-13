@@ -141,7 +141,7 @@ variable "auto_minor_version_upgrade" {
 variable "postgresql_engine_version" {
   description = "The engine version to use for postgresql"
   type        = string
-  default     = "16.1"
+  default     = "16.12"
 }
 
 variable "read_replica_multi_az" {
@@ -159,7 +159,7 @@ variable "mysql_engine_version" {
 variable "enable_ssl" {
   description = "Whether SSL should be enabled or not based on user requirement"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "multi_ds" {

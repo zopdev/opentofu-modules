@@ -130,7 +130,8 @@ resource "aws_db_instance" "db_instance" {
   db_subnet_group_name            = aws_db_subnet_group.db_subnet.name
   vpc_security_group_ids          = [aws_security_group.rds.id]
   parameter_group_name            = aws_db_parameter_group.db_param_group.name
-  skip_final_snapshot             = true
+  skip_final_snapshot             = false
+  final_snapshot_identifier       = "${var.rds_name}-final-snapshot"
   multi_az                        = var.multi_az
   backup_retention_period         = 7
   performance_insights_enabled    = false
@@ -158,7 +159,8 @@ resource "aws_db_instance" "rds_read_replica" {
   allocated_storage               = var.allocated_storage
   vpc_security_group_ids          = [aws_security_group.rds.id]
   parameter_group_name            = aws_db_parameter_group.db_param_group.name
-  skip_final_snapshot             = true
+  skip_final_snapshot             = false
+  final_snapshot_identifier       = "rds-read-replica-${var.rds_name}-final-snapshot"
   multi_az                        = var.read_replica_multi_az
   performance_insights_enabled    = false
   deletion_protection             = var.deletion_protection
