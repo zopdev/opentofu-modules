@@ -86,6 +86,10 @@ resource "google_storage_bucket" "mimir_data" {
 
   uniform_bucket_level_access = true
   public_access_prevention    = "enforced"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_service_account" "mimir_svc_acc" {

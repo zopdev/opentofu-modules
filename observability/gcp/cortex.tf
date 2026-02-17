@@ -104,6 +104,10 @@ resource "google_storage_bucket" "cortex_data" {
 
   uniform_bucket_level_access = true
   public_access_prevention    = "enforced"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_service_account" "cortex_svc_acc" {

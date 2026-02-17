@@ -64,6 +64,10 @@ resource "google_storage_bucket" "loki_data" {
 
   uniform_bucket_level_access = true
   public_access_prevention    = "enforced"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_project_iam_member" "loki-k8s-service-account" {
