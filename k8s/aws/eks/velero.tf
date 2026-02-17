@@ -23,12 +23,12 @@ resource "aws_iam_user_policy" "velero" {
           "s3:AbortMultipartUpload",
           "s3:ListMultipartUploadParts"
         ],
-        Resource = "arn:aws:s3:::*/*"
+        Resource = "arn:aws:s3:::k8s-resource-backups/*"
       },
       {
         Effect = "Allow",
         Action = ["s3:ListBucket"],
-        Resource = "arn:aws:s3:::*"
+        Resource = "arn:aws:s3:::k8s-resource-backups"
       },
       {
         Effect = "Allow",
