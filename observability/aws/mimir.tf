@@ -53,6 +53,10 @@ resource "aws_s3_bucket" "mimir_data" {
   count = local.enable_mimir ? 1 : 0
   bucket        = "${local.cluster_name}-mimir-data-${var.observability_suffix}"
   force_destroy = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "mimir_public_access_block" {

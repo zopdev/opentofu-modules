@@ -59,6 +59,10 @@ resource "aws_s3_bucket" "loki_data" {
   count         = local.enable_loki ? 1 : 0
   bucket        = "${local.cluster_name}-loki-data-${var.observability_suffix}"
   force_destroy = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "loki_public_access_block" {

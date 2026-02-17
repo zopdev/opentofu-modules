@@ -56,6 +56,10 @@ resource "aws_s3_bucket" "tempo_data" {
   count         = local.enable_tempo ? 1 : 0
   bucket        = "${local.cluster_name}-tempo-data-${var.observability_suffix}"
   force_destroy = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "tempo_public_access_block" {

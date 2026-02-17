@@ -99,6 +99,10 @@ resource "aws_s3_bucket" "cortex_data" {
   count         = local.enable_cortex ? 1 : 0
   bucket        = "${local.cluster_name}-cortex-data-${var.observability_suffix}"
   force_destroy = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "cortex_public_access_block" {

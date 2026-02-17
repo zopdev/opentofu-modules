@@ -4,6 +4,10 @@ resource "aws_s3_bucket" "openobserve_data" {
 
   bucket        = "${local.cluster_name}-openobserve-${each.value.name}-${var.observability_suffix}"
   force_destroy = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "openobserve_public_access_block" {
