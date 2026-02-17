@@ -66,7 +66,7 @@ module "eks" {
 
   // Cluster endpoint access
   cluster_endpoint_private_access = true
-  cluster_endpoint_public_access  = false
+  cluster_endpoint_public_access  = true
 
   self_managed_node_group_defaults = {
     autoscaling_group_tags = {
