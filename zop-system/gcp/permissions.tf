@@ -163,7 +163,7 @@ resource "kubernetes_cluster_role_binding" "zop_system_admin_role_binding_gcp_sa
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "ClusterRole"
-    name      = "cluster-admin"
+    name      = "edit"
   }
 
   subject {
