@@ -3,7 +3,22 @@ resource "aws_s3_bucket" "openobserve_data" {
   for_each = local.enable_openobserve ? { for instance in var.openobserve : instance.name => instance if instance.enable } : {}
 
   bucket        = "${local.cluster_name}-openobserve-${each.value.name}-${var.observability_suffix}"
-  force_destroy = true
+  force_destroy = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "openobserve_public_access_block" {
+  for_each = aws_s3_bucket.openobserve_data
+
+  bucket = each.value.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "openobserve_data_encryption" {
@@ -14,6 +29,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "openobserve_data_
     apply_server_side_encryption_by_default {
       sse_algorithm = "aws:kms"
     }
+    bucket_key_enabled = true
   }
 }
 
