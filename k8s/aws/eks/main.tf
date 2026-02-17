@@ -64,8 +64,8 @@ module "eks" {
       resources        = ["secrets"]
     }
 
-  // Cluster endpoint should not have public access
-  cluster_endpoint_private_access = false
+  // Cluster endpoint access
+  cluster_endpoint_private_access = true
   cluster_endpoint_public_access  = true
 
   self_managed_node_group_defaults = {
@@ -82,7 +82,7 @@ module "eks" {
       desired_size                 = var.node_config.min_count
       min_size                     = var.node_config.min_count
       max_size                     = var.node_config.max_count
-      bootstrap_extra_args         = "--container-runtime containerd"
+      bootstrap_extra_args         = ""
       #         vpc_security_group_ids  = var.internal_loadbalancer ? [aws_security_group.worker_group_mgmt.id] : [aws_security_group.external_worker_group_mgmt.id]
       #         target_group_arns       = var.public_ingress ? [aws_lb_target_group.cluster_tg.0.arn,aws_lb_target_group.kong_tg_admin.0.arn] : (var.public_app ? [aws_lb_target_group.cluster_alb_tg.0.arn] : [aws_lb_target_group.cluster_nlb_tg.0.arn])
       #         user_data_template_path = file("./templates/user-data.tpl")
