@@ -101,18 +101,6 @@ resource "aws_s3_bucket" "cortex_data" {
   force_destroy = false
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "cortex_encryption" {
-  count  = local.enable_cortex ? 1 : 0
-  bucket = aws_s3_bucket.cortex_data[0].id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
-    }
-    bucket_key_enabled = true
-  }
-}
-
 resource "aws_s3_bucket_public_access_block" "cortex_public_access_block" {
   count  = local.enable_cortex ? 1 : 0
   bucket = aws_s3_bucket.cortex_data[0].id
@@ -133,6 +121,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "cortex_data_encry
     apply_server_side_encryption_by_default {
       sse_algorithm = "aws:kms"
     }
+    bucket_key_enabled = true
   }
 }
 

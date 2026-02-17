@@ -6,19 +6,6 @@ resource "aws_s3_bucket" "openobserve_data" {
   force_destroy = false
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "openobserve_encryption" {
-  for_each = aws_s3_bucket.openobserve_data
-
-  bucket = each.value.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
-    }
-    bucket_key_enabled = true
-  }
-}
-
 resource "aws_s3_bucket_public_access_block" "openobserve_public_access_block" {
   for_each = aws_s3_bucket.openobserve_data
 
@@ -38,6 +25,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "openobserve_data_
     apply_server_side_encryption_by_default {
       sse_algorithm = "aws:kms"
     }
+    bucket_key_enabled = true
   }
 }
 
