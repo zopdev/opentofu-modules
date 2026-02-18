@@ -26,7 +26,7 @@ output "cluster_name" {
 }
 
 output "k8s_version" {
-  value = "1.32.0"
+  value = "1.33.0"
 }
 
 output "os" {
