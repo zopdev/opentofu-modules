@@ -240,7 +240,7 @@ variable "worker_ami_config" {
   })
   default = {
     owner_id          = "amazon"
-    name              = "amazon-eks-node-al2023-x86_64-standard-1.33-*"
+    name              = "amazon-eks-node-al2023-x86_64-standard-1.34-*"
   }
 }
 
