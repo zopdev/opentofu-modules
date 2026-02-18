@@ -43,7 +43,7 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "postgres_firewall" 
   name                = "${var.cluster_name}-${var.namespace}-postgres-firewall"
   server_id           = azurerm_postgresql_flexible_server.postgres_server.id
   start_ip_address    = "0.0.0.0"
-  end_ip_address      = "255.255.255.255"
+  end_ip_address      = "0.0.0.0"
 }
 
 resource "azurerm_postgresql_flexible_server" "postgresql_replica_server" {
