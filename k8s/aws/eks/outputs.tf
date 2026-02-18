@@ -26,7 +26,7 @@ output "cluster_endpoint" {
 
 
 output "k8s_version" {
-  value = "1.34"
+  value = "1.35"
 }
 
 output "os" {
