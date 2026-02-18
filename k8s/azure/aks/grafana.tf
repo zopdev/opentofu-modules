@@ -22,6 +22,7 @@ locals {
       GRAFANA_DB_HOST                   = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? module.grafana_db[0].db_url : "", "")
       GRAFANA_DB_PASSWORD               = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? module.grafana_db[0].db_password : "", "")
       GRAFANA_DB_USER                   = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? module.grafana_db[0].db_admin_user : "", "")
+      GRAFANA_DB_SSL_MODE               = try(local.grafana_enable && var.observability_config.grafana.persistence.type == "db" ? "require" : "disable", "disable")
       GRAFANA_MIN_REPLICA               = try(var.observability_config.grafana.min_replica != null ? var.observability_config.grafana.min_replica : 1, 1)
       GRAFANA_MAX_REPLICA               = try(var.observability_config.grafana.max_replica != null ? var.observability_config.grafana.max_replica : 10, 10)
       GRAFANA_REQUEST_MEMORY            = try(var.observability_config.grafana.request_memory != null ? var.observability_config.grafana.request_memory : "100Mi", "100Mi")

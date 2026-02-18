@@ -70,11 +70,13 @@ resource "helm_release" "cert_manager" {
 }
 
 resource "kubectl_manifest" "cluster_wildcard_issuer" {
-  yaml_body = local.cluster_wildcard_issuer
+  yaml_body  = local.cluster_wildcard_issuer
+  depends_on = [helm_release.cert_manager]
 }
 
 resource "kubectl_manifest" "cluster_wildcard_certificate" {
-  yaml_body = local.cluster_wildcard_certificate
+  yaml_body  = local.cluster_wildcard_certificate
+  depends_on = [kubectl_manifest.cluster_wildcard_issuer]
 }
 
 resource "kubernetes_secret_v1" "certificate_replicator" {

@@ -19,6 +19,7 @@ grafana.ini:
     host: ${GRAFANA_DB_HOST}
     user: ${GRAFANA_DB_USER}
     password: ${GRAFANA_DB_PASSWORD}
+    ssl_mode: ${GRAFANA_DB_SSL_MODE}
   %{~ endif ~}
   server:
     root_url: https://${GRAFANA_HOST}
