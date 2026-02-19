@@ -1,8 +1,11 @@
 locals {
+  # Check if env_list is null or empty
   env_list = var.env_list != null ? var.env_list : []
 
+  # Check if APP_NAME exists in the env_list
   app_name_exists_list = length([for item in local.env_list : item if item.name == "APP_NAME"]) > 0
 
+  # Add APP_NAME to the env_list if it doesn't exist
   env_list_with_app_name = local.app_name_exists_list ? local.env_list : concat(local.env_list, [{
     name  = "APP_NAME"
     value = var.name
