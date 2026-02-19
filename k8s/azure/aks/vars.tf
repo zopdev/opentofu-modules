@@ -44,7 +44,7 @@ variable "public_ingress" {
 variable "kubernetes_version" {
   description = "Kubernetes version of the AKS Cluster"
   type        = string
-  default     = "1.31.10"
+  default     = "1.32.0"
 }
 
 variable "user_access" {
@@ -720,4 +720,22 @@ variable "dns_zone_list" {
   description = "List of Azure DNS zone names to be used in the ClusterIssuer solvers."
   type        = list(string)
   default     = []
+}
+
+variable "vpc" {
+  description = "VNet name the apps are going to use. When provided along with subnet, resources will be deployed inside the VNet."
+  type        = string
+  default     = ""
+}
+
+variable "subnet" {
+  description = "Subnet name the apps are going to use. Must be provided along with vpc for VNet integration."
+  type        = string
+  default     = ""
+}
+
+variable "service_cidr_third_octet" {
+  description = "Third octet for Kubernetes service CIDR calculation (e.g., 240 for 10.1.240.0/20). Should be in high range to avoid conflicts with typical subnet ranges. Default: 240"
+  type        = number
+  default     = 240
 }
