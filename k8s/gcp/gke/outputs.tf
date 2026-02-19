@@ -28,7 +28,7 @@ output "app_env"{
 }
 
 output "k8s_version" {
-  value = "1.33"
+  value = "1.34"
 }
 
 output "os" {
