@@ -35,7 +35,8 @@ resource "aws_kms_key" "eks" {
 }
 
 data "aws_ami" "eks_ami" {
-  owners   = [var.worker_ami_config.owner_id]
+  most_recent = true
+  owners      = [var.worker_ami_config.owner_id]
   filter {
     name   = "name"
     values = [var.worker_ami_config.name]
@@ -47,7 +48,7 @@ module "eks" {
   version         = "20.0.0"
 
   cluster_name    = local.cluster_name
-  cluster_version = "1.32"
+  cluster_version = "1.33"
 
   enable_irsa              = true
   vpc_id                   = local.vpc_id
@@ -78,6 +79,7 @@ module "eks" {
   self_managed_node_groups = {
     "${local.cluster_name}" = {
       ami_id                       = data.aws_ami.eks_ami.id
+      platform                     = "al2023"
       instance_type                = var.node_config.node_type
       desired_size                 = var.node_config.min_count
       min_size                     = var.node_config.min_count
