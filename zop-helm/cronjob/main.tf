@@ -6,10 +6,23 @@ locals {
   app_name_exists_list = length([for item in local.env_list : item if item.name == "APP_NAME"]) > 0
 
   # Add APP_NAME to the env_list if it doesn't exist
-  updated_env_list = local.app_name_exists_list ? local.env_list : concat(local.env_list, [{
+  env_list_with_app_name = local.app_name_exists_list ? local.env_list : concat(local.env_list, [{
     name  = "APP_NAME"
     value = var.name
   }])
+
+  # Sort env_list by name for deterministic ordering
+  env_map = {
+    for item in local.env_list_with_app_name :
+    item.name => item.value
+  }
+
+  updated_env_list = [
+    for name in sort(keys(local.env_map)) : {
+      name  = name
+      value = local.env_map[name]
+    }
+  ]
 }
 
 resource "helm_release" "cron_helm"{
