@@ -45,7 +45,7 @@ data "aws_ami" "eks_ami" {
 
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
-  version         = "20.0.0"
+  version         = "20.31.6"
 
   cluster_name    = local.cluster_name
   cluster_version = "1.33"
@@ -55,6 +55,7 @@ module "eks" {
   subnet_ids               = local.private_subnet_ids
   control_plane_subnet_ids = local.private_subnet_ids
   enable_cluster_creator_admin_permissions = true
+  authentication_mode                      = "API_AND_CONFIG_MAP"
 
   // Enable Control Plane Logging
   cluster_enabled_log_types     = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
@@ -79,7 +80,8 @@ module "eks" {
   self_managed_node_groups = {
     "${local.cluster_name}" = {
       ami_id                       = data.aws_ami.eks_ami.id
-      platform                     = "al2023"
+      create_launch_template       = true
+      ami_type                     = "AL2023_x86_64_STANDARD"
       instance_type                = var.node_config.node_type
       desired_size                 = var.node_config.min_count
       min_size                     = var.node_config.min_count
