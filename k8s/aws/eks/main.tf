@@ -55,6 +55,7 @@ module "eks" {
   subnet_ids               = local.private_subnet_ids
   control_plane_subnet_ids = local.private_subnet_ids
   enable_cluster_creator_admin_permissions = true
+  authentication_mode                      = "API_AND_CONFIG_MAP"
 
   // Enable Control Plane Logging
   cluster_enabled_log_types     = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
