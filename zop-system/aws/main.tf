@@ -103,11 +103,9 @@ resource "kubernetes_ingress_v1" "kube_management_api_ingress" {
   metadata {
     name      = "kube-management-api-ingress"
     namespace = "zop-system"
-    annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-    }
   }
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = "kube-management-api.${var.host}"
       http {
