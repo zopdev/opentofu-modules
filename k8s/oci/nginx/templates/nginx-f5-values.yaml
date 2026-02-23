@@ -1,0 +1,38 @@
+# F5 NGINX Ingress Controller on OCI. IngressClass name "nginx" (same as before).
+# OCI annotations preserved; optional reserved IP when lb_ip is set.
+controller:
+  ingressClass:
+    name: nginx
+    create: true
+    setAsDefaultIngress: false
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Local
+    annotations:
+      service.beta.kubernetes.io/oci-load-balancer-shape: ${load_balancer_shape}
+      service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
+      service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "100"
+      service.beta.kubernetes.io/oci-load-balancer-subnet: ${subnet_id}
+      service.beta.kubernetes.io/oci-load-balancer-internal: "false"
+      %{ if lb_ip != "" ~}
+      oci.oraclecloud.com/reserved-ips: "${lb_ip}"
+      %{ endif ~}
+  replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 11
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+  %{ if prometheus_enabled == "true" ~}
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
+  %{ endif ~}
