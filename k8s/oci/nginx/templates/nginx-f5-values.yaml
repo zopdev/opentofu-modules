@@ -1,10 +1,18 @@
-# F5 NGINX Ingress Controller on OCI. IngressClass name "nginx" (same as before).
-# OCI annotations preserved; optional reserved IP when lb_ip is set.
 controller:
   ingressClass:
     name: nginx
     create: true
     setAsDefaultIngress: false
+  config:
+    entries:
+      otel-exporter-endpoint: "tempo-distributor.tempo:4317"
+      otel-trace-in-http: "true"
+      http-snippets: "gzip on;"
+      %{ if prometheus_enabled }
+      proxy-body-size: "4m"
+      proxy-buffer-size: "16k"
+      proxy-buffers: "32 16k"
+      %{ endif }
   service:
     type: LoadBalancer
     externalTrafficPolicy: Local
@@ -28,7 +36,7 @@ controller:
     requests:
       cpu: 50m
       memory: 256Mi
-  %{ if prometheus_enabled == "true" ~}
+  %{ if prometheus_enabled ~}
   metrics:
     enabled: true
     serviceMonitor:
