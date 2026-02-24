@@ -187,7 +187,7 @@ resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
         "cert-manager.io/issuer"           = "letsencrypt"
         "kubernetes.io/tls-acme"           = "true"
         "nginx.org/path-regex"             = "case_sensitive"
-        "nginx.org/rewrite-target"         = "/$2"
+        "nginx.org/rewrites"               = "serviceName=${each.value.service_name} rewrite=/"
       },
       each.value.basic_auth ? {
         "nginx.org/basic-auth-secret" = "${each.value.service_name}-basic-auth"

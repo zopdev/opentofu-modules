@@ -1,11 +1,16 @@
-# serviceNameOverride (root) sets the Service name so domain.tf data source finds it for Route53.
-serviceNameOverride: ${cluster_name}-ingress-nginx-controller
-
 controller:
   ingressClass:
     name: nginx
     create: true
     setAsDefaultIngress: false
+  config:
+    entries:
+      otel-exporter-endpoint: "tempo-distributor.tempo:4317"
+      otel-trace-in-http: "true"
+      %{~ if cluster_name == "cosmos" ~}
+      proxy-buffer-size: "128k"
+      large-client-header-buffers: "4 16k"
+      %{~ endif ~}
   service:
     type: LoadBalancer
     externalTrafficPolicy: Local

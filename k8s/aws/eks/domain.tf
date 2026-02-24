@@ -11,7 +11,7 @@ data "aws_route53_zone" "zone" {
 
 data "kubernetes_service" "ingress-controller" {
   metadata {
-    name      = "${local.cluster_name}-ingress-nginx-controller"
+    name      = "${local.cluster_name}-nginx-ingress-controller"
     namespace = "kube-system"
   }
   depends_on = [module.nginx]
