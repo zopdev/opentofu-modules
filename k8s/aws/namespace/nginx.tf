@@ -129,7 +129,7 @@ resource "kubernetes_ingress_v1" "default_service_ingress" {
     }
     tls {
       secret_name = "tls-secret-replica"
-      hosts       = ["*.${local.domain_name}"]
+      hosts       = [each.value.domain_name]
     }
   }
   depends_on = [kubernetes_namespace.app_environments]
