@@ -98,11 +98,9 @@ resource "kubernetes_ingress_v1" "kops_kube_ingress" {
   metadata {
     name      = "kops-kube-ingress"
     namespace = "kube-system"
-    annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-    }
   }
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = "kops-kube.${var.host}"
       http {
