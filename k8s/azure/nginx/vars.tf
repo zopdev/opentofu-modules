@@ -1,9 +1,4 @@
-variable "node_port" {
-  description = "Node Port on which to expose kong."
-  type        = number
-}
-
-variable app_name {
+variable "app_name" {
   type = string
   description = "Name of AKS cluster"
   default = ""
