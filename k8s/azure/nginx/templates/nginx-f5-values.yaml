@@ -1,7 +1,3 @@
-# F5 NGINX Ingress Controller on Azure.
-# Uses the same static Public IP and resource group as the current nginx ingress.
-# Ingress class name is "nginx" so existing Ingresses with ingressClassName: nginx keep working.
-
 controller:
   enableCustomResources: false
   ingressClass:
