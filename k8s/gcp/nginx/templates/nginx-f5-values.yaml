@@ -1,0 +1,46 @@
+controller:
+  enableCustomResources: false
+  ingressClass:
+    name: nginx
+    create: true
+    setAsDefaultIngress: true
+
+  config:
+    entries:
+      otel-exporter-endpoint: "tempo-distributor.tempo:4317"
+      otel-trace-in-http: "true"
+      http-snippets: "gzip on;"
+      %{ if prometheus_enabled }
+      proxy-body-size: "4m"
+      proxy-buffer-size: "16k"
+      proxy-buffers: "32 16k"
+      %{ endif }
+
+  service:
+    type: LoadBalancer
+    loadBalancerIP: ${lb_ip}
+    externalTrafficPolicy: Local
+
+  replicaCount: 2
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 11
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+
+prometheus:
+  create: true
+  port: 9113
+  service:
+    create: true
+  serviceMonitor:
+    create: true
+    labels:
+      release: prometheus
