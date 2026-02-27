@@ -38,9 +38,12 @@ controller:
       cpu: 50m
       memory: 256Mi
 
-  metrics:
-    enabled: true
-    serviceMonitor:
-      enabled: true
-      additionalLabels:
-        release: prometheus
+prometheus:
+  create: true
+  port: 9113
+  service:
+    create: true
+  serviceMonitor:
+    create: true
+    labels:
+      release: prometheus
