@@ -3,7 +3,7 @@ variable "node_port" {
   type        = number
 }
 
-variable app_name {
+variable "app_name" {
   type = string
   description = "Name of AKS cluster"
   default = ""
