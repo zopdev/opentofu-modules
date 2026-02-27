@@ -11,7 +11,7 @@ locals {
       NAMESPACE                         = "monitoring"
       GRAFANA_HOST                      = local.grafana_host
       GRAFANA_ENABLED                   = local.grafana_enable
-      GRAFANA_TLS_HOST                  = "*.${local.domain_name}"
+      GRAFANA_TLS_HOST                  = local.grafana_host
       GRAFANA_OBS_ADMIN_PASSWORD        = try(local.grafana_enable ? try(random_password.observability_admin.0.result, "") : "", "")
       CLUSTER_NAME                      = var.app_name
       PERSISTENCE_TYPE_DB               = try(var.observability_config.grafana.persistence.type == "db" ? true : false, false)
