@@ -100,10 +100,10 @@ resource "kubernetes_ingress_v1" "default_service_ingress" {
   metadata {
     name      = each.value.ingress_name
     namespace = each.value.ns
-    annotations = {
-      "nginx.org/basic-auth-secret"      = each.value.basic_auth ? "${each.value.ns}/${each.value.service_name}-basic-auth" : ""
-      "nginx.org/basic-auth-realm"       = each.value.basic_auth ? "Authentication Required" : ""
-    }
+    annotations = each.value.basic_auth ? {
+      "nginx.org/basic-auth-secret" = "${each.value.ns}/${each.value.service_name}-basic-auth"
+      "nginx.org/basic-auth-realm"  = "Authentication Required"
+    } : {}
   }
   spec {
     ingress_class_name = "nginx"
@@ -136,12 +136,16 @@ resource "kubernetes_ingress_v1" "custom_service_ingress" {
   metadata {
     name      = each.value.ingress_name
     namespace = each.value.ns
-    annotations = {
-      "cert-manager.io/issuer"      = "letsencrypt"
-      "kubernetes.io/tls-acme"      = "true"
-      "nginx.org/basic-auth-secret" = each.value.basic_auth ? "${each.value.ns}/${each.value.service_name}-basic-auth" : ""
-      "nginx.org/basic-auth-realm"  = each.value.basic_auth ? "Authentication Required" : ""
-    }
+    annotations = merge(
+      {
+        "cert-manager.io/issuer" = "letsencrypt"
+        "kubernetes.io/tls-acme" = "true"
+      },
+      each.value.basic_auth ? {
+        "nginx.org/basic-auth-secret" = "${each.value.ns}/${each.value.service_name}-basic-auth"
+        "nginx.org/basic-auth-realm"  = "Authentication Required"
+      } : {}
+    )
   }
   spec {
     ingress_class_name = "nginx"
@@ -174,13 +178,17 @@ resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
   metadata {
     name      = each.value.ingress_name
     namespace = each.value.ns
-    annotations = {
-      "cert-manager.io/issuer"      = "letsencrypt"
-      "kubernetes.io/tls-acme"      = "true"
-      "nginx.org/rewrites"          = "serviceName=${each.value.service_name} rewrite=/"
-      "nginx.org/basic-auth-secret" = each.value.basic_auth ? "${each.value.ns}/${each.value.service_name}-basic-auth" : ""
-      "nginx.org/basic-auth-realm"  = each.value.basic_auth ? "Authentication Required" : ""
-    }
+    annotations = merge(
+      {
+        "cert-manager.io/issuer" = "letsencrypt"
+        "kubernetes.io/tls-acme" = "true"
+        "nginx.org/rewrites"     = "serviceName=${each.value.service_name} rewrite=/"
+      },
+      each.value.basic_auth ? {
+        "nginx.org/basic-auth-secret" = "${each.value.ns}/${each.value.service_name}-basic-auth"
+        "nginx.org/basic-auth-realm"  = "Authentication Required"
+      } : {}
+    )
   }
   spec {
     ingress_class_name = "nginx"
