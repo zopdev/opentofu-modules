@@ -10,12 +10,10 @@ controller:
     entries:
       otel-exporter-endpoint: "tempo-distributor.tempo:4317"
       otel-trace-in-http: "true"
-      http-snippets: "gzip on;"
-      %{ if prometheus_enabled }
-      proxy-body-size: "4m"
-      proxy-buffer-size: "16k"
-      proxy-buffers: "32 16k"
-      %{ endif }
+      %{~ if cluster_name == "cosmos" ~}
+      proxy-buffer-size: "128k"
+      large-client-header-buffers: "4 16k"
+      %{~ endif ~}
 
   service:
     type: LoadBalancer
