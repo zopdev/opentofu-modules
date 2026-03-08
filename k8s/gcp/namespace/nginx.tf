@@ -128,9 +128,9 @@ resource "kubernetes_ingress_v1" "default_service_ingress" {
     name      = each.value.ingress_name
     namespace = each.value.ns
     annotations = each.value.basic_auth ? {
-      "nginx.org/basic-auth-secret" = "${each.value.service_name}-basic-auth"
-      "nginx.org/basic-auth-realm"  = "Authentication Required"
-    } : {}
+        "nginx.org/basic-auth-secret" = "${each.value.service_name}-basic-auth"
+        "nginx.org/basic-auth-realm"  = "Authentication Required"
+      } : {}
   }
   spec {
     ingress_class_name = "nginx"
@@ -211,8 +211,8 @@ resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
         "kubernetes.io/tls-acme" = "true"
       },
       each.value.nginx_rewrite ? {
-        "nginx.org/path-regex" = "case_sensitive"
-        "nginx.org/rewrites"   = "serviceName=${each.value.service_name} rewrite=/"
+        "nginx.org/path-regex"        = "case_sensitive"
+        "nginx.org/location-snippets" = "rewrite ^/${each.value.path_based_routing}/?(.*)$ /$1 break;"
       } : {},
       each.value.basic_auth ? {
         "nginx.org/basic-auth-secret" = "${each.value.service_name}-basic-auth"
@@ -234,7 +234,7 @@ resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
               }
             }
           }
-          path = "/${each.value.path_based_routing}"
+          path = each.value.nginx_rewrite ? "/${each.value.path_based_routing}(/|$)" : "/${each.value.path_based_routing}"
         }
       }
     }
