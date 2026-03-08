@@ -20,8 +20,8 @@ variable "app_env" {
 }
 
 variable "app_name" {
-    description = "AppDynamics Controller URL."
-    type        = string
+  description = "AppDynamics Controller URL."
+  type        = string
 }
 
 variable "lb_ip" {

@@ -127,14 +127,13 @@ resource "kubernetes_ingress_v1" "default_service_ingress" {
   metadata {
     name      = each.value.ingress_name
     namespace = each.value.ns
-    annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-      "nginx.ingress.kubernetes.io/auth-type" = each.value.basic_auth ? "basic" : ""
-      "nginx.ingress.kubernetes.io/auth-secret" = each.value.basic_auth ? "${each.value.service_name}-basic-auth" : ""
-      "nginx.ingress.kubernetes.io/auth-realm" = each.value.basic_auth ? "Authentication Required" : ""
-    }
+    annotations = each.value.basic_auth ? {
+        "nginx.org/basic-auth-secret" = "${each.value.service_name}-basic-auth"
+        "nginx.org/basic-auth-realm"  = "Authentication Required"
+      } : {}
   }
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = each.value.domain_name
       http {
@@ -153,7 +152,7 @@ resource "kubernetes_ingress_v1" "default_service_ingress" {
     }
     tls {
       secret_name = "tls-secret-replica"
-      hosts       = ["*.${local.domain_name}"]
+      hosts       = [each.value.domain_name]
     }
   }
   depends_on = [kubernetes_namespace.app_environments]
@@ -164,17 +163,19 @@ resource "kubernetes_ingress_v1" "custom_service_ingress" {
   metadata {
     name      = each.value.ingress_name
     namespace = each.value.ns
-    annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-      "cert-manager.io/issuer"      = "letsencrypt"
-      "kubernetes.io/tls-acme"      = "true"
-      "nginx.ingress.kubernetes.io/auth-type" = each.value.basic_auth ? "basic" : ""
-      "nginx.ingress.kubernetes.io/auth-secret" = each.value.basic_auth ? "${each.value.service_name}-basic-auth" : ""
-      "nginx.ingress.kubernetes.io/auth-realm" = each.value.basic_auth ? "Authentication Required" : ""
-
-    }
+    annotations = merge(
+      {
+        "cert-manager.io/issuer" = "letsencrypt"
+        "kubernetes.io/tls-acme" = "true"
+      },
+      each.value.basic_auth ? {
+        "nginx.org/basic-auth-secret" = "${each.value.service_name}-basic-auth"
+        "nginx.org/basic-auth-realm"  = "Authentication Required"
+      } : {}
+    )
   }
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = each.value.ingress_host
       http {
@@ -204,19 +205,23 @@ resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
   metadata {
     name      = each.value.ingress_name
     namespace = each.value.ns
-    annotations = {
-      "kubernetes.io/ingress.class"                = "nginx"
-      "cert-manager.io/issuer"                     = "letsencrypt"
-      "kubernetes.io/tls-acme"                     = "true"
-      "nginx.ingress.kubernetes.io/use-regex"      = "true"
-      "nginx.ingress.kubernetes.io/rewrite-target" = each.value.nginx_rewrite ?  "/$2" : ""
-      "nginx.ingress.kubernetes.io/auth-type" = each.value.basic_auth ? "basic" : ""
-      "nginx.ingress.kubernetes.io/auth-secret" = each.value.basic_auth ? "${each.value.service_name}-basic-auth" : ""
-      "nginx.ingress.kubernetes.io/auth-realm" = each.value.basic_auth ? "Authentication Required" : ""
-
-    }
+    annotations = merge(
+      {
+        "cert-manager.io/issuer" = "letsencrypt"
+        "kubernetes.io/tls-acme" = "true"
+      },
+      each.value.nginx_rewrite ? {
+        "nginx.org/path-regex"        = "case_sensitive"
+        "nginx.org/location-snippets" = "rewrite ^/${each.value.path_based_routing}/?(.*)$ /$1 break;"
+      } : {},
+      each.value.basic_auth ? {
+        "nginx.org/basic-auth-secret" = "${each.value.service_name}-basic-auth"
+        "nginx.org/basic-auth-realm"  = "Authentication Required"
+      } : {}
+    )
   }
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = each.value.ingress_host
       http {
@@ -229,7 +234,7 @@ resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
               }
             }
           }
-          path = each.value.nginx_rewrite ? "/${each.value.path_based_routing}(\\/|$)(.*)" : "/${each.value.path_based_routing}"
+          path = each.value.nginx_rewrite ? "/${each.value.path_based_routing}(/|$)" : "/${each.value.path_based_routing}"
         }
       }
     }
@@ -256,11 +261,11 @@ resource "kubernetes_ingress_v1" "wildcard_custom_service_ingress" {
     name      = each.value.ingress_name
     namespace = each.value.ns
     annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-      "kubernetes.io/tls-acme"      = "true"
+      "kubernetes.io/tls-acme" = "true"
     }
   }
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = each.value.ingress_host
       http {
@@ -339,13 +344,11 @@ resource "kubernetes_ingress_v1" "service_ingress_with_secret" {
   metadata {
     name      = "ingress-with-secret-${each.key}"
     namespace = var.namespace
-    annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-      # Add more annotations as needed
-    }
+    annotations = {}
   }
 
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = each.value.host
       http {
