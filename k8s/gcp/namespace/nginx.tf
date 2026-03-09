@@ -211,8 +211,8 @@ resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
         "kubernetes.io/tls-acme" = "true"
       },
       each.value.nginx_rewrite ? {
-        "nginx.org/path-regex"   = "case_sensitive"
-        "nginx.org/rewrite-target" = "/$2"
+        "nginx.org/path-regex"        = "case_sensitive"
+        "nginx.org/location-snippets" = "rewrite ^/${each.value.path_based_routing}/?(.*)$ /$1 break;"
       } : {},
       each.value.basic_auth ? {
         "nginx.org/basic-auth-secret" = "${each.value.service_name}-basic-auth"
@@ -234,7 +234,7 @@ resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
               }
             }
           }
-          path = each.value.nginx_rewrite ? "/${each.value.path_based_routing}(/|$)(.*)" : "/${each.value.path_based_routing}"
+          path = each.value.nginx_rewrite ? "/${each.value.path_based_routing}(/|$)" : "/${each.value.path_based_routing}"
         }
       }
     }
