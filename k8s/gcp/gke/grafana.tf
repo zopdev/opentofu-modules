@@ -26,7 +26,7 @@ data "template_file" "grafana_template" {
   template = file("${path.module}/templates/grafana-values.yaml")
   vars = {
     NAMESPACE                         = "monitoring"
-    GRAFANA_TLS_HOST                  = "*.${local.domain_name}"
+    GRAFANA_TLS_HOST                  = local.grafana_host
     GRAFANA_HOST                      = local.grafana_host
     GRAFANA_ENABLED                   = local.grafana_enable
     GRAFANA_OBS_ADMIN_PASSWORD        = try(local.grafana_enable ? try(random_password.observability_admin.0.result, "") : "", "")
