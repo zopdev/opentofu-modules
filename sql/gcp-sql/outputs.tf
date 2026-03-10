@@ -23,6 +23,10 @@ output "read_replica_db_url" {
   value =  var.read_replica == true ? google_sql_database_instance.sql_db_replica.0.connection_name : null
 }
 
+output "read_replica_instance_ip" {
+  value = var.read_replica == true ? google_sql_database_instance.sql_db_replica[0].private_ip_address : null
+}
+
 output "db_type" {
   value = local.db_type[var.sql_type].type
 }

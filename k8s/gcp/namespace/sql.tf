@@ -99,6 +99,21 @@ resource "kubernetes_service" "db_service" {
   }
 }
 
+resource "kubernetes_service" "db_read_replica_service" {
+  count       = try(var.sql_db.read_replica, false) ? 1 : 0
+  metadata {
+    name      = "${var.namespace}-sql-replica"
+    namespace = "db"
+  }
+  spec {
+    type          = "ExternalName"
+    external_name = module.sql_db[0].read_replica_instance_ip
+    port {
+      port = module.sql_db[0].db_port
+    }
+  }
+}
+
 module "sql_db_v2" {
   source =  "../../../sql/gcp-sql"
 
@@ -141,6 +156,25 @@ resource "kubernetes_service" "sql_db_service_v2" {
   spec {
     type          = "ExternalName"
     external_name = module.sql_db_v2[each.key].db_instance_ip
+    port {
+      port = module.sql_db_v2[each.key].db_port
+    }
+  }
+}
+
+resource "kubernetes_service" "sql_db_read_replica_service_v2" {
+  for_each = {
+    for k, v in (var.sql_list != null ? var.sql_list : {}) : k => v
+    if try(tobool(v.read_replica), false)
+  }
+
+  metadata {
+    name      = "${each.key}-sql-replica"
+    namespace = "db"
+  }
+  spec {
+    type          = "ExternalName"
+    external_name = module.sql_db_v2[each.key].read_replica_instance_ip
     port {
       port = module.sql_db_v2[each.key].db_port
     }
