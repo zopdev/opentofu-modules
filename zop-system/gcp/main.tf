@@ -117,7 +117,7 @@ resource "kubernetes_ingress_v1" "kube_management_api_ingress" {
             service {
               name = "kube-management-api"
               port {
-                number = 8000
+                number = 80
               }
             }
           }
@@ -127,7 +127,7 @@ resource "kubernetes_ingress_v1" "kube_management_api_ingress" {
     }
     tls {
       secret_name = "tls-secret-replica"
-      hosts       = ["*.${var.host}"]
+      hosts       = ["kube-management-api.${var.host}"]
     }
   }
   depends_on = [kubernetes_secret_v1.namespace-cert-replicator,kubernetes_namespace.app_environments]
