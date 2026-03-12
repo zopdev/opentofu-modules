@@ -64,8 +64,9 @@ variable "services" {
     enable_default_ingress = optional(bool)
     badger_db          = optional(bool)
     datastore_configs = optional(object({
-      name = optional(string)
-      databse = optional(string)
+      name         = optional(string)
+      databse      = optional(string)
+      read_replica = optional(bool)
     }))
     redis_configs = optional(object({
       name = optional(string)
@@ -182,8 +183,9 @@ variable "cron_jobs" {
     enable_default_ingress = optional(bool)
     badger_db          = optional(bool)
     datastore_configs = optional(object({
-      name = optional(string)
-      databse = optional(string)
+      name         = optional(string)
+      databse      = optional(string)
+      read_replica = optional(bool)
     }))
     redis_configs = optional(object({
       name = optional(string)
