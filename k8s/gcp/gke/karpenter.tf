@@ -80,16 +80,15 @@ resource "kubernetes_secret" "gcp-credentials" {
 }
 
 # helm chart values
-locals {
-  karpenter_template = var.karpenter_configs.enable ? templatefile(
-    "${path.module}/templates/karpenter-values.yaml",
-    {
-      PROJECT_ID   = var.provider_id
-      REGION       = var.app_region
-      CLUSTER_NAME = local.cluster_name
-      SECRET_NAME  = kubernetes_secret.gcp-credentials[0].metadata[0].name
-    }
-  ) : ""
+data "template_file" "karpenter_template" {
+  count    = var.karpenter_configs.enable ? 1 : 0
+  template = file("./templates/karpenter-values.yaml")
+  vars = {
+    PROJECT_ID   = var.provider_id
+    REGION       = var.app_region
+    CLUSTER_NAME = local.cluster_name
+    SECRET_NAME  = kubernetes_secret.gcp-credentials[0].metadata[0].name
+  }
 }
 
 # helm chart install
@@ -101,7 +100,7 @@ resource "helm_release" "karpenter" {
   namespace  = "karpenter"
   version    = "0.0.3"
 
-  values = [local.karpenter_template]
+  values = [data.template_file.karpenter_template[0].rendered]
 }
 
 # available zones in region
