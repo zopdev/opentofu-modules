@@ -52,21 +52,7 @@ locals {
 resource "aws_s3_bucket" "mimir_data" {
   count = local.enable_mimir ? 1 : 0
   bucket        = "${local.cluster_name}-mimir-data-${var.observability_suffix}"
-  force_destroy = false
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
-resource "aws_s3_bucket_public_access_block" "mimir_public_access_block" {
-  count  = local.enable_mimir ? 1 : 0
-  bucket = aws_s3_bucket.mimir_data[0].id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  force_destroy = "true"
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "mimir_data_encryption" {
@@ -77,7 +63,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "mimir_data_encryp
     apply_server_side_encryption_by_default {
       sse_algorithm = "aws:kms"
     }
-    bucket_key_enabled = true
   }
 }
 
