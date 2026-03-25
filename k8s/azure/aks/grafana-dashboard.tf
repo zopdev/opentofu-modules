@@ -32,7 +32,7 @@ locals {
 
   users_with_roles = flatten([
     for role, emails in var.grafana_access: [
-      for email in coalesce(try(emails, null), []) : {
+      for email in emails : {
         email = email
         role  = local.role_map[role]
       }

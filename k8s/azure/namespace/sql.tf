@@ -42,7 +42,6 @@ module "mysql" {
   io_scaling_enabled         = var.sql_db.iops_scaling != null ? var.sql_db.iops_scaling : false
   read_replica               = var.sql_db.read_replica != null ? var.sql_db.read_replica : false
   key_vault_id               = data.azurerm_key_vault.secrets.id
-  vpc                        = var.vpc
   tags                       = local.common_tags
 }
 
@@ -82,7 +81,6 @@ module "postgresql" {
   read_replica               = var.sql_db.read_replica != null ? var.sql_db.read_replica : false
   key_vault_id               = data.azurerm_key_vault.secrets.id
   enable_ssl                 = var.sql_db.enable_ssl != null ? var.sql_db.enable_ssl : false
-  vpc                        = var.vpc
 
   tags                       = merge(local.common_tags,
     tomap({
@@ -130,7 +128,6 @@ module "mysql_v2" {
   read_replica               = each.value.read_replica != null ? each.value.read_replica : false
   multi_ds                   = true
   key_vault_id               = data.azurerm_key_vault.secrets.id
-  vpc                        = var.vpc
   tags                       = local.common_tags
 }
 
@@ -177,7 +174,6 @@ module "postgres_v2" {
   key_vault_id               = data.azurerm_key_vault.secrets.id
   multi_ds                   = true
   enable_ssl                 = each.value.enable_ssl != null ? each.value.enable_ssl : false
-  vpc                        = var.vpc
 
   tags                       = merge(local.common_tags,
     tomap({

@@ -16,7 +16,7 @@ resource "helm_release" "service_helm"{
   name        = "kube-management-api"
   namespace   = "zop-system"
   repository  = "https://helm.zop.dev"
-  version     = "v0.0.28"
+  version     = "v0.0.29"
   chart       = "service"
 
   set {
@@ -89,11 +89,6 @@ resource "helm_release" "service_helm"{
     value = ["zop-system-secret"]
   }
 
-  set {
-    name  = "Containers.privileged"
-    value = true
-  }
-
   values = [templatefile("./templates/values.yaml",{
     cluster_name = var.cluster_name
     app_region   = var.app_region
@@ -122,7 +117,7 @@ resource "kubernetes_ingress_v1" "kube_management_api_ingress" {
             service {
               name = "kube-management-api"
               port {
-                number = 80
+                number = 8000
               }
             }
           }
@@ -132,7 +127,7 @@ resource "kubernetes_ingress_v1" "kube_management_api_ingress" {
     }
     tls {
       secret_name = "tls-secret-replica"
-      hosts       = ["kube-management-api.${var.host}"]
+      hosts       = ["*.${var.host}"]
     }
   }
   depends_on = [kubernetes_secret_v1.namespace-cert-replicator,kubernetes_namespace.app_environments]

@@ -103,9 +103,11 @@ resource "kubernetes_ingress_v1" "kube_management_api_ingress" {
   metadata {
     name      = "kube-management-api-ingress"
     namespace = "zop-system"
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+    }
   }
   spec {
-    ingress_class_name = "nginx"
     rule {
       host = "kube-management-api.${var.host}"
       http {
@@ -114,7 +116,7 @@ resource "kubernetes_ingress_v1" "kube_management_api_ingress" {
             service {
               name = "kube-management-api"
               port {
-                number = 80
+                number = 8000
               }
             }
           }
@@ -124,7 +126,7 @@ resource "kubernetes_ingress_v1" "kube_management_api_ingress" {
     }
     tls {
       secret_name = "tls-secret-replica"
-      hosts       = ["kube-management-api.${var.host}"]
+      hosts       = ["*.${var.host}"]
     }
   }
   depends_on = [kubernetes_secret_v1.namespace-cert-replicator, kubernetes_namespace.app_environments]

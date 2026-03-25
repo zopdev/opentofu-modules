@@ -52,7 +52,8 @@ image:
   tag: 10.2.1
 ingress:
   %{~ if GRAFANA_HOST != "" ~}
-    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.class: "nginx"
     tls:
       - hosts:
           - "${GRAFANA_TLS_HOST}"

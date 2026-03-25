@@ -104,13 +104,14 @@ resource "kubernetes_ingress_v1" "default_service_ingress" {
   metadata {
     name      = each.value.ingress_name
     namespace = each.value.ns
-    annotations = each.value.basic_auth ? {
-      "nginx.org/basic-auth-secret" = "${each.value.service_name}-basic-auth"
-      "nginx.org/basic-auth-realm"  = "Authentication Required"
-    } : {}
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+      "nginx.ingress.kubernetes.io/auth-type" = each.value.basic_auth ? "basic" : ""
+      "nginx.ingress.kubernetes.io/auth-secret" = each.value.basic_auth ? "${each.value.service_name}-basic-auth" : ""
+      "nginx.ingress.kubernetes.io/auth-realm" = each.value.basic_auth ? "Authentication Required" : ""
+    }
   }
   spec {
-    ingress_class_name = "nginx"
     rule {
       host = each.value.domain_name
       http {
@@ -129,7 +130,7 @@ resource "kubernetes_ingress_v1" "default_service_ingress" {
     }
     tls {
       secret_name = "tls-secret-replica"
-      hosts       = [each.value.domain_name]
+      hosts       = ["*.${local.domain_name}"]
     }
   }
   depends_on = [kubernetes_namespace.app_environments]
@@ -140,19 +141,16 @@ resource "kubernetes_ingress_v1" "custom_service_ingress" {
   metadata {
     name      = each.value.ingress_name
     namespace = each.value.ns
-    annotations = merge(
-      {
-        "cert-manager.io/issuer" = "letsencrypt"
-        "kubernetes.io/tls-acme" = "true"
-      },
-      each.value.basic_auth ? {
-        "nginx.org/basic-auth-secret" = "${each.value.service_name}-basic-auth"
-        "nginx.org/basic-auth-realm"  = "Authentication Required"
-      } : {}
-    )
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+      "cert-manager.io/issuer"      = "letsencrypt"
+      "kubernetes.io/tls-acme"      = "true"
+      "nginx.ingress.kubernetes.io/auth-type" = each.value.basic_auth ? "basic" : ""
+      "nginx.ingress.kubernetes.io/auth-secret" = each.value.basic_auth ? "${each.value.service_name}-basic-auth" : ""
+      "nginx.ingress.kubernetes.io/auth-realm" = each.value.basic_auth ? "Authentication Required" : ""
+    }
   }
   spec {
-    ingress_class_name = "nginx"
     rule {
       host = each.value.ingress_host
       http {
@@ -182,21 +180,18 @@ resource "kubernetes_ingress_v1" "custom_path_based_service_ingress" {
   metadata {
     name      = each.value.ingress_name
     namespace = each.value.ns
-    annotations = merge(
-      {
-        "cert-manager.io/issuer"           = "letsencrypt"
-        "kubernetes.io/tls-acme"           = "true"
-        "nginx.org/path-regex"             = "case_sensitive"
-        "nginx.org/rewrites"               = "serviceName=${each.value.service_name} rewrite=/"
-      },
-      each.value.basic_auth ? {
-        "nginx.org/basic-auth-secret" = "${each.value.service_name}-basic-auth"
-        "nginx.org/basic-auth-realm"  = "Authentication Required"
-      } : {}
-    )
+    annotations = {
+      "kubernetes.io/ingress.class"                = "nginx"
+      "cert-manager.io/issuer"                     = "letsencrypt"
+      "kubernetes.io/tls-acme"                     = "true"
+      "nginx.ingress.kubernetes.io/use-regex"      = "true"
+      "nginx.ingress.kubernetes.io/rewrite-target" = "/$2"
+      "nginx.ingress.kubernetes.io/auth-type" = each.value.basic_auth ? "basic" : ""
+      "nginx.ingress.kubernetes.io/auth-secret" = each.value.basic_auth ? "${each.value.service_name}-basic-auth" : ""
+      "nginx.ingress.kubernetes.io/auth-realm" = each.value.basic_auth ? "Authentication Required" : ""
+    }
   }
   spec {
-    ingress_class_name = "nginx"
     rule {
       host = each.value.ingress_host
       http {
@@ -236,11 +231,11 @@ resource "kubernetes_ingress_v1" "wildcard_custom_service_ingress" {
     name      = each.value.ingress_name
     namespace = each.value.ns
     annotations = {
-      "kubernetes.io/tls-acme" = "true"
+      "kubernetes.io/ingress.class" = "nginx"
+      "kubernetes.io/tls-acme"      = "true"
     }
   }
   spec {
-    ingress_class_name = "nginx"
     rule {
       host = each.value.ingress_host
       http {

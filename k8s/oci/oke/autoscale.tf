@@ -5,11 +5,12 @@ resource "null_resource" "wait_for_cluster" {
   depends_on = [module.oke]
 }
 
-locals {
-  autoscale_yaml = templatefile("${path.module}/templates/cluster-auto-scaler-values.yaml", {
-    CLUSTER_NAME = local.cluster_name
-    REGION       = var.app_region
-  })
+data "template_file" "autoscale_template" {
+  template = file("./templates/cluster-auto-scaler-values.yaml")
+  vars = {
+    CLUSTER_NAME   = local.cluster_name
+    REGION         = var.app_region
+  }
 }
 
 resource "helm_release" "auto_scaler" {
@@ -19,7 +20,7 @@ resource "helm_release" "auto_scaler" {
   namespace  = "kube-system"
   version    = "9.28.0"
 
-  values = [local.autoscale_yaml]
+  values = [data.template_file.autoscale_template.rendered]
 
   depends_on = [null_resource.wait_for_cluster]
 } 

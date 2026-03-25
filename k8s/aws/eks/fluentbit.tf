@@ -114,42 +114,40 @@ data "aws_iam_policy_document" "fluent_bit_policy" {
   }
 }
 
-locals {
-  fluent_bit = local.fluent_bit_enable ? templatefile(
-    "${path.module}/templates/fluent-bit-values.yaml",
-    {
-      CLUSTER_NAME    = local.cluster_name
-      AWS_REGION      = var.app_region
-      TAGS            = join(",", [for key, value in local.common_tags : "${key}=${value}"])
+data template_file "fluent-bit"{
+  count    = local.fluent_bit_enable ? 1 : 0
+  template = file("./templates/fluent-bit-values.yaml")
+  vars     = {
+    "CLUSTER_NAME"    = local.cluster_name
+    "AWS_REGION"      = var.app_region
+    "TAGS"            = join(",", [for key, value in local.common_tags : "${key}=${value}"])
 
-      HTTP_SERVER     = "On"
-      HTTP_PORT       = "2020"
+    "HTTP_SERVER" = "On"
+    "HTTP_PORT"   = "2020"
 
-      READ_FROM_HEAD  = "Off"
-      READ_FROM_TAIL  = "On"
+    "READ_FROM_HEAD" = "Off"
+    "READ_FROM_TAIL" = "On"
 
-      fluent_bit_cloud_watch_enable = local.fluent_bit_cloud_watch_enable
-      fluent_bit_loki_outputs       = jsonencode(local.fluent_bit_loki_outputs)
-      fluent_bit_http_outputs       = jsonencode(local.fluent_bit_http_outputs)
-      fluent_bit_splunk_outputs     = jsonencode(local.fluent_bit_splunk_outputs)
-      fluent_bit_datadog_outputs    = jsonencode(local.fluent_bit_datadog_outputs)
-      fluent_bit_newrelic_outputs   = jsonencode(local.fluent_bit_newrelic_outputs)
-      fluent_bit_slack_outputs      = jsonencode(local.fluent_bit_slack_outputs)
-    }
-  ) : null
+    fluent_bit_cloud_watch_enable = local.fluent_bit_cloud_watch_enable
+    fluent_bit_loki_outputs = jsonencode(local.fluent_bit_loki_outputs)
+    fluent_bit_http_outputs = jsonencode(local.fluent_bit_http_outputs)
+    fluent_bit_splunk_outputs = jsonencode(local.fluent_bit_splunk_outputs)
+    fluent_bit_datadog_outputs = jsonencode(local.fluent_bit_datadog_outputs)
+    fluent_bit_newrelic_outputs = jsonencode(local.fluent_bit_newrelic_outputs)
+    fluent_bit_slack_outputs = jsonencode(local.fluent_bit_slack_outputs)
+  }
 }
-
 
 resource "helm_release" "fluntbit-config" {
   count    = local.fluent_bit_enable ? 1 : 0
   repository = "https://fluent.github.io/helm-charts"
   chart      = "fluent-bit"
   name       = "fluent-bit"
-  version    = "0.36.0"
+  version    = "0.54.0"
   namespace  = kubernetes_namespace.monitoring.metadata.0.name
 
   values = [
-    local.fluent_bit
+    data.template_file.fluent-bit[0].rendered
   ]
   depends_on = [
     kubernetes_namespace.monitoring

@@ -3,22 +3,7 @@ resource "aws_s3_bucket" "openobserve_data" {
   for_each = local.enable_openobserve ? { for instance in var.openobserve : instance.name => instance if instance.enable } : {}
 
   bucket        = "${local.cluster_name}-openobserve-${each.value.name}-${var.observability_suffix}"
-  force_destroy = false
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
-resource "aws_s3_bucket_public_access_block" "openobserve_public_access_block" {
-  for_each = aws_s3_bucket.openobserve_data
-
-  bucket = each.value.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "openobserve_data_encryption" {
@@ -29,7 +14,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "openobserve_data_
     apply_server_side_encryption_by_default {
       sse_algorithm = "aws:kms"
     }
-    bucket_key_enabled = true
   }
 }
 
@@ -45,34 +29,25 @@ resource "random_password" "openobserve_password" {
 }
 
 # Create template for OpenObserve values
-locals {
-  openobserve_templates = local.enable_openobserve ? {
-    for instance in var.openobserve :
-    instance.name => templatefile(
-      "${path.module}/templates/openobserve-values.yaml",
-      {
-        replica_count       = try(instance.replicaCount, 2)
-        cpu_request         = try(instance.min_cpu, "250m")
-        memory_request      = try(instance.min_memory, "1Gi")
-        cpu_limit           = try(instance.max_cpu, "1")
-        memory_limit        = try(instance.max_memory, "2Gi")
-        storage_provider    = "s3"
-        storage_region      = var.app_region
-        storage_bucket_name = aws_s3_bucket.openobserve_data[instance.name].id
-        aws_access_key      = var.access_key
-        aws_secret_key      = var.access_secret
-        root_user_email     = "admin@zop.dev"
-        root_user_password  = random_password.openobserve_password[instance.name].result
+data "template_file" "openobserve_template" {
+  for_each = local.enable_openobserve ? { for instance in var.openobserve : instance.name => instance if instance.enable } : {}
 
-        additional_env_vars = length(try(instance.env, [])) > 0 ? join("\n",
-            [
-              for env in instance.env :
-              "  - name: ${env.name}\n    value: \"${env.value}\""
-            ]) : ""
-      }
-    )
-    if instance.enable
-  } : {}
+  template = file("${path.module}/templates/openobserve-values.yaml")
+  vars = {
+    replica_count       = try(each.value.replicaCount, 2)
+    cpu_request         = try(each.value.min_cpu, "250m")
+    memory_request      = try(each.value.min_memory, "1Gi")
+    cpu_limit           = try(each.value.max_cpu, "1")
+    memory_limit        = try(each.value.max_memory, "2Gi")
+    storage_provider    = "s3"
+    storage_region      = var.app_region
+    storage_bucket_name = aws_s3_bucket.openobserve_data[each.key].id
+    aws_access_key      = var.access_key
+    aws_secret_key      = var.access_secret
+    root_user_email     = "admin@zop.dev"
+    root_user_password  = random_password.openobserve_password[each.key].result
+    additional_env_vars = length(try(each.value.env, [])) > 0 ? join("\n", [for env in each.value.env : "  - name: ${env.name}\n    value: \"${env.value}\""]) : ""
+  }
 }
 
 # Deploy OpenObserve using Helm
@@ -86,7 +61,7 @@ resource "helm_release" "openobserve" {
   namespace  = kubernetes_namespace.app_environments["openobserve"].metadata[0].name
 
   values = [
-    local.openobserve_templates[each.key]
+    data.template_file.openobserve_template[each.key].rendered
   ]
 
   depends_on = [

@@ -112,7 +112,7 @@ resource "kubernetes_ingress_v1" "kops_kube_ingress" {
             service {
               name = "kops-kube"
               port {
-                number = 80
+                number = 8000
               }
             }
           }
@@ -122,7 +122,7 @@ resource "kubernetes_ingress_v1" "kops_kube_ingress" {
     }
     tls {
       secret_name = "tls-secret-replica"
-      hosts       = ["kops-kube.${var.host}"]
+      hosts       = ["*.${var.host}"]
     }
   }
   depends_on = [kubernetes_secret_v1.namespace-cert-replicator]

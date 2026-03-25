@@ -101,7 +101,7 @@ variable "zone" {
 variable "enable_ssl" {
   description = "Whether SSL should be enabled or not based on user requirement"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "storage_mb" {
@@ -134,10 +134,4 @@ variable "multi_ds" {
   description = "Whether to create multiple databases in the same instance"
   type        = bool
   default     = false
-}
-
-variable "vpc" {
-  description = "VNet name the apps are going to use."
-  type        = string
-  default     = ""
 }

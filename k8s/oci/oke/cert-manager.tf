@@ -2,38 +2,6 @@ locals {
   private_key_content = <<EOF
   ${var.private_key_content}
   EOF
-
-  cert_manager_webhook_template = templatefile("${path.module}/templates/cert-manager-webhook-values.yaml", {
-    CLUSTER_NAME = local.cluster_name
-  })
-
-  cluster_wildcard_issuer_yaml = templatefile("${path.module}/templates/cluster-issuer.yaml", {
-    email           = var.cert_issuer_config.email
-    dns_zone_name   = local.domain_name
-    compartment_id  = var.provider_id
-    cert_issuer_url = try(
-        var.cert_issuer_config.env == "stage" ?
-        "https://acme-staging-v02.api.letsencrypt.org/directory" :
-        "https://acme-v02.api.letsencrypt.org/directory",
-      "https://acme-staging-v02.api.letsencrypt.org/directory"
-    )
-    tenancy_id      = var.provider_id
-    fingerprint     = var.accessibility.fingerprint
-    user_id         = var.accessibility.user_id
-    region          = var.app_region
-  })
-
-  oci_profile_secret_yaml = templatefile("${path.module}/templates/oci-profile-secret.yaml", {
-    tenancy     = var.provider_id
-    user        = var.accessibility.user_id
-    region      = var.app_region
-    fingerprint = var.accessibility.fingerprint
-    private_key = local.private_key_content
-  })
-
-  cluster_wildcard_certificate_yaml = templatefile("${path.module}/templates/cluster-certificate.yaml", {
-    dns = local.domain_name
-  })
 }
 
 resource "oci_identity_dynamic_group" "cert_manager_group" {
@@ -54,11 +22,12 @@ resource "oci_identity_policy" "cert_manager_policy" {
   ]
 }
 
-locals {
-  cert_manager_template = templatefile("${path.module}/templates/cert-manager-values.yaml", {
+data "template_file" "cert_manager_template" {
+  template = file("./templates/cert-manager-values.yaml")
+  vars = {
     CLUSTER_NAME   = local.cluster_name
     COMPARTMENT_ID = var.provider_id
-  })
+  }
 }
 
 resource "helm_release" "cert_manager" {
@@ -74,7 +43,14 @@ resource "helm_release" "cert_manager" {
     value = "true"
   }
 
-  values = [local.cert_manager_template]
+  values = [data.template_file.cert_manager_template.rendered]
+}
+
+data "template_file" "cert_manager_webhook_template" {
+  template = file("./templates/cert-manager-webhook-values.yaml")
+  vars = {
+    CLUSTER_NAME = local.cluster_name
+  }
 }
 
 resource "helm_release" "cert_manager_webhook_oci" {
@@ -84,23 +60,59 @@ resource "helm_release" "cert_manager_webhook_oci" {
   namespace        = "cert-manager"
   create_namespace = false 
 
-  values = [local.cert_manager_webhook_template]
+  values = [data.template_file.cert_manager_webhook_template.rendered]
 
   depends_on = [ helm_release.cert_manager, kubectl_manifest.oci_profile_secret]
 }
 
+
+data "template_file" "cluster_wildcard_issuer" {
+  template = file("./templates/cluster-issuer.yaml")
+  vars = {
+    email           = var.cert_issuer_config.email
+    dns_zone_name   = local.domain_name
+    compartment_id  = var.provider_id
+    cert_issuer_url = try(var.cert_issuer_config.env == "stage" ? "https://acme-staging-v02.api.letsencrypt.org/directory" : "https://acme-v02.api.letsencrypt.org/directory","https://acme-staging-v02.api.letsencrypt.org/directory")
+    tenancy_id      = var.provider_id
+    fingerprint     = var.accessibility.fingerprint
+    user_id         = var.accessibility.user_id
+    region          = var.app_region
+  }
+  depends_on = [helm_release.cert_manager, helm_release.cert_manager_webhook_oci, kubernetes_namespace.monitoring]
+}
+
 resource "kubectl_manifest" "cluster_wildcard_issuer" {
-  yaml_body = local.cluster_wildcard_issuer_yaml
+  yaml_body = data.template_file.cluster_wildcard_issuer.rendered
+}
+
+data "template_file" "oci_profile_secret" {
+  template = file("${path.module}/templates/oci-profile-secret.yaml")
+
+  vars = {
+    tenancy               = var.provider_id
+    user                  = var.accessibility.user_id
+    region                = var.app_region
+    fingerprint           = var.accessibility.fingerprint
+    private_key           = local.private_key_content
+  }
 }
 
 resource "kubectl_manifest" "oci_profile_secret" {
-  yaml_body = local.oci_profile_secret_yaml
+  yaml_body = data.template_file.oci_profile_secret.rendered
 
   depends_on = [helm_release.cert_manager]
 }
 
+data "template_file" "cluster_wildcard_certificate" {
+  template = file("./templates/cluster-certificate.yaml")
+  vars = {
+    dns = local.domain_name
+  }
+  depends_on = [kubectl_manifest.cluster_wildcard_issuer]
+}
+
 resource "kubectl_manifest" "cluster_wildcard_certificate" {
-  yaml_body = local.cluster_wildcard_certificate_yaml
+  yaml_body = data.template_file.cluster_wildcard_certificate.rendered
 }
 
 resource "kubernetes_secret_v1" "certificate_replicator" {
