@@ -30,7 +30,8 @@ data:
     timeout = "30s"
     proxy_url = ""
     template = "static/message.tmpl"
-    thread_ttl = "12h"
+    thread_ttl = "24h"
+    threaded_replies = "true"
     dry_run = "false"
     %{~ endfor ~}
 
@@ -59,7 +60,7 @@ spec:
     spec:
       containers:
         - name: "calert"
-          image: "ghcr.io/mr-karan/calert:v2.0.6"
+          image: "ghcr.io/mr-karan/calert:v2.3.0"
           imagePullPolicy: "Always"
           args: ["--config=/app/static/config.toml"]
           ports:
