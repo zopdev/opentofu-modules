@@ -30,7 +30,7 @@ data:
     timeout = "30s"
     proxy_url = ""
     template = "static/message.tmpl"
-    thread_ttl = "24h"
+    thread_ttl = "168h"
     threaded_replies = "true"
     dry_run = "false"
     %{~ endfor ~}
