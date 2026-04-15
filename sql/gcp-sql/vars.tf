@@ -179,3 +179,13 @@ variable "multi_ds" {
   type        = bool
   default     = false
 }
+
+variable "sql_edition" {
+  description = "Cloud SQL edition. Defaults to ENTERPRISE which matches GCP's auto-assigned default for MySQL 5.6/5.7/8.0 and current Postgres versions; set to ENTERPRISE_PLUS for newer instances that need it. Declaring this here prevents drift on every terraform apply."
+  type        = string
+  default     = "ENTERPRISE"
+  validation {
+    condition     = contains(["ENTERPRISE", "ENTERPRISE_PLUS"], var.sql_edition)
+    error_message = "sql_edition must be either ENTERPRISE or ENTERPRISE_PLUS."
+  }
+}
