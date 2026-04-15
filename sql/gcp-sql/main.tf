@@ -57,6 +57,7 @@ resource "google_sql_database_instance" "postgres_sql_db" {
 
   settings {
     tier              = var.machine_type
+    edition           = var.sql_edition
     activation_policy = var.activation_policy
     disk_size         = var.disk_size
     disk_type         = var.disk_type
@@ -91,6 +92,7 @@ resource "google_sql_database_instance" "sql_db" {
 
   settings {
     tier              = var.machine_type
+    edition           = var.sql_edition
     activation_policy = var.activation_policy
     disk_size         = var.disk_size
     disk_type         = var.disk_type
@@ -148,6 +150,7 @@ resource "google_sql_database_instance" "sql_db_replica" {
 
   settings {
     tier              = var.machine_type
+    edition           = var.sql_edition
     activation_policy = var.activation_policy
     disk_type         = var.disk_type
     availability_type = "ZONAL"
