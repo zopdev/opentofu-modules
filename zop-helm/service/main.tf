@@ -25,7 +25,7 @@ resource "helm_release" "service_helm"{
   name        = var.name
   namespace   = var.namespace
   repository  = "https://helm.zop.dev"
-  version     = "v0.0.29"
+  version     = "v0.0.32"
   chart       = "service"
   reuse_values = true
   max_history  = var.max_history
